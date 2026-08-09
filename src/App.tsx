@@ -43,12 +43,12 @@ import { ShieldCheck, Wifi, RefreshCw, MessageSquare, X, Mic, Send, Sparkles, Bo
 import { doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
 
 const DEFAULT_BUDGETS: BudgetLimit[] = [
-  { category: 'Grocery', limitPHP: 15000, spentPHP: 0 },
-  { category: 'Utilities', limitPHP: 5000, spentPHP: 0 },
-  { category: 'Travel', limitPHP: 8000, spentPHP: 0 },
-  { category: 'Dining', limitPHP: 6000, spentPHP: 0 },
-  { category: 'Shopping', limitPHP: 5000, spentPHP: 0 },
-  { category: 'Other', limitPHP: 3000, spentPHP: 0 },
+  { category: 'Lifestyle', limitPHP: 4050, spentPHP: 0 },
+  { category: 'Rent & Utilities', limitPHP: 700, spentPHP: 0 },
+  { category: 'Travel / Fuel', limitPHP: 1600, spentPHP: 0 },
+  { category: 'Shopping', limitPHP: 500, spentPHP: 0 },
+  { category: 'Food & Dining', limitPHP: 500, spentPHP: 0 },
+  { category: 'Other', limitPHP: 500, spentPHP: 0 },
 ];
 
 const FREE_ALLOWED_TABS = ['home', 'pricing', 'ledger', 'social', 'transactions'] as const;
@@ -284,6 +284,7 @@ export default function App() {
   const isInitialized = React.useRef(false);
   const isRemoteUpdate = React.useRef(false);
   const isTickerUpdateRef = React.useRef(false);
+  const lastSyncedDataRef = React.useRef<string>('');
 
   const [activeTab, setActiveTab] = useState<'home' | 'dashboard' | 'pricing' | 'portfolio' | 'assets' | 'ledger' | 'social' | 'audit' | 'transactions'>('home');
   const [darkMode, setDarkMode] = useState(false);
@@ -485,6 +486,22 @@ export default function App() {
         localStorage.setItem(`wealth_vault_deployment_${email}`, JSON.stringify(userDeploymentItems));
         localStorage.setItem(`wealth_vault_budget_cap_${email}`, userBudgetCap);
 
+        lastSyncedDataRef.current = JSON.stringify({
+          assets: userAssets,
+          expenses: userExpenses,
+          transactions: userTransactions,
+          goals: userGoals,
+          budgets: userBudgets,
+          cycleItems: userCycleItems,
+          devaluationItems: userDevaluationItems,
+          devaluationTactics: userDevaluationTactics,
+          auditChanges: userAuditChanges,
+          deploymentItems: userDeploymentItems,
+          budgetCap: userBudgetCap,
+          targetAllocation: data.targetAllocation !== undefined ? data.targetAllocation : 85,
+          alerts: Array.isArray(data.alerts) ? data.alerts : [],
+        });
+
         isInitialized.current = true;
       } else {
         // Document does not exist in Firestore for this user
@@ -639,7 +656,7 @@ export default function App() {
     }
   };
 
-  // Automated state persistence to Firestore with optimized debounce
+  // Automated state persistence to Firestore with optimized debounce and strict diff checking
   useEffect(() => {
     if (email && isInitialized.current) {
       if (isRemoteUpdate.current) {
@@ -663,24 +680,31 @@ export default function App() {
       localStorage.setItem(`wealth_vault_deployment_${email}`, JSON.stringify(deploymentItems));
       localStorage.setItem(`wealth_vault_budget_cap_${email}`, budgetCap);
 
+      const dataToSync = {
+        assets,
+        expenses,
+        transactions,
+        goals,
+        budgets,
+        cycleItems,
+        devaluationItems,
+        devaluationTactics,
+        auditChanges,
+        deploymentItems,
+        budgetCap,
+        targetAllocation,
+        alerts,
+      };
+
+      const serialized = JSON.stringify(dataToSync);
+      if (serialized === lastSyncedDataRef.current) {
+        // No actual data change compared to Firestore cloud state -> DO NOT WRITE
+        return;
+      }
+
       const handler = setTimeout(() => {
-        const dataToSync = {
-          assets,
-          expenses,
-          transactions,
-          goals,
-          budgets,
-          cycleItems,
-          devaluationItems,
-          devaluationTactics,
-          auditChanges,
-          deploymentItems,
-          budgetCap,
-          targetAllocation,
-          alerts,
-          updatedAt: Date.now(),
-        };
-        setDoc(doc(db, "users", email, "financialData", "data"), dataToSync, { merge: true })
+        lastSyncedDataRef.current = serialized;
+        setDoc(doc(db, "users", email, "financialData", "data"), { ...dataToSync, updatedAt: Date.now() }, { merge: true })
           .catch(console.error);
       }, 2000);
 
@@ -690,14 +714,20 @@ export default function App() {
 
   // Automated budget sync with expense ledger
   useEffect(() => {
-    setBudgets((prevBudgets) =>
-      prevBudgets.map((b) => {
+    setBudgets((prevBudgets) => {
+      let changed = false;
+      const updated = prevBudgets.map((b) => {
         const totalSpent = expenses
           .filter((e) => e.category === b.category)
           .reduce((sum, e) => sum + e.amountPHP, 0);
-        return { ...b, spentPHP: totalSpent };
-      })
-    );
+        if (b.spentPHP !== totalSpent) {
+          changed = true;
+          return { ...b, spentPHP: totalSpent };
+        }
+        return b;
+      });
+      return changed ? updated : prevBudgets;
+    });
   }, [expenses]);
 
   // 1. Live Market Fluctuations Polling Ticker (Supports both Backend Server & Static Deployment)
@@ -761,7 +791,7 @@ export default function App() {
     };
 
     fetchTicks();
-    const interval = setInterval(fetchTicks, 10000);
+    const interval = setInterval(fetchTicks, 30000);
     return () => clearInterval(interval);
   }, [email]);
 
@@ -1740,6 +1770,7 @@ export default function App() {
             goals={goals}
             transactions={transactions}
             usdPhpRate={exchangeRates.USD}
+            targetAllocation={targetAllocation}
             onNavigateTab={(tab) => setActiveTab(tab as any)}
             onOpenChat={() => setIsChatOpen(true)}
             onOpenSettings={() => setIsSettingsOpen(true)}

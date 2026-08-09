@@ -34,23 +34,42 @@ interface SummaryDashboardProps {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
+  Lifestyle: '#10b981',
+  'Rent & Utilities': '#a855f7',
+  'Travel / Fuel': '#3b82f6',
+  Shopping: '#fb923c',
+  'Food & Dining': '#fb7185',
+  Other: '#94a3b8',
   Grocery: '#10b981',
   Utilities: '#a855f7',
   Travel: '#3b82f6',
   Dining: '#fb7185',
-  Shopping: '#fb923c',
-  Other: '#94a3b8',
 };
 
-// Helper to categorize user logged expenses
-const mapExpenseCategory = (cat: string): 'Grocery' | 'Utilities' | 'Travel' | 'Dining' | 'Shopping' | 'Other' => {
-  const c = (cat || '').toLowerCase();
-  if (c.includes('groc') || (c.includes('food') && !c.includes('din') && !c.includes('out')) || c.includes('supermarket')) return 'Grocery';
-  if (c.includes('util') || c.includes('elect') || c.includes('water') || c.includes('bill') || c.includes('wifi') || c.includes('internet')) return 'Utilities';
-  if (c.includes('trav') || c.includes('fuel') || c.includes('gas') || c.includes('commute') || c.includes('transport') || c.includes('flight') || c.includes('hotel')) return 'Travel';
-  if (c.includes('din') || c.includes('rest') || c.includes('eat') || c.includes('coffee') || c.includes('cafe')) return 'Dining';
-  if (c.includes('shop') || c.includes('mall') || c.includes('cloth') || c.includes('lifestyle') || c.includes('retail') || c.includes('amazon') || c.includes('lazada') || c.includes('shopee')) return 'Shopping';
-  return 'Other';
+// Helper to categorize user logged expenses dynamically matching current budget limits
+const mapExpenseCategory = (cat: string, availableBudgets: BudgetLimit[]): string => {
+  if (!availableBudgets || availableBudgets.length === 0) return 'Other';
+  const c = (cat || '').trim().toLowerCase();
+
+  // 1. Exact match (case insensitive)
+  const exact = availableBudgets.find((b) => b.category.toLowerCase() === c);
+  if (exact) return exact.category;
+
+  // 2. Keyword heuristic matching against available budget categories
+  for (const b of availableBudgets) {
+    const bCat = b.category.toLowerCase();
+    if ((c.includes('life') || c.includes('health') || c.includes('entertainment')) && bCat.includes('life')) return b.category;
+    if ((c.includes('rent') || c.includes('util') || c.includes('bill') || c.includes('elect') || c.includes('water') || c.includes('wifi') || c.includes('net')) && (bCat.includes('rent') || bCat.includes('util'))) return b.category;
+    if ((c.includes('trav') || c.includes('fuel') || c.includes('gas') || c.includes('commute') || c.includes('trans')) && (bCat.includes('trav') || bCat.includes('fuel'))) return b.category;
+    if ((c.includes('shop') || c.includes('mall') || c.includes('cloth') || c.includes('retail')) && bCat.includes('shop')) return b.category;
+    if ((c.includes('food') || c.includes('din') || c.includes('groc') || c.includes('eat') || c.includes('rest') || c.includes('cafe') || c.includes('supermarket')) && (bCat.includes('food') || bCat.includes('din') || bCat.includes('groc'))) return b.category;
+  }
+
+  // 3. Fallback to 'Other' or first available category
+  const fallbackOther = availableBudgets.find((b) => b.category.toLowerCase().includes('other'));
+  if (fallbackOther) return fallbackOther.category;
+
+  return availableBudgets[0].category;
 };
 
 export default function SummaryDashboard({
@@ -70,7 +89,7 @@ export default function SummaryDashboard({
   const [selectedAssetClass, setSelectedAssetClass] = useState<'all' | 'safe' | 'risk' | 'physical'>('all');
   const [adjustingBudget, setAdjustingBudget] = useState<string | null>(null);
   const [adjustedLimit, setAdjustedLimit] = useState<string>('');
-  const [spendViewCategory, setSpendViewCategory] = useState<'all' | 'Grocery' | 'Utilities' | 'Travel' | 'Dining' | 'Shopping' | 'Other'>('all');
+  const [spendViewCategory, setSpendViewCategory] = useState<string>('all');
 
   // Overall Desired Monthly Expense Limit State
   const defaultDesiredLimit = useMemo(() => {
@@ -84,22 +103,18 @@ export default function SummaryDashboard({
   const [isEditingDesired, setIsEditingDesired] = useState<boolean>(false);
   const [desiredInputVal, setDesiredInputVal] = useState<string>(defaultDesiredLimit.toString());
 
-  // Category spent amounts derived directly from expenses ledger
+  // Category spent amounts derived directly from expenses ledger matching budget categories
   const categorySpentMap = useMemo(() => {
-    const map: Record<string, number> = {
-      Grocery: 0,
-      Utilities: 0,
-      Travel: 0,
-      Dining: 0,
-      Shopping: 0,
-      Other: 0,
-    };
+    const map: Record<string, number> = {};
+    budgets.forEach((b) => {
+      map[b.category] = 0;
+    });
     expenses.forEach((e) => {
-      const bucket = mapExpenseCategory(e.category);
+      const bucket = mapExpenseCategory(e.category, budgets);
       map[bucket] = (map[bucket] || 0) + (e.amountPHP || 0);
     });
     return map;
-  }, [expenses]);
+  }, [expenses, budgets]);
 
   // Calculate sum of individual category budget limits
   const sumCategoryLimits = useMemo(() => {
@@ -138,31 +153,32 @@ export default function SummaryDashboard({
     return expenses.filter((e) => e.date && e.date.startsWith(selectedYear));
   }, [expenses, selectedYear]);
 
-  // Historical Expenditure Pie Data computation derived strictly from expense ledger
+  // Historical Expenditure Pie Data computation derived strictly from expense ledger matching budget categories
   const historicalPieData = useMemo(() => {
-    const catMap: Record<string, number> = {
-      Grocery: 0,
-      Utilities: 0,
-      Travel: 0,
-      Dining: 0,
-      Shopping: 0,
-      Other: 0,
-    };
+    const catMap: Record<string, number> = {};
+    budgets.forEach((b) => {
+      catMap[b.category] = 0;
+    });
 
     filteredExpenses.forEach((e) => {
-      const bucket = mapExpenseCategory(e.category);
-      catMap[bucket] += (e.amountPHP || 0);
+      const bucket = mapExpenseCategory(e.category, budgets);
+      if (catMap[bucket] !== undefined) {
+        catMap[bucket] += (e.amountPHP || 0);
+      } else {
+        catMap[bucket] = (e.amountPHP || 0);
+      }
     });
 
     const totalVal = Object.values(catMap).reduce((a, b) => a + b, 0);
+    const palette = ['#10b981', '#a855f7', '#3b82f6', '#fb923c', '#fb7185', '#06b6d4', '#8b5cf6', '#eab308', '#94a3b8'];
 
-    return Object.entries(catMap).map(([name, value]) => ({
+    return Object.entries(catMap).map(([name, value], idx) => ({
       name,
       value,
-      color: CATEGORY_COLORS[name] || '#94a3b8',
+      color: CATEGORY_COLORS[name] || palette[idx % palette.length],
       percentage: totalVal > 0 ? (value / totalVal) * 100 : 0,
     }));
-  }, [filteredExpenses]);
+  }, [filteredExpenses, budgets]);
 
   const totalHistoricalExpenditure = useMemo(() => {
     return historicalPieData.reduce((sum, item) => sum + item.value, 0);
@@ -170,17 +186,17 @@ export default function SummaryDashboard({
 
   // Monthly & Yearly Spend Data Aggregation
   const { monthlySpendData, yearlySpendData } = useMemo(() => {
-    const monthsMap: Record<string, { Grocery: number; Utilities: number; Travel: number; Dining: number; Shopping: number; Other: number }> = {};
-    const yearsMap: Record<string, { Grocery: number; Utilities: number; Travel: number; Dining: number; Shopping: number; Other: number }> = {};
+    const monthsMap: Record<string, Record<string, number>> = {};
+    const yearsMap: Record<string, Record<string, number>> = {};
 
-    // Initialize baseline 12 months for selected year or 2026
     const yrSuffix = selectedYear !== 'all' ? selectedYear.slice(-2) : '26';
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     monthNames.forEach((m) => {
-      monthsMap[`${m} ${yrSuffix}`] = { Grocery: 0, Utilities: 0, Travel: 0, Dining: 0, Shopping: 0, Other: 0 };
+      const initObj: Record<string, number> = {};
+      budgets.forEach((b) => { initObj[b.category] = 0; });
+      monthsMap[`${m} ${yrSuffix}`] = initObj;
     });
 
-    // Populate from actual expenses
     filteredExpenses.forEach((e) => {
       if (!e.date) return;
       const d = new Date(e.date);
@@ -191,22 +207,35 @@ export default function SummaryDashboard({
       const mKey = `${mName} ${yStr.slice(-2)}`;
 
       if (!monthsMap[mKey]) {
-        monthsMap[mKey] = { Grocery: 0, Utilities: 0, Travel: 0, Dining: 0, Shopping: 0, Other: 0 };
+        const initObj: Record<string, number> = {};
+        budgets.forEach((b) => { initObj[b.category] = 0; });
+        monthsMap[mKey] = initObj;
       }
 
       if (!yearsMap[yStr]) {
-        yearsMap[yStr] = { Grocery: 0, Utilities: 0, Travel: 0, Dining: 0, Shopping: 0, Other: 0 };
+        const initObj: Record<string, number> = {};
+        budgets.forEach((b) => { initObj[b.category] = 0; });
+        yearsMap[yStr] = initObj;
       }
 
-      const bucket = mapExpenseCategory(e.category);
+      const bucket = mapExpenseCategory(e.category, budgets);
       const amt = e.amountPHP || 0;
 
-      monthsMap[mKey][bucket] += amt;
-      yearsMap[yStr][bucket] += amt;
+      if (monthsMap[mKey][bucket] !== undefined) {
+        monthsMap[mKey][bucket] += amt;
+      } else {
+        monthsMap[mKey][bucket] = amt;
+      }
+
+      if (yearsMap[yStr][bucket] !== undefined) {
+        yearsMap[yStr][bucket] += amt;
+      } else {
+        yearsMap[yStr][bucket] = amt;
+      }
     });
 
     const mData = Object.entries(monthsMap).map(([month, cats]) => {
-      const total = cats.Grocery + cats.Utilities + cats.Travel + cats.Dining + cats.Shopping + cats.Other;
+      const total = Object.values(cats).reduce((acc, v) => acc + v, 0);
       return {
         month,
         ...cats,
@@ -215,7 +244,7 @@ export default function SummaryDashboard({
     });
 
     const yData = Object.entries(yearsMap).map(([year, cats]) => {
-      const total = cats.Grocery + cats.Utilities + cats.Travel + cats.Dining + cats.Shopping + cats.Other;
+      const total = Object.values(cats).reduce((acc, v) => acc + v, 0);
       return {
         month: year,
         ...cats,
@@ -224,7 +253,7 @@ export default function SummaryDashboard({
     });
 
     return { monthlySpendData: mData, yearlySpendData: yData };
-  }, [filteredExpenses, selectedYear]);
+  }, [filteredExpenses, selectedYear, budgets]);
 
   // Active chart data based on viewMode and selectedYear
   const activeSpendData = viewMode === 'yearly' && selectedYear === 'all' ? yearlySpendData : monthlySpendData;
@@ -249,11 +278,10 @@ export default function SummaryDashboard({
   const currentSafeRatio = financialNetWorth > 0 ? (totalSafe / financialNetWorth) * 100 : 0;
   const isSafeShieldViolated = currentSafeRatio < targetAllocation;
 
-  // Asset class pie chart data for Pro
+  // Asset class pie chart data for Pro (excluding physical assets)
   const assetPieData = [
     { name: 'Safe Shield', value: totalSafe, color: '#10b981' },
     { name: 'Risk Sleeve', value: totalRisk, color: '#6366f1' },
-    { name: 'Physical Assets', value: totalPhysical, color: '#a855f7' },
   ];
 
   // Cash burn runway
@@ -472,7 +500,7 @@ export default function SummaryDashboard({
 
             <div className="space-y-2 mt-6 pt-4 border-t border-slate-100 dark:border-white/5">
               {assetPieData.map((el) => {
-                const ratio = grandTotalNetWorth > 0 ? (el.value / grandTotalNetWorth) * 100 : 0;
+                const ratio = financialNetWorth > 0 ? (el.value / financialNetWorth) * 100 : 0;
                 return (
                   <div key={el.name} className="flex items-center justify-between text-xs">
                     <div className="flex items-center space-x-2.5">
@@ -928,17 +956,27 @@ export default function SummaryDashboard({
 
             {/* Category Filter Pills */}
             <div className="flex flex-wrap gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-lg border border-slate-200 dark:border-slate-800">
-              {(['all', 'Grocery', 'Utilities', 'Travel', 'Dining', 'Shopping', 'Other'] as const).map((cat) => (
+              <button
+                onClick={() => setSpendViewCategory('all')}
+                className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                  spendViewCategory === 'all'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
+                }`}
+              >
+                All (Stacked)
+              </button>
+              {budgets.map((b) => (
                 <button
-                  key={cat}
-                  onClick={() => setSpendViewCategory(cat)}
+                  key={b.category}
+                  onClick={() => setSpendViewCategory(b.category)}
                   className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                    spendViewCategory === cat
+                    spendViewCategory === b.category
                       ? 'bg-blue-600 text-white shadow-xs'
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
                   }`}
                 >
-                  {cat === 'all' ? 'All (Stacked)' : cat}
+                  {b.category}
                 </button>
               ))}
             </div>
@@ -1013,14 +1051,21 @@ export default function SummaryDashboard({
               />
               <Legend />
               {spendViewCategory === 'all' ? (
-                <>
-                  <Bar dataKey="Grocery" stackId="spend" fill="#10b981" name="Grocery" />
-                  <Bar dataKey="Utilities" stackId="spend" fill="#a855f7" name="Utilities" />
-                  <Bar dataKey="Travel" stackId="spend" fill="#3b82f6" name="Travel" />
-                  <Bar dataKey="Dining" stackId="spend" fill="#fb7185" name="Dining" />
-                  <Bar dataKey="Shopping" stackId="spend" fill="#fb923c" name="Shopping" />
-                  <Bar dataKey="Other" stackId="spend" fill="#94a3b8" name="Other" radius={[4, 4, 0, 0]} />
-                </>
+                budgets.map((b, idx) => {
+                  const palette = ['#10b981', '#a855f7', '#3b82f6', '#fb923c', '#fb7185', '#06b6d4', '#8b5cf6', '#eab308', '#94a3b8'];
+                  const color = CATEGORY_COLORS[b.category] || palette[idx % palette.length];
+                  const isLast = idx === budgets.length - 1;
+                  return (
+                    <Bar
+                      key={b.category}
+                      dataKey={b.category}
+                      stackId="spend"
+                      fill={color}
+                      name={b.category}
+                      radius={isLast ? [4, 4, 0, 0] : undefined}
+                    />
+                  );
+                })
               ) : (
                 <Bar
                   dataKey={spendViewCategory}

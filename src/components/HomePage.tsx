@@ -36,6 +36,7 @@ interface HomePageProps {
   goals: FamilyGoal[];
   transactions: HistoricalTx[];
   usdPhpRate: number;
+  targetAllocation?: number;
   onNavigateTab: (tab: string) => void;
   onOpenChat: () => void;
   onOpenSettings: () => void;
@@ -52,6 +53,7 @@ export default function HomePage({
   goals,
   transactions,
   usdPhpRate,
+  targetAllocation = 85,
   onNavigateTab,
   onOpenChat,
   onOpenSettings,
@@ -109,8 +111,9 @@ export default function HomePage({
   // Recent 5 transactions
   const recentTransactions = transactions.slice(0, 5);
 
-  // Safe Ratio
-  const safeRatioPercent = grandTotalAssets > 0 ? Math.round((totalSafe / grandTotalAssets) * 100) : 0;
+  // Safe Ratio from My Financial Portfolio (Safe Shield / (Safe Shield + Risk Sleeve))
+  const totalFinancialPortfolio = totalSafe + totalRisk;
+  const safeRatioPercent = totalFinancialPortfolio > 0 ? Number(((totalSafe / totalFinancialPortfolio) * 100).toFixed(1)) : 0;
 
   const isPro = isAdmin || subscriptionTier === 'pro';
 
@@ -259,13 +262,13 @@ export default function HomePage({
             </div>
             <div className="mt-3">
               <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                {safeRatioPercent}% <span className="text-xs font-normal text-slate-400">/ 85% Target</span>
+                {safeRatioPercent}% <span className="text-xs font-normal text-slate-400">/ {targetAllocation}% Target</span>
               </div>
               <div className="mt-2 flex items-center justify-between text-xs">
                 <span className="text-indigo-600 dark:text-indigo-400 font-bold">
                   ₱{totalSafe.toLocaleString(undefined, { maximumFractionDigits: 0 })} Safe Capital
                 </span>
-                <span className="text-slate-400">Risk: {100 - safeRatioPercent}%</span>
+                <span className="text-slate-400">Risk: {(100 - safeRatioPercent).toFixed(1)}%</span>
               </div>
             </div>
           </div>

@@ -1081,9 +1081,9 @@ export default function MyFinancialPortfolio({
             <div>
               <h3 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider flex items-center space-x-2">
                 <Layers className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <span>2. The 85/15 Allocation Architecture</span>
+                <span>2. The {targetAllocation}/{100 - targetAllocation} Allocation Architecture</span>
               </h3>
-              <p className="text-[10px] text-slate-500 mt-1">Strategy: 85% Safe Shield / 15% Risk Sleeve (Salary-Only Dilution)</p>
+              <p className="text-[10px] text-slate-500 mt-1">Strategy: {targetAllocation}% Safe Shield / {100 - targetAllocation}% Risk Sleeve (Salary-Only Dilution)</p>
             </div>
           </div>
           
@@ -1113,7 +1113,7 @@ export default function MyFinancialPortfolio({
                     </span>
                   </td>
                   <td className="py-4 text-xs font-mono font-bold text-right">{safeWeight.toFixed(2)}%</td>
-                  <td className="py-4 text-xs font-mono text-right text-slate-400">85.0%</td>
+                  <td className="py-4 text-xs font-mono text-right text-slate-400">{targetAllocation.toFixed(1)}%</td>
                   <td className="py-4 text-center pr-5">
                     <span className={`px-2.5 py-1 text-[9px] font-extrabold rounded-md ${
                       safeStatus === 'UNDERWEIGHT' 
@@ -1136,7 +1136,7 @@ export default function MyFinancialPortfolio({
                     </span>
                   </td>
                   <td className="py-4 text-xs font-mono font-bold text-right">{riskWeight.toFixed(2)}%</td>
-                  <td className="py-4 text-xs font-mono text-right text-slate-400">15.0%</td>
+                  <td className="py-4 text-xs font-mono text-right text-slate-400">{(100 - targetAllocation).toFixed(1)}%</td>
                   <td className="py-4 text-center pr-5">
                     <span className={`px-2.5 py-1 text-[9px] font-extrabold rounded-md ${
                       riskStatus === 'OVERWEIGHT'
