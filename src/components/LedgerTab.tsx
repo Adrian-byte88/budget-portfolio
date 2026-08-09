@@ -10,7 +10,6 @@ interface LedgerTabProps {
   onAddExpense: (expense: Omit<ExpenseEntry, 'id'>) => void;
   onAdjustExpense: (id: string, newAmount: number) => void;
   onDeleteExpense: (id: string) => void;
-  onLinkBankSync: (bankName: string) => void;
   exchangeRates: Record<string, number>;
   highlightId: {type: string, id: string, tab?: string} | null;
 }
@@ -21,7 +20,6 @@ export default function LedgerTab({
   onAddExpense,
   onAdjustExpense,
   onDeleteExpense,
-  onLinkBankSync,
   exchangeRates,
   highlightId,
 }: LedgerTabProps) {
@@ -41,9 +39,6 @@ export default function LedgerTab({
   const [amount, setAmount] = useState('1500');
   const [currency, setCurrency] = useState('PHP');
   const [familyShared, setFamilyShared] = useState(false);
-
-  // Bank Link state
-  const [linkingBank, setLinkingBank] = useState<string | null>(null);
 
   // Calculator Travel Converter State
   const [calcFromAmt, setCalcFromAmt] = useState('100');
@@ -88,17 +83,9 @@ export default function LedgerTab({
     setCalcResult(converted.toFixed(2));
   };
 
-  const executeBankSyncSimulation = (bankName: string) => {
-    setLinkingBank(bankName);
-    setTimeout(() => {
-      onLinkBankSync(bankName);
-      setLinkingBank(null);
-    }, 1800);
-  };
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
-      {/* Col 1 & 2: Budget Entry Form, Bank Sync, and Table */}
+      {/* Col 1 & 2: Budget Entry Form and Table */}
       <div className="lg:col-span-2 space-y-6">
         <div id="expense-table-section" data-highlight-id="expense-table-section" className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-xl p-6 sm:p-8 shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-white/5 pb-4 mb-6">
@@ -107,7 +94,7 @@ export default function LedgerTab({
                 <Receipt className="w-5 h-5 text-blue-600 dark:text-teal-400" />
                 <span>Financial Ledger Registry</span>
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Audit transactions, manual inputs, and synchronized bank files</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Audit transactions, manual inputs, and category expense allocations</p>
             </div>
             <button
               id="add-expense-section"
@@ -255,40 +242,6 @@ export default function LedgerTab({
                 })}
               </tbody>
             </table>
-          </div>
-        </div>
-
-        {/* Bank Synchronization Portal */}
-        <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-xl p-6 sm:p-8 shadow-xs">
-          <h3 className="text-base font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-2.5">
-            Institutional Bank Synchronizations
-          </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
-            Link and import offline transaction registers securely. Avoid manual overhead using our simulated institutional bank handshakes.
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {['BDO Unibank', 'Bank of PI (BPI)', 'Citibank PH'].map((bank) => (
-              <button
-                key={bank}
-                onClick={() => executeBankSyncSimulation(bank)}
-                disabled={linkingBank !== null}
-                className="p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-white/5 rounded-xl hover:border-blue-500/30 dark:hover:border-blue-500/30 text-center relative group transition-all"
-              >
-                {linkingBank === bank ? (
-                  <div className="flex flex-col items-center justify-center space-y-2">
-                    <RefreshCw className="w-5 h-5 text-blue-600 dark:text-teal-400 animate-spin" />
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase">Syncing ledger files...</span>
-                  </div>
-                ) : (
-                  <div className="space-y-1">
-                    <CreditCard className="w-6 h-6 text-blue-600 dark:text-blue-400 mx-auto group-hover:scale-110 transition-transform" />
-                    <h4 className="text-xs font-bold text-slate-900 dark:text-white">{bank}</h4>
-                    <span className="text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-widest font-semibold block">Link & Sync</span>
-                  </div>
-                )}
-              </button>
-            ))}
           </div>
         </div>
       </div>

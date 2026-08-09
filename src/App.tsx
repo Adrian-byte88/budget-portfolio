@@ -1650,6 +1650,8 @@ export default function App() {
         expenses={expenses}
         goals={goals}
         budgets={budgets}
+        transactions={trades}
+        cycleItems={cycleItems}
         onSelect={handleSearchSelect}
         onOpenSettings={(tab) => {
           setSettingsDefaultTab(tab || 'profile');
@@ -1874,7 +1876,6 @@ export default function App() {
             onAddExpense={handleAddExpense}
             onAdjustExpense={handleAdjustExpense}
             onDeleteExpense={handleDeleteExpense}
-            onLinkBankSync={handleLinkBankSync}
             exchangeRates={exchangeRates}
             highlightId={highlightId}
           />

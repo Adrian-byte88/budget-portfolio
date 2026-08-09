@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sun, Moon, Bell, Shield, LogOut, User, Menu, X, Wifi, Settings, Crown, Lock } from 'lucide-react';
-import { MarketAlert, AssetPosition, ExpenseEntry, FamilyGoal, BudgetLimit } from '../types';
+import { MarketAlert, AssetPosition, ExpenseEntry, FamilyGoal, BudgetLimit, TradeEntry } from '../types';
+import { CycleItem } from './MarketCycleAuditTab';
 import SearchEngine from './SearchEngine';
 import logoImg from '../assets/images/app_logo_1786099253668.jpg';
 import { formatTimeAgo } from '../lib/formatters';
@@ -16,6 +17,8 @@ interface NavbarProps {
   expenses: ExpenseEntry[];
   goals: FamilyGoal[];
   budgets: BudgetLimit[];
+  transactions?: TradeEntry[];
+  cycleItems?: CycleItem[];
   onSelect: (type: string, id: string, targetTab?: string) => void;
   onOpenSettings: (tab?: 'profile' | 'preferences' | 'export') => void;
   subscriptionTier?: 'free' | 'pro';
@@ -37,6 +40,8 @@ export default function Navbar({
   expenses,
   goals,
   budgets,
+  transactions,
+  cycleItems,
   onSelect,
   onOpenSettings,
   subscriptionTier = 'free',
@@ -103,7 +108,7 @@ export default function Navbar({
 
         {/* Desktop Controls */}
         <div className="hidden md:flex items-center space-x-4">
-          <SearchEngine assets={assets} expenses={expenses} goals={goals} budgets={budgets} onSelect={onSelect} />
+          <SearchEngine assets={assets} expenses={expenses} goals={goals} budgets={budgets} transactions={transactions} cycleItems={cycleItems} onSelect={onSelect} />
           
           <button
             onClick={onOpenPricing}

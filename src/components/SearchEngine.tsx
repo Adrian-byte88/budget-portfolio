@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Search, ChevronRight, Layout, Compass, DollarSign, Wallet, Target, Tag, Settings, Command, CornerDownLeft } from 'lucide-react';
-import { AssetPosition, ExpenseEntry, FamilyGoal, BudgetLimit } from '../types';
+import { AssetPosition, ExpenseEntry, FamilyGoal, BudgetLimit, TradeEntry } from '../types';
+import { CycleItem } from './MarketCycleAuditTab';
 import { getAssetValuation } from '../lib/formatters';
 
 interface SearchEngineProps {
@@ -8,11 +9,13 @@ interface SearchEngineProps {
   expenses: ExpenseEntry[];
   goals: FamilyGoal[];
   budgets: BudgetLimit[];
+  transactions?: TradeEntry[];
+  cycleItems?: CycleItem[];
   onSelect: (type: string, id: string, targetTab?: string) => void;
 }
 
 interface SearchItem {
-  type: 'Tab' | 'Section' | 'Asset' | 'Expense' | 'Goal' | 'Category';
+  type: 'Tab' | 'Section' | 'Asset' | 'Expense' | 'Goal' | 'Category' | 'Transaction' | 'CycleItem';
   name: string;
   id: string;
   targetTab?: string;
@@ -66,7 +69,7 @@ const STATIC_INDEX: SearchItem[] = [
   { type: 'Section', name: 'Data Export Engine (Excel / JSON Backup)', id: 'settings-export', targetTab: 'settings', subtitle: 'Settings Modal', keywords: 'export excel download csv backup json restore data save' },
 ];
 
-export default function SearchEngine({ assets, expenses, goals, budgets, onSelect }: SearchEngineProps) {
+export default function SearchEngine({ assets, expenses, goals, budgets, transactions = [], cycleItems = [], onSelect }: SearchEngineProps) {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<'All' | 'Tabs' | 'Sections' | 'Data'>('All');
@@ -164,8 +167,30 @@ export default function SearchEngine({ assets, expenses, goals, budgets, onSelec
       });
     });
 
+    transactions.forEach(t => {
+      dynamicItems.push({
+        type: 'Transaction',
+        name: `${t.action} ${t.assetName}`,
+        id: t.id,
+        targetTab: 'history',
+        subtitle: `Trade Record • ₱${(t.amountPHP || 0).toLocaleString()} (${t.date})`,
+        keywords: `${t.action} ${t.assetName} ${t.notes} transaction trade history`
+      });
+    });
+
+    cycleItems.forEach(c => {
+      dynamicItems.push({
+        type: 'CycleItem',
+        name: `Market Audit: ${c.asset}`,
+        id: c.id,
+        targetTab: 'market',
+        subtitle: `Cycle Phase: ${c.phase} • ${c.sentiment}`,
+        keywords: `${c.asset} ${c.phase} ${c.sentiment} ${c.logic} cycle market audit`
+      });
+    });
+
     return [...STATIC_INDEX, ...dynamicItems];
-  }, [assets, expenses, goals, budgets]);
+  }, [assets, expenses, goals, budgets, transactions, cycleItems]);
 
   const results = useMemo(() => {
     const q = query.toLowerCase().trim();

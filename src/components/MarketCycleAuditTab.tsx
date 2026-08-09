@@ -69,62 +69,56 @@ export const INITIAL_CYCLE_ITEMS: CycleItem[] = [];
 export function buildCycleItemsFromAssets(assetsList: AssetPosition[], totalVal: number): CycleItem[] {
   if (!assetsList || assetsList.length === 0) return [];
 
-  return assetsList
-    .filter((a) => {
-      if (a.class === 'liability' || a.class === 'physical' || a.assetType === 'property') return false;
-      const lowerName = a.name.toLowerCase();
-      if (
-        a.class === 'safe' ||
-        a.class === 'hys' ||
-        a.assetType === 'cash' ||
-        a.assetType === 'deposit' ||
-        a.assetType === 'hys' ||
-        lowerName.includes('high-yield') ||
-        lowerName.includes('time deposit') ||
-        lowerName.includes('personal loan') ||
-        lowerName.includes('savings') ||
-        lowerName.includes('deposit') ||
-        lowerName.includes('loan')
-      ) {
-        return false;
-      }
-      return true;
-    })
-    .map((a, idx) => {
-      const val = a.units * a.currentPricePHP;
-      const weightPct = totalVal > 0 ? (val / totalVal) * 100 : 0;
-      const change = a.change24h || 0;
+  return assetsList.map((a, idx) => {
+    const val = getAssetValuation(a).totalValue;
+    const weightPct = totalVal > 0 ? (val / totalVal) * 100 : 0;
+    const change = a.change24h || 0;
 
-      let phase = 'Consolidation';
-      let sentiment: 'Bullish' | 'Bearish' | 'Neutral' = 'Neutral';
+    let phase = 'Consolidation';
+    let sentiment: 'Bullish' | 'Bearish' | 'Neutral' = 'Neutral';
 
-      if (change >= 2) {
-        phase = 'Markup';
-        sentiment = 'Bullish';
-      } else if (change <= -2) {
-        phase = 'Markdown';
-        sentiment = 'Bearish';
-      }
+    if (a.class === 'safe' || a.assetType === 'cash' || a.assetType === 'deposit' || a.assetType === 'hys') {
+      phase = 'Safe Shield Defense';
+      sentiment = 'Bullish';
+    } else if (a.class === 'liability') {
+      phase = 'Liability & Debt Audit';
+      sentiment = 'Bearish';
+    } else if (a.class === 'physical') {
+      phase = 'Real Estate / Physical Hold';
+      sentiment = 'Neutral';
+    } else if (change >= 2) {
+      phase = 'Markup';
+      sentiment = 'Bullish';
+    } else if (change <= -2) {
+      phase = 'Markdown';
+      sentiment = 'Bearish';
+    }
 
-      const assetClassLabel = a.class ? a.class.toUpperCase() : 'ASSET';
+    const assetClassLabel = a.class ? a.class.toUpperCase() : 'ASSET';
 
-      let logic = '';
-      if (change >= 2) {
-        logic = `${a.name} is in a markup phase with a +${change.toFixed(2)}% price increase in 24 hours, currently valued at ₱${a.currentPricePHP.toLocaleString()}.`;
-      } else if (change <= -2) {
-        logic = `${a.name} experienced a price markdown of ${Math.abs(change).toFixed(2)}% over 24 hours to ₱${a.currentPricePHP.toLocaleString()}. Position monitored for dollar-cost averaging.`;
-      } else {
-        logic = `${a.name} is trading in consolidation at ₱${a.currentPricePHP.toLocaleString()} (${change >= 0 ? '+' : ''}${change.toFixed(2)}% in 24h), accounting for ${weightPct.toFixed(1)}% of total portfolio value.`;
-      }
+    let logic = '';
+    if (a.class === 'safe' || a.assetType === 'cash' || a.assetType === 'deposit' || a.assetType === 'hys') {
+      logic = `${a.name} provides capital preservation with high yield interest (${a.yieldPercent || 5}% p.a.), valued at ₱${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`;
+    } else if (a.class === 'liability') {
+      logic = `${a.name} represents outstanding liability debt of ₱${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} at ${a.yieldPercent || 0}% APR.`;
+    } else if (a.class === 'physical') {
+      logic = `${a.name} is held as a physical asset with total valuation of ₱${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`;
+    } else if (change >= 2) {
+      logic = `${a.name} is in a markup phase with a +${change.toFixed(2)}% price increase in 24 hours, currently valued at ₱${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`;
+    } else if (change <= -2) {
+      logic = `${a.name} experienced a price markdown of ${Math.abs(change).toFixed(2)}% over 24 hours to ₱${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. Position monitored for dollar-cost averaging.`;
+    } else {
+      logic = `${a.name} is trading in consolidation at ₱${a.currentPricePHP.toLocaleString()} (${change >= 0 ? '+' : ''}${change.toFixed(2)}% in 24h), accounting for ${weightPct.toFixed(1)}% of total portfolio value.`;
+    }
 
-      return {
-        id: `c-dyn-${a.key || idx}`,
-        asset: `${a.name} [${assetClassLabel}]`,
-        phase,
-        sentiment,
-        logic
-      };
-    });
+    return {
+      id: `c-dyn-${a.key || idx}`,
+      asset: `${a.name} [${assetClassLabel}]`,
+      phase,
+      sentiment,
+      logic
+    };
+  });
 }
 
 export const INITIAL_DEVALUATION_ITEMS: DevaluationItem[] = [
@@ -490,27 +484,7 @@ export default function MarketCycleAuditTab({
   // Auto-sync Section 1 Cycle Items whenever user adds/edits assets in Risk & Safe Assets
   useEffect(() => {
     if (assets && assets.length > 0) {
-      const activeCycleAssets = assets.filter((a) => {
-        if (a.class === 'liability' || a.class === 'physical' || a.assetType === 'property') return false;
-        const lowerName = a.name.toLowerCase();
-        if (
-          a.class === 'safe' ||
-          a.class === 'hys' ||
-          a.assetType === 'cash' ||
-          a.assetType === 'deposit' ||
-          a.assetType === 'hys' ||
-          lowerName.includes('high-yield') ||
-          lowerName.includes('time deposit') ||
-          lowerName.includes('personal loan') ||
-          lowerName.includes('savings') ||
-          lowerName.includes('deposit') ||
-          lowerName.includes('loan')
-        ) {
-          return false;
-        }
-        return true;
-      });
-      const totalVal = activeCycleAssets.reduce((sum, a) => sum + (a.units * a.currentPricePHP), 0);
+      const totalVal = assets.reduce((sum, a) => sum + getAssetValuation(a).totalValue, 0);
       const generated = buildCycleItemsFromAssets(assets, totalVal);
 
       const genKeyStr = generated.map(g => g.asset).sort().join('|');
