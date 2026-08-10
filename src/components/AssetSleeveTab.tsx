@@ -759,20 +759,20 @@ export default function AssetSleeveTab({
         )}
 
         {activeSubTab === 'risk' && (
-          <div className="bg-white dark:bg-gradient-to-r dark:from-blue-950/40 dark:via-indigo-950/30 dark:to-slate-900/40 border-b border-slate-200 dark:border-blue-500/20 p-4 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs shadow-2xs">
+          <div className="bg-slate-50/90 dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 p-4 sm:p-5 rounded-2xl mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs shadow-2xs transition-colors">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl border border-purple-200 dark:border-purple-500/20 shrink-0">
+              <div className="p-2.5 bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 rounded-xl border border-purple-200 dark:border-purple-500/30 shrink-0">
                 <BarChart2 className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                <h4 className="font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2 flex-wrap">
                   <span>Yahoo Finance® Live Technical Charts & Market Quotations</span>
                   <span className="px-2 py-0.5 bg-purple-600 dark:bg-purple-500 text-white rounded text-[9px] font-mono font-black shadow-2xs">
                     LIVE
                   </span>
                 </h4>
-                <p className="text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">
-                  Click any risk asset below or the <b className="text-slate-900 dark:text-slate-200">Yahoo Finance 📈</b> badge to launch Yahoo Finance® live price quotes, technical analysis, community polls, and breaking news.
+                <p className="text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                  Click any risk asset below or the <b className="text-slate-900 dark:text-white bg-slate-200/70 dark:bg-purple-950/60 border border-slate-300 dark:border-purple-500/30 px-1.5 py-0.5 rounded">Yahoo Finance 📈</b> badge to launch Yahoo Finance® live price quotes, technical analysis, community polls, and breaking news.
                 </p>
               </div>
             </div>

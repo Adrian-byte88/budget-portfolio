@@ -746,18 +746,18 @@ export default function MarketCycleAuditTab({
       </div>
 
       {/* SECTION 1: YAHOO FINANCE® LIVE TECHNICAL ANALYSIS, COMMUNITY POLLS & BREAKING NEWS HUB */}
-      <div id="cycle-audit-section" data-highlight-id="cycle-audit-section" className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-2xl p-6 sm:p-8 shadow-xs">
+      <div id="cycle-audit-section" data-highlight-id="cycle-audit-section" className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
           <div>
-            <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 font-bold text-xs uppercase tracking-wider">
-              <BarChart2 className="w-4 h-4 text-indigo-500" />
+            <div className="flex items-center gap-2 text-purple-700 dark:text-purple-300 font-extrabold text-xs uppercase tracking-wider">
+              <BarChart2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               <span>Yahoo Finance® Live Technical Analysis, Community Polls & Breaking News Hub</span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
               Click any risk asset below to open its live interactive chart, technical indicator dashboard, breaking news feed, and community sentiment poll.
             </p>
           </div>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-500/10 text-purple-600 dark:text-purple-300 rounded-lg text-[10px] font-mono font-bold border border-purple-500/20 shrink-0">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-100 dark:bg-purple-500/20 text-purple-800 dark:text-purple-300 rounded-lg text-[10px] font-mono font-bold border border-purple-200 dark:border-purple-500/30 shrink-0">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span>Real-Time Market Sync Active</span>
           </span>
@@ -774,16 +774,16 @@ export default function MarketCycleAuditTab({
               const logo = isCrypto ? '🪙' : isGold ? '🥇' : '📈';
 
               let phaseLabel = 'Active Holding';
-              let phaseBadge = 'bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300';
+              let phaseBadge = 'bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-300 dark:border dark:border-purple-500/30';
               if (isCrypto) {
                 phaseLabel = 'Markup Phase';
-                phaseBadge = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300';
+                phaseBadge = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border dark:border-emerald-500/30';
               } else if (isGold) {
                 phaseLabel = 'Hardening Phase';
-                phaseBadge = 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300';
+                phaseBadge = 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300 dark:border dark:border-amber-500/30';
               } else {
                 phaseLabel = 'Consolidation';
-                phaseBadge = 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300';
+                phaseBadge = 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300 dark:border dark:border-blue-500/30';
               }
 
               let pollVal = '75% Bullish';
