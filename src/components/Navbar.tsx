@@ -29,6 +29,7 @@ interface NavbarProps {
   onOpenSignIn?: () => void;
   isGuest?: boolean;
   onOpenAdminHQ?: () => void;
+  onOpenPolicyModal?: () => void;
 }
 
 export default function Navbar({
@@ -54,6 +55,7 @@ export default function Navbar({
   onOpenSignIn,
   isGuest = false,
   onOpenAdminHQ,
+  onOpenPolicyModal,
 }: NavbarProps) {
   const [showAlerts, setShowAlerts] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -759,6 +761,19 @@ export default function Navbar({
             <Settings className="w-4 h-4" />
             <span>App Settings & Backups</span>
           </button>
+
+          {onOpenPolicyModal && (
+            <button
+              onClick={() => {
+                onOpenPolicyModal();
+                setMobileMenuOpen(false);
+              }}
+              className="w-full py-2 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl flex items-center justify-center space-x-2 border border-slate-200 dark:border-white/10 transition-all cursor-pointer"
+            >
+              <Shield className="w-4 h-4 text-emerald-500" />
+              <span>Terms & Privacy Policy</span>
+            </button>
+          )}
 
           <button
             onClick={() => {

@@ -34,6 +34,7 @@ import MarketCycleAuditTab, {
   INITIAL_DEPLOYMENT_ITEMS
 } from './components/MarketCycleAuditTab';
 import SettingsModal from './components/SettingsModal';
+import PolicyModal, { POLICY_KEY, POLICY_VERSION } from './components/PolicyModal';
 import PhilippineClock from './components/PhilippineClock';
 import ProPaywallOverlay from './components/ProPaywallOverlay';
 import AdminPortal from './components/admin/AdminPortal';
@@ -294,6 +295,35 @@ export default function App() {
   const [settingsDefaultTab, setSettingsDefaultTab] = useState<'profile' | 'preferences' | 'export'>('profile');
   const [highlightId, setHighlightId] = useState<{type: string, id: string, tab?: string} | null>(null);
   const [toast, setToast] = useState<{ title: string; desc: string; type: 'success' | 'warning' | 'error' } | null>(null);
+
+  // Policy Modal state & acceptance check
+  const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
+  const [policyAcceptedAt, setPolicyAcceptedAt] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(POLICY_KEY);
+    }
+    return null;
+  });
+
+  const handleAcceptPolicy = () => {
+    const now = new Date().toISOString();
+    localStorage.setItem(POLICY_KEY, now);
+    setPolicyAcceptedAt(now);
+    setIsPolicyModalOpen(false);
+
+    if (email) {
+      setDoc(doc(db, "users", email), {
+        policyAcceptedAt: now,
+        policyVersion: POLICY_VERSION
+      }, { merge: true }).catch(console.error);
+    }
+
+    setToast({
+      title: 'Policy Accepted',
+      desc: 'Thank you for agreeing to Budget Portfolio Terms, Privacy Policy & Disclaimers.',
+      type: 'success'
+    });
+  };
   const [popupModal, setPopupModal] = useState<{
     isOpen: boolean;
     type: 'quota' | 'search_grounding' | null;
@@ -822,6 +852,14 @@ export default function App() {
         <PublicLandingPage
           onOpenSignIn={() => setShowSignInModal(true)}
           onExploreGuest={() => setIsGuestMode(true)}
+          onOpenPolicyModal={() => setIsPolicyModalOpen(true)}
+        />
+        <PolicyModal
+          isOpen={isPolicyModalOpen}
+          onClose={() => setIsPolicyModalOpen(false)}
+          onAccept={handleAcceptPolicy}
+          isMandatory={!policyAcceptedAt && isGuestMode}
+          acceptedAt={policyAcceptedAt}
         />
         {showSignInModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
@@ -1665,6 +1703,7 @@ export default function App() {
         onOpenSignIn={() => setShowSignInModal(true)}
         isGuest={!firebaseUser}
         onOpenAdminHQ={() => setIsAdminPortalMode(true)}
+        onOpenPolicyModal={() => setIsPolicyModalOpen(true)}
       />
 
       {/* Sign In Modal Overlay for Guest Mode */}
@@ -1965,6 +2004,16 @@ export default function App() {
         onUpdateSubscriptionTier={handleUpdateSubscriptionTier}
         onOpenGCashModal={() => setIsGCashModalOpen(true)}
         isAdmin={isAdmin}
+        onOpenPolicyModal={() => setIsPolicyModalOpen(true)}
+      />
+
+      {/* Global Policy Modal */}
+      <PolicyModal
+        isOpen={isPolicyModalOpen}
+        onClose={() => setIsPolicyModalOpen(false)}
+        onAccept={handleAcceptPolicy}
+        isMandatory={!policyAcceptedAt && (Boolean(firebaseUser) || isGuestMode)}
+        acceptedAt={policyAcceptedAt}
       />
 
       {/* GCash Payment Verification Modal */}

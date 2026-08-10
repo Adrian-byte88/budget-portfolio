@@ -51,6 +51,7 @@ interface SettingsModalProps {
   onUpdateSubscriptionTier?: (tier: 'free' | 'pro') => void;
   onOpenGCashModal?: () => void;
   isAdmin?: boolean;
+  onOpenPolicyModal?: () => void;
 }
 
 const AVATAR_PRESETS = [
@@ -82,7 +83,8 @@ export default function SettingsModal({
   subscriptionTier = 'free',
   onUpdateSubscriptionTier,
   onOpenGCashModal,
-  isAdmin = false
+  isAdmin = false,
+  onOpenPolicyModal
 }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<'profile' | 'preferences' | 'export' | 'admin_users'>(defaultTab as any);
 
@@ -371,6 +373,35 @@ export default function SettingsModal({
                       <span>Firebase Auth 2FA Enforced</span>
                     </div>
                   </div>
+                </div>
+
+                {/* Legal & Terms Policy Card */}
+                <div className="p-4 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-white/5 rounded-2xl flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl shrink-0">
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>Terms of Service & Privacy Policy</span>
+                        <span className="text-[9px] font-mono px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 rounded font-bold">
+                          v1.0 Agreed
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                        View official platform user agreement, privacy protection standards, and financial disclaimers.
+                      </p>
+                    </div>
+                  </div>
+                  {onOpenPolicyModal && (
+                    <button
+                      type="button"
+                      onClick={onOpenPolicyModal}
+                      className="px-3 py-1.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-white/10 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer shadow-2xs"
+                    >
+                      View Policies
+                    </button>
+                  )}
                 </div>
               </div>
 

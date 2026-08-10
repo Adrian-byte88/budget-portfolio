@@ -26,9 +26,10 @@ import SignInPanel from './SignInPanel';
 interface PublicLandingPageProps {
   onOpenSignIn: () => void;
   onExploreGuest: () => void;
+  onOpenPolicyModal?: () => void;
 }
 
-export default function PublicLandingPage({ onOpenSignIn, onExploreGuest }: PublicLandingPageProps) {
+export default function PublicLandingPage({ onOpenSignIn, onExploreGuest, onOpenPolicyModal }: PublicLandingPageProps) {
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
 
   const handleOpenSignIn = () => {
@@ -342,7 +343,32 @@ export default function PublicLandingPage({ onOpenSignIn, onExploreGuest }: Publ
               <p className="text-[10px] text-slate-500">Institutional Financial Command Center</p>
             </div>
           </div>
-          <p className="text-center md:text-right max-w-md text-[11px] leading-relaxed text-slate-500 font-medium">
+
+          {/* Policy Links */}
+          <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-bold text-slate-600">
+            <button
+              onClick={onOpenPolicyModal}
+              className="hover:text-blue-600 transition-colors cursor-pointer"
+            >
+              Terms of Service
+            </button>
+            <span className="text-slate-300">•</span>
+            <button
+              onClick={onOpenPolicyModal}
+              className="hover:text-blue-600 transition-colors cursor-pointer"
+            >
+              Privacy Policy
+            </button>
+            <span className="text-slate-300">•</span>
+            <button
+              onClick={onOpenPolicyModal}
+              className="hover:text-blue-600 transition-colors cursor-pointer"
+            >
+              Financial Disclaimer
+            </button>
+          </div>
+
+          <p className="text-center md:text-right max-w-xs text-[11px] leading-relaxed text-slate-500 font-medium">
             Built with isolated authentication & encrypted Firestore data transport.
           </p>
         </div>
