@@ -278,11 +278,78 @@ export default function SummaryDashboard({
   const currentSafeRatio = financialNetWorth > 0 ? (totalSafe / financialNetWorth) * 100 : 0;
   const isSafeShieldViolated = currentSafeRatio < targetAllocation;
 
-  // Asset class pie chart data for Pro (excluding physical assets)
-  const assetPieData = [
-    { name: 'Safe Shield', value: totalSafe, color: '#10b981' },
-    { name: 'Risk Sleeve', value: totalRisk, color: '#6366f1' },
+  // Transferred Portfolio Asset Allocation & Target Weights calculations
+  const totalPortfolioValue = totalSafe + totalRisk;
+  const safeWeight = totalPortfolioValue > 0 ? (totalSafe / totalPortfolioValue) * 100 : 0;
+  const riskWeight = totalPortfolioValue > 0 ? (totalRisk / totalPortfolioValue) * 100 : 0;
+
+  const targetSafe = targetAllocation;
+  const targetRisk = 100 - targetSafe;
+
+  const targetCryptoGoldOfTotal = 9.38;
+  const targetReitOfTotal = 3.75;
+  const targetStockOfTotal = 1.87;
+
+  const riskAssets = assets.filter((a) => a.class === 'risk');
+  const cryptoGoldAssets = riskAssets.filter(
+    (a) => a.assetType === 'crypto' || a.assetType === 'commodity' || a.key === 'btc' || a.key === 'paxg'
+  );
+  const cryptoGoldValue = cryptoGoldAssets.reduce((sum, a) => sum + (a.units * a.currentPricePHP), 0);
+  const cryptoGoldWeightOfTotal = totalPortfolioValue > 0 ? (cryptoGoldValue / totalPortfolioValue) * 100 : 0;
+
+  const reitAssets = riskAssets.filter(
+    (a) => a.key === 'manulife' || a.key === 'rcr' || a.name.toLowerCase().includes('reit')
+  );
+  const reitValue = reitAssets.reduce((sum, a) => sum + (a.units * a.currentPricePHP), 0);
+  const reitWeightOfTotal = totalPortfolioValue > 0 ? (reitValue / totalPortfolioValue) * 100 : 0;
+
+  const stockAssets = riskAssets.filter(
+    (a) => (a.assetType === 'equity' || a.key === 'scc' || a.key === 'spc') && !reitAssets.some((r) => r.key === a.key)
+  );
+  const stockValue = stockAssets.reduce((sum, a) => sum + (a.units * a.currentPricePHP), 0);
+  const stockWeightOfTotal = totalPortfolioValue > 0 ? (stockValue / totalPortfolioValue) * 100 : 0;
+
+  const targetPortfolioSize = targetRisk > 0 ? totalRisk / (targetRisk / 100) : 0;
+  const targetSafeShieldValue = targetPortfolioSize * (targetSafe / 100);
+  const institutionalFundingGap = Math.max(0, targetSafeShieldValue - totalSafe);
+
+  const sectorData = [
+    {
+      sector: 'Fixed Income / Cash',
+      currentValue: totalSafe,
+      portfolioPct: safeWeight,
+      color: '#3b82f6',
+    },
+    {
+      sector: 'Commodities (Gold)',
+      currentValue: assets.filter((a) => a.key === 'paxg' || a.assetType === 'commodity').reduce((sum, a) => sum + (a.units * a.currentPricePHP), 0),
+      portfolioPct: totalPortfolioValue > 0 ? (assets.filter((a) => a.key === 'paxg' || a.assetType === 'commodity').reduce((sum, a) => sum + (a.units * a.currentPricePHP), 0) / totalPortfolioValue) * 100 : 0,
+      color: '#eab308',
+    },
+    {
+      sector: 'Real Estate (REITs)',
+      currentValue: reitValue,
+      portfolioPct: reitWeightOfTotal,
+      color: '#10b981',
+    },
+    {
+      sector: 'Digital Assets',
+      currentValue: assets.filter((a) => a.key === 'btc' || a.assetType === 'crypto').reduce((sum, a) => sum + (a.units * a.currentPricePHP), 0),
+      portfolioPct: totalPortfolioValue > 0 ? (assets.filter((a) => a.key === 'btc' || a.assetType === 'crypto').reduce((sum, a) => sum + (a.units * a.currentPricePHP), 0) / totalPortfolioValue) * 100 : 0,
+      color: '#6366f1',
+    },
+    {
+      sector: 'Energy / Utilities',
+      currentValue: stockValue,
+      portfolioPct: stockWeightOfTotal,
+      color: '#f97316',
+    },
   ];
+
+  const pieChartData = sectorData.map((s) => ({
+    name: s.sector,
+    value: s.currentValue,
+  }));
 
   // Cash burn runway
   const savedLivingExpenses = typeof window !== 'undefined' ? localStorage.getItem('monthly_living_expenses') : null;
@@ -347,32 +414,7 @@ export default function SummaryDashboard({
 
       {/* Target allocation visual banners and warning triggers (Pro / Admin Only) */}
       {isPro && (
-        <div id="net-worth-summary" data-highlight-id="net-worth-summary" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-xl p-5 relative overflow-hidden transition-all duration-300 hover:-translate-y-0.5 shadow-xs group">
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mb-1.5">Asset Net Worth</p>
-            <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-              ₱{grandTotalNetWorth.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </h3>
-            <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-2.5 font-bold uppercase tracking-widest bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-md w-max flex items-center">
-              <TrendingUp className="w-3.5 h-3.5 mr-1" />
-              Liquid + Physical Book
-            </p>
-          </div>
-
-          <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-xl p-5 relative overflow-hidden transition-all duration-300 hover:-translate-y-0.5 shadow-xs group">
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mb-1.5">Safe Shield Ratio</p>
-            <div className="flex items-baseline space-x-2">
-              <span className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{currentSafeRatio.toFixed(2)}%</span>
-              <span className="text-xs text-slate-500">/ {targetAllocation}% target</span>
-            </div>
-            <div className="w-full bg-slate-100 dark:bg-slate-950 rounded-full h-1.5 mt-3.5 overflow-hidden">
-              <div
-                className={`h-full transition-all duration-700 ${isSafeShieldViolated ? 'bg-rose-500' : 'bg-emerald-500'}`}
-                style={{ width: `${Math.min(currentSafeRatio, 100)}%` }}
-              />
-            </div>
-          </div>
-
+        <div id="net-worth-summary" data-highlight-id="net-worth-summary" className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-xl p-5 relative overflow-hidden transition-all duration-300 hover:-translate-y-0.5 shadow-xs group">
             <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mb-1.5">Cumulative Cash Burn Rate</p>
             <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
@@ -408,8 +450,8 @@ export default function SummaryDashboard({
 
       {/* Main Historical Asset performance analysis graphs (Pro / Admin Only) */}
       {isPro && (
-        <div id="asset-allocation-section" data-highlight-id="asset-allocation-section" className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-xl p-6 sm:p-8 flex flex-col justify-between shadow-xs">
+        <div className="space-y-8">
+          <div id="asset-allocation-section" data-highlight-id="asset-allocation-section" className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-xl p-6 sm:p-8 flex flex-col justify-between shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-6 gap-4">
               <div>
                 <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center space-x-2">
@@ -460,60 +502,102 @@ export default function SummaryDashboard({
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-xl p-6 sm:p-8 flex flex-col justify-between shadow-xs">
-            <div>
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-1">
-                Asset Class Structuring
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">Proportional distribution ratios across liquid, volatile, and fixed indexes</p>
-            </div>
+          {/* Transferred Asset Allocation Mix & Target vs Current Target Weights */}
+          <div id="portfolio-charts-section" data-highlight-id="portfolio-charts-section" className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Allocation Pizza Pie */}
+            <div className="lg:col-span-5 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-xl p-6 shadow-xs flex flex-col justify-between">
+              <div>
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Asset Allocation Mix</h3>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400">Visualization of current sector book valuation</p>
+              </div>
 
-            <div className="relative h-48 w-full min-w-0 flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                <PieChart>
-                  <Pie
-                    data={assetPieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={65}
-                    outerRadius={85}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {assetPieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(val: number) => `₱${val.toLocaleString()}`}
-                    contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="absolute flex flex-col items-center">
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Liquid Worth</span>
-                <span className="text-lg font-bold text-slate-900 dark:text-white">
-                  ₱{(totalSafe + totalRisk).toLocaleString('en-US', { maximumFractionDigits: 0 })}
-                </span>
+              <div className="h-64 w-full min-w-0 relative flex items-center justify-center my-4">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                  <PieChart>
+                    <Pie
+                      data={pieChartData}
+                      innerRadius={65}
+                      outerRadius={95}
+                      paddingAngle={3}
+                      dataKey="value"
+                    >
+                      {sectorData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(val: number) => `₱${val.toLocaleString()}`}
+                      contentStyle={{
+                        backgroundColor: '#0f172a',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '11px',
+                        color: '#fff',
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute text-center flex flex-col">
+                  <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Total Active</span>
+                  <span className="text-lg font-black font-mono text-slate-900 dark:text-white">
+                    ₱{totalPortfolioValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-2 border-t border-slate-100 dark:border-white/5">
+                {sectorData.map((s) => (
+                  <div key={s.sector} className="flex items-center space-x-2 text-[10px]">
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+                    <span className="text-slate-500 dark:text-slate-400 truncate max-w-[120px]">{s.sector}</span>
+                    <span className="font-mono font-bold ml-auto">{s.portfolioPct.toFixed(1)}%</span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <div className="space-y-2 mt-6 pt-4 border-t border-slate-100 dark:border-white/5">
-              {assetPieData.map((el) => {
-                const ratio = financialNetWorth > 0 ? (el.value / financialNetWorth) * 100 : 0;
-                return (
-                  <div key={el.name} className="flex items-center justify-between text-xs">
-                    <div className="flex items-center space-x-2.5">
-                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: el.color }} />
-                      <span className="font-semibold text-slate-600 dark:text-slate-300">{el.name}</span>
-                    </div>
-                    <div className="flex items-center space-x-3 font-bold">
-                      <span className="text-slate-500 dark:text-slate-400">₱{el.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                      <span className="text-slate-900 dark:text-slate-200 bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded-md border border-slate-200 dark:border-white/5 text-[10px]">{ratio.toFixed(1)}%</span>
-                    </div>
-                  </div>
-                );
-              })}
+            {/* Visual Bar Comparison */}
+            <div className="lg:col-span-7 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-xl p-6 shadow-xs flex flex-col justify-between">
+              <div>
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Target vs Current Target Weights</h3>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400">Discrepancy audit in Core Tiers & Pillars</p>
+              </div>
+
+              <div className="h-64 w-full min-w-0 my-4">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                  <BarChart
+                    data={[
+                      { name: 'Safe Shield', Current: Number(safeWeight.toFixed(2)), Target: targetSafe },
+                      { name: 'Risk: Crypto/Gold', Current: Number(cryptoGoldWeightOfTotal.toFixed(2)), Target: targetCryptoGoldOfTotal },
+                      { name: 'Risk: REITs', Current: Number(reitWeightOfTotal.toFixed(2)), Target: targetReitOfTotal },
+                      { name: 'Risk: Stocks', Current: Number(stockWeightOfTotal.toFixed(2)), Target: targetStockOfTotal },
+                    ]}
+                    margin={{ top: 20, right: 10, left: -20, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:hidden" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1e293b" className="hidden dark:block" />
+                    <XAxis dataKey="name" stroke="#94a3b8" fontSize={9} />
+                    <YAxis stroke="#94a3b8" fontSize={9} unit="%" />
+                    <Tooltip
+                      formatter={(val: number) => `${val}%`}
+                      contentStyle={{
+                        backgroundColor: '#0f172a',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '11px',
+                        color: '#fff',
+                      }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: '10px' }} />
+                    <Bar dataKey="Current" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Target" fill="#94a3b8" opacity={0.4} radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/5 rounded-lg text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">
+                💡 <b>Strategic Benchmark:</b> Your objective is to expand the Safe Shield block dynamically until the <b>₱{institutionalFundingGap.toLocaleString(undefined, { maximumFractionDigits: 0 })}</b> gap is dissolved. Focus entirely on Safe Cash Assets.
+              </div>
             </div>
           </div>
         </div>

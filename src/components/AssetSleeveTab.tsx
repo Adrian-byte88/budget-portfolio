@@ -772,7 +772,7 @@ export default function AssetSleeveTab({
                   </span>
                 </h4>
                 <p className="text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">
-                  Click any asset below or the <b className="text-slate-900 dark:text-slate-200">Chart 📈</b> button to launch Yahoo Finance® live price quotes, technical analysis, community polls, and breaking news.
+                  Click any risk asset below or the <b className="text-slate-900 dark:text-slate-200">Yahoo Finance 📈</b> badge to launch Yahoo Finance® live price quotes, technical analysis, community polls, and breaking news.
                 </p>
               </div>
             </div>
@@ -823,16 +823,22 @@ export default function AssetSleeveTab({
                     <td className="p-5 pl-8">
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <button
-                            onClick={() => setSelectedTradingViewAsset(asset)}
-                            className="font-bold text-slate-900 dark:text-slate-200 text-xs hover:text-purple-600 dark:hover:text-purple-400 transition-colors text-left cursor-pointer flex items-center gap-1.5 group"
-                            title="Click to view Yahoo Finance® Live Chart, Technical Analysis & Quotations"
-                          >
-                            <span>{asset.name}</span>
-                            <span className="px-1.5 py-0.5 bg-purple-500/10 group-hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30 rounded text-[9px] font-extrabold flex items-center gap-1 transition-all shrink-0">
-                              <span>Yahoo Finance 📈</span>
+                          {activeSubTab === 'risk' ? (
+                            <button
+                              onClick={() => setSelectedTradingViewAsset(asset)}
+                              className="font-bold text-slate-900 dark:text-slate-200 text-xs hover:text-purple-600 dark:hover:text-purple-400 transition-colors text-left cursor-pointer flex items-center gap-1.5 group"
+                              title="Click to view Yahoo Finance® Live Chart, Technical Analysis & Quotations"
+                            >
+                              <span>{asset.name}</span>
+                              <span className="px-1.5 py-0.5 bg-purple-500/10 group-hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30 rounded text-[9px] font-extrabold flex items-center gap-1 transition-all shrink-0">
+                                <span>Yahoo Finance 📈</span>
+                              </span>
+                            </button>
+                          ) : (
+                            <span className="font-bold text-slate-900 dark:text-slate-200 text-xs">
+                              {asset.name}
                             </span>
-                          </button>
+                          )}
                         </div>
                         <span className="text-[10px] text-slate-400 mt-0.5 capitalize">{asset.assetType} index</span>
                       </div>
@@ -1033,13 +1039,7 @@ export default function AssetSleeveTab({
                           </button>
                         )}
 
-                        <button
-                          onClick={() => setSelectedTradingViewAsset(asset)}
-                          className="px-2.5 py-1.5 bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/50 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 text-[10px] font-bold uppercase tracking-wider rounded-lg border border-purple-200 dark:border-purple-800/40 transition-all shrink-0 cursor-pointer"
-                          title="Open Yahoo Finance Live Chart"
-                        >
-                          <span>Chart 📈</span>
-                        </button>
+                        {/* Chart button removed as requested */}
 
                         <button
                           onClick={() => {

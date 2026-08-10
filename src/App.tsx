@@ -329,7 +329,7 @@ export default function App() {
     {
       id: 'welcome-msg',
       sender: 'assistant',
-      text: "Hello! I am Wealth Vault's AI Financial Assistant, powered by Gemini. I can assist you with your portfolio analysis or perform actions. Try saying: 'Add ₱15,000 to HYS', 'Log spent ₱1,200 on dining', or ask me about market sentiments!"
+      text: "Hello! I am Ask AI, your AI Financial Assistant powered by Gemini. I can assist you with your portfolio analysis or perform actions. Try saying: 'Add ₱15,000 to HYS', 'Log spent ₱1,200 on dining', or ask me about market sentiments!"
     }
   ]);
 
@@ -1646,6 +1646,8 @@ export default function App() {
         onToggleDarkMode={() => setDarkMode(!darkMode)}
         alerts={alerts}
         onClearAlerts={() => setAlerts([])}
+        onAddAlert={handleAddAlert}
+        onDeleteAlert={handleDeleteAlert}
         assets={assets}
         expenses={expenses}
         goals={goals}
@@ -2090,7 +2092,7 @@ export default function App() {
                 type="text"
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Ask or command Wealth Vault..."
+                placeholder="Ask AI..."
                 className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500 outline-hidden text-slate-800 dark:text-slate-200 font-medium"
               />
               <button
@@ -2107,7 +2109,7 @@ export default function App() {
             className="bg-gradient-to-r from-slate-900 to-indigo-950 text-white px-4 py-3 rounded-full shadow-2xl hover:shadow-indigo-500/10 border border-white/15 flex items-center gap-2.5 cursor-pointer transition-all hover:-translate-y-0.5 select-none"
           >
             <Sparkles className="w-4 h-4 text-indigo-400 animate-pulse" />
-            <span className="text-xs font-black uppercase tracking-wider">Ask Wealth Vault AI</span>
+            <span className="text-xs font-black uppercase tracking-wider">Ask AI</span>
             <MessageSquare className="w-4 h-4 text-slate-300" />
           </button>
         )}

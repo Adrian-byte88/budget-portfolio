@@ -35,13 +35,13 @@ const STATIC_INDEX: SearchItem[] = [
   { type: 'Tab', name: 'Settings & Export Engine', id: 'settings-export', targetTab: 'settings', subtitle: 'Profile, Theme & Excel/JSON Backup', keywords: 'settings profile dark mode theme backup export excel json csv restore' },
 
   // SECTIONS - SUMMARY DASHBOARD
-  { type: 'Section', name: 'Net Worth & Safe Shield KPI Cards', id: 'net-worth-summary', targetTab: 'dashboard', subtitle: 'Dashboard Section', keywords: 'net worth total assets liquid reserves shield ratio cash burn rate' },
-  { type: 'Section', name: 'Historical Allocation Analysis Chart', id: 'asset-allocation-section', targetTab: 'dashboard', subtitle: 'Dashboard Section', keywords: 'pie chart doughnut allocation breakdown distribution safe risk' },
+  { type: 'Section', name: 'Cash Burn & Shield Hardening KPI Cards', id: 'net-worth-summary', targetTab: 'dashboard', subtitle: 'Dashboard Section', keywords: 'cash burn rate runway shield hardening alert summary' },
+  { type: 'Section', name: 'Historical Net Worth Curves Chart', id: 'asset-allocation-section', targetTab: 'dashboard', subtitle: 'Dashboard Section', keywords: 'line chart valuation trends net worth curves' },
+  { type: 'Section', name: 'Asset Allocation Mix & Target vs Current Weights', id: 'portfolio-charts-section', targetTab: 'dashboard', subtitle: 'Dashboard Section', keywords: 'asset allocation mix target vs current weights pie chart bar chart breakdown' },
   { type: 'Section', name: 'Monthly Spend Overview & Outflow Timeline', id: 'monthly-spend-overview', targetTab: 'dashboard', subtitle: 'Dashboard Section', keywords: 'bar chart monthly spend expenditure trends mom change peak spend timeline' },
   { type: 'Section', name: 'Category Budget Limits & Progress Tracker', id: 'category-limits-section', targetTab: 'dashboard', subtitle: 'Dashboard Section', keywords: 'budget caps spending thresholds violation tracker limits progress alarms' },
 
   // SECTIONS - PORTFOLIO
-  { type: 'Section', name: 'Portfolio Asset Allocation Pie Charts', id: 'portfolio-charts-section', targetTab: 'portfolio', subtitle: 'Portfolio Section', keywords: 'safe vs risk portfolio share chart distribution doughnut' },
   { type: 'Section', name: 'Asset Class Breakdown Table & Yields', id: 'portfolio-table-section', targetTab: 'portfolio', subtitle: 'Portfolio Section', keywords: 'holdings table yield php value portfolio percentage return' },
   { type: 'Section', name: 'Target Allocation Slider & Rebalancing Shield', id: 'portfolio-allocation-section', targetTab: 'portfolio', subtitle: 'Portfolio Section', keywords: 'target allocation risk dial safe shield rebalance strategy slider' },
 
@@ -49,7 +49,7 @@ const STATIC_INDEX: SearchItem[] = [
   { type: 'Section', name: 'Safe Asset Sleeve (Maya Bank HYS, TBills, Digital Banks)', id: 'safe-assets-section', targetTab: 'assets', subtitle: 'Assets Section', keywords: 'maya bank hys high yield savings treasury bills time deposit safe sleeve' },
   { type: 'Section', name: 'Risk Asset Sleeve (Crypto, PSEi, Global Equities)', id: 'risk-assets-section', targetTab: 'assets', subtitle: 'Assets Section', keywords: 'bitcoin stocks psei s&p500 global equities crypto risk capital equity' },
   { type: 'Section', name: 'Physical Assets & Illiquid Real Estate', id: 'physical-assets-section', targetTab: 'assets', subtitle: 'Assets Section', keywords: 'condominium lot real estate property gold vehicle physical illiquid' },
-  { type: 'Section', name: 'Market Price Alert Alarms', id: 'market-alerts-section', targetTab: 'audit', subtitle: 'Cycle Audit Section', keywords: 'price alarms alert thresholds notifications upper bound lower bound trigger' },
+  { type: 'Section', name: 'Personal Price Alerts & 1-Click Guardrails', id: 'personal-price-alerts', targetTab: 'assets', subtitle: 'Header Bell Menu', keywords: 'price alarms alert thresholds notifications upper bound lower bound trigger presets guardrails bell' },
 
   // SECTIONS - EXPENSE LEDGER
   { type: 'Section', name: 'Expense Ledger Outflow Table', id: 'expense-table-section', targetTab: 'ledger', subtitle: 'Ledger Section', keywords: 'expense list transactions outflow table delete adjust log' },

@@ -504,7 +504,7 @@ export default function MarketCycleAuditTab({
         await onFetchLiveMarketPrices();
       }
     } catch (err) {
-      console.error('Failed to fetch live prices during Zero-AI sync:', err);
+      console.error('Failed to fetch live prices during sync:', err);
     } finally {
       setIsUpdatingAI(false);
     }
@@ -593,7 +593,7 @@ export default function MarketCycleAuditTab({
     const newAuditChanges: AuditChangeItem[] = [
       {
         id: `ac-${now.getTime()}-1`,
-        title: `Zero-AI Engine Audit Sync (${formattedShortNow})`,
+        title: `Algorithmic Engine Audit Sync (${formattedShortNow})`,
         description: `Automated audit refreshed on ${formattedNowDate}: USD/PHP spot at ₱${usdRate.toFixed(2)}, BTC at ₱${(btcAsset?.currentPricePHP || 0).toLocaleString()}, Safe Shield at ${safePct.toFixed(1)}% / Risk Sleeve at ${riskPct.toFixed(1)}%.`
       },
       {
@@ -643,7 +643,7 @@ export default function MarketCycleAuditTab({
           onAddAlert({
             asset: 'Bitcoin (BTC)',
             type: btcChange >= 5 ? 'up' : 'down',
-            message: `⚡ Zero-AI Rule Engine: BTC 24h swing threshold breached (${btcChange >= 0 ? '+' : ''}${btcChange.toFixed(2)}%). Spot ₱${(btcAsset?.currentPricePHP || 5200000).toLocaleString()}.`,
+            message: `⚡ Algorithmic Rule Engine: BTC 24h swing threshold breached (${btcChange >= 0 ? '+' : ''}${btcChange.toFixed(2)}%). Spot ₱${(btcAsset?.currentPricePHP || 5200000).toLocaleString()}.`,
             thresholdPercentage: 5.0
           });
         }
@@ -656,7 +656,7 @@ export default function MarketCycleAuditTab({
           onAddAlert({
             asset: 'USD / PHP FX',
             type: 'volatility',
-            message: `⚡ Zero-AI Rule Engine: High FX volatility threshold breached (₱${usdRate.toFixed(2)} ≥ ₱62.50).`,
+            message: `⚡ Algorithmic Rule Engine: High FX volatility threshold breached (₱${usdRate.toFixed(2)} ≥ ₱62.50).`,
             thresholdPercentage: 2.0
           });
         }
@@ -669,7 +669,7 @@ export default function MarketCycleAuditTab({
           onAddAlert({
             asset: 'Portfolio Safe Shield',
             type: 'down',
-            message: `⚡ Zero-AI Rule Engine: Safe Shield capital is ₱${totalSafeVal.toLocaleString()} (${safePct.toFixed(1)}% weight). CRITICAL: Below 60% safety baseline threshold!`,
+            message: `⚡ Algorithmic Rule Engine: Safe Shield capital is ₱${totalSafeVal.toLocaleString()} (${safePct.toFixed(1)}% weight). CRITICAL: Below 60% safety baseline threshold!`,
             thresholdPercentage: 60.0
           });
         }
@@ -695,7 +695,7 @@ export default function MarketCycleAuditTab({
         newBudgetCap
       );
     } else {
-      triggerLocalToast('⚡ Zero-AI Rule Engine executed & saved locally!', 'success');
+      triggerLocalToast('⚡ Algorithmic Rule Engine executed & saved locally!', 'success');
     }
   };
 
@@ -732,7 +732,7 @@ export default function MarketCycleAuditTab({
             onClick={handleAlgorithmicDataRefreshAndSync}
             disabled={isUpdatingAI}
             className="px-5 py-3 bg-gradient-to-r from-emerald-600 to-indigo-600 hover:from-emerald-700 hover:to-indigo-700 text-white rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all cursor-pointer active:scale-95 disabled:opacity-60"
-            title="Recalculate all 4 Cycle Audit sections using live deterministic math formulas and sync directly to cloud database"
+            title="Recalculate Cycle Audit sections using live deterministic math formulas and sync directly to cloud database"
           >
             {isUpdatingAI ? (
               <RefreshCw className="w-4 h-4 text-amber-300 animate-spin" />
@@ -740,7 +740,7 @@ export default function MarketCycleAuditTab({
               <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
             )}
             <CloudUpload className="w-4 h-4" />
-            <span>{isUpdatingAI ? 'Fetching Internet Prices...' : '⚡ Run Zero-AI Engine & Sync to Database'}</span>
+            <span>{isUpdatingAI ? 'Fetching Internet Prices...' : '⚡ Run Engine & Sync to Database'}</span>
           </button>
         </div>
       </div>
@@ -1048,176 +1048,13 @@ export default function MarketCycleAuditTab({
         </div>
       </div>
 
-      {/* SECTION 3: WHAT CHANGED SINCE THE LAST AUDIT (MAXIMUM OF 10 UPDATES) */}
-      <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-2xl p-6 sm:p-8 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
-              <Info className="w-4 h-4 text-blue-600" />
-              <span>
-                3. What Changed Since The Last Audit ({auditStartDate} → {auditEndDate})
-              </span>
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Strict audit log tracking key balance adjustments, rate changes, and portfolio structural shifts (Maximum of 10 updates)
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {isEditingAudit && (
-              <>
-                <button
-                  disabled={auditChanges.length >= 10}
-                  onClick={() => {
-                    if (auditChanges.length < 10) {
-                      const newItem: AuditChangeItem = {
-                        id: `ac-${Date.now()}`,
-                        title: 'New Update Title',
-                        description: 'Describe what changed since the last financial audit.'
-                      };
-                      setAuditChanges([...auditChanges, newItem]);
-                    }
-                  }}
-                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Add Update ({auditChanges.length}/10)
-                </button>
-                <button
-                  onClick={() => {
-                    if (window.confirm('Reset audit changes list to default updates?')) {
-                      setAuditChanges(INITIAL_AUDIT_CHANGES);
-                    }
-                  }}
-                  className="px-3 py-1.5 border border-slate-200 dark:border-white/10 text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" /> Reset
-                </button>
-              </>
-            )}
-            <button
-              onClick={() => setIsEditingAudit(!isEditingAudit)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors ${
-                isEditingAudit 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200'
-              }`}
-            >
-              {isEditingAudit ? <Check className="w-3.5 h-3.5" /> : <Edit2 className="w-3.5 h-3.5" />}
-              <span>{isEditingAudit ? 'Done' : 'Edit Updates'}</span>
-            </button>
-          </div>
-        </div>
-
-        {(() => {
-          const col1Count = Math.max(1, Math.ceil(auditChanges.length / 2));
-          const col1Items = auditChanges.slice(0, col1Count);
-          const col2Items = auditChanges.slice(col1Count);
-
-          return (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              <div className="space-y-4">
-                {col1Items.map((item, idx) => (
-                  <div key={item.id} className="p-4 bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/60 dark:border-white/5 rounded-xl flex items-start space-x-3 group">
-                    <span className="w-5 h-5 rounded-full bg-blue-600/10 text-blue-600 dark:text-blue-400 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
-                      {idx + 1}
-                    </span>
-                    <div className="flex-1">
-                      {isEditingAudit ? (
-                        <div className="space-y-1.5 w-full">
-                          <input
-                            type="text"
-                            value={item.title}
-                            onChange={(e) => {
-                              setAuditChanges(prev => prev.map(a => a.id === item.id ? { ...a, title: e.target.value } : a));
-                            }}
-                            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded px-2.5 py-1 text-xs font-bold w-full"
-                          />
-                          <textarea
-                            value={item.description}
-                            onChange={(e) => {
-                              setAuditChanges(prev => prev.map(a => a.id === item.id ? { ...a, description: e.target.value } : a));
-                            }}
-                            rows={2}
-                            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded px-2.5 py-1 text-xs w-full"
-                          />
-                        </div>
-                      ) : (
-                        <p>
-                          <strong className="font-bold text-slate-900 dark:text-white">{item.title}:</strong> {item.description}
-                        </p>
-                      )}
-                    </div>
-                    {isEditingAudit && (
-                      <button
-                        onClick={() => {
-                          setAuditChanges(prev => prev.filter(a => a.id !== item.id));
-                        }}
-                        className="p-1 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded shrink-0 self-center cursor-pointer"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              <div className="space-y-4">
-                {col2Items.map((item, idx) => (
-                  <div key={item.id} className="p-4 bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/60 dark:border-white/5 rounded-xl flex items-start space-x-3 group">
-                    <span className="w-5 h-5 rounded-full bg-blue-600/10 text-blue-600 dark:text-blue-400 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
-                      {col1Count + idx + 1}
-                    </span>
-                    <div className="flex-1">
-                      {isEditingAudit ? (
-                        <div className="space-y-1.5 w-full">
-                          <input
-                            type="text"
-                            value={item.title}
-                            onChange={(e) => {
-                              setAuditChanges(prev => prev.map(a => a.id === item.id ? { ...a, title: e.target.value } : a));
-                            }}
-                            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded px-2.5 py-1 text-xs font-bold w-full"
-                          />
-                          <textarea
-                            value={item.description}
-                            onChange={(e) => {
-                              setAuditChanges(prev => prev.map(a => a.id === item.id ? { ...a, description: e.target.value } : a));
-                            }}
-                            rows={2}
-                            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded px-2.5 py-1 text-xs w-full"
-                          />
-                        </div>
-                      ) : (
-                        <p>
-                          <strong className="font-bold text-slate-900 dark:text-white">{item.title}:</strong> {item.description}
-                        </p>
-                      )}
-                    </div>
-                    {isEditingAudit && (
-                      <button
-                        onClick={() => {
-                          setAuditChanges(prev => prev.filter(a => a.id !== item.id));
-                        }}
-                        className="p-1 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded shrink-0 self-center cursor-pointer"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })()}
-      </div>
-
-      {/* SECTION 4: CAPITAL DEPLOYMENT PLAN */}
+      {/* SECTION 3: CAPITAL DEPLOYMENT PLAN */}
       <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-2xl p-6 sm:p-8 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
               <Coins className="w-4 h-4 text-amber-500" />
-              <span>4. Strategic Capital Deployment Execution Plan</span>
+              <span>3. Strategic Capital Deployment Execution Plan</span>
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Tactical roadmap and execution controls for cash surplus allocations
@@ -1385,178 +1222,6 @@ export default function MarketCycleAuditTab({
               </div>
             );
           })}
-        </div>
-      </div>
-
-      {/* SECTION 5: CUSTOM PRICE-DROP & VOLATILITY ALERT TRIGGERS (MAX 10 UPDATES PER WEEK) */}
-      <div id="alert-triggers" className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-2xl p-6 sm:p-8 shadow-xs space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-white/10 pb-4">
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
-              <Bell className="w-4 h-4 text-blue-600" />
-              <span>5. Custom Price-Drop & Volatility Alert Triggers</span>
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-              Define custom percentage threshold triggers for specific assets or portfolio-wide indices. Evaluated deterministically by the Zero-AI Rule Engine with real-time notifications (Maximum of 10 updates per week).
-            </p>
-          </div>
-          <button
-            onClick={() => setShowAlertForm(!showAlertForm)}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center space-x-1.5 transition-all shadow-xs shrink-0 cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{showAlertForm ? 'Close Form' : 'New Trigger Rule'}</span>
-          </button>
-        </div>
-
-        {showAlertForm && (
-          <form onSubmit={handleAlertSubmit} className="bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-white/10 p-5 rounded-xl space-y-4 animate-slide-down">
-            <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Configure Custom Trigger Threshold</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1.5">Target Asset</label>
-                <select
-                  value={alertAssetKey}
-                  onChange={(e) => {
-                    setAlertAssetKey(e.target.value);
-                    const name = e.target.value === 'all' ? 'Portfolio Wide' : (assets.find(a => a.key === e.target.value)?.name || e.target.value);
-                    if (alertType === 'down') setAlertMessage(`${name} price drop exceeds ${alertThreshold}% threshold`);
-                    else if (alertType === 'volatility') setAlertMessage(`${name} volatility spike exceeds ±${alertThreshold}%`);
-                    else setAlertMessage(`${name} price surge exceeds +${alertThreshold}%`);
-                  }}
-                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">🌐 All Assets / Portfolio Wide</option>
-                  {assets.map((a) => (
-                    <option key={a.key} value={a.key}>{a.name} ({a.platform})</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1.5">Trigger Condition Type</label>
-                <select
-                  value={alertType}
-                  onChange={(e) => {
-                    const type = e.target.value as any;
-                    setAlertType(type);
-                    const name = alertAssetKey === 'all' ? 'Portfolio Wide' : (assets.find(a => a.key === alertAssetKey)?.name || alertAssetKey);
-                    if (type === 'down') setAlertMessage(`${name} price drop exceeds ${alertThreshold}% threshold`);
-                    else if (type === 'volatility') setAlertMessage(`${name} volatility spike exceeds ±${alertThreshold}%`);
-                    else setAlertMessage(`${name} price surge exceeds +${alertThreshold}%`);
-                  }}
-                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="down">📉 Price Drop (Drawdown)</option>
-                  <option value="volatility">⚡ Volatility Spike (±% Swing)</option>
-                  <option value="up">📈 Price Surge (Breakout)</option>
-                  <option value="info">ℹ️ Informational / Macro</option>
-                </select>
-              </div>
-
-              <div>
-                <SmartCalculatorInput
-                  label="Threshold Percentage (%)"
-                  value={alertThreshold}
-                  onChange={(val) => {
-                    setAlertThreshold(val);
-                    const name = alertAssetKey === 'all' ? 'Portfolio Wide' : (assets.find(a => a.key === alertAssetKey)?.name || alertAssetKey);
-                    if (alertType === 'down') setAlertMessage(`${name} price drop exceeds ${val}% threshold`);
-                    else if (alertType === 'volatility') setAlertMessage(`${name} volatility spike exceeds ±${val}%`);
-                    else setAlertMessage(`${name} price surge exceeds +${val}%`);
-                  }}
-                  currencySymbol=""
-                  placeholder="5"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1.5">Custom Alert Notification Message</label>
-              <input
-                type="text"
-                value={alertMessage}
-                onChange={(e) => setAlertMessage(e.target.value)}
-                required
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div className="flex justify-end space-x-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowAlertForm(false)}
-                className="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-bold uppercase cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold uppercase shadow-xs cursor-pointer"
-              >
-                Activate Trigger Rule
-              </button>
-            </div>
-          </form>
-        )}
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Active Personal Trigger Rules</h4>
-            <span className="text-[10px] font-mono text-slate-400 font-semibold bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
-              {alerts?.length || 0}/10 Max Active Rules
-            </span>
-          </div>
-          {(!alerts || alerts.length === 0) ? (
-            <div className="p-6 bg-slate-50 dark:bg-slate-950/50 rounded-xl text-center text-xs text-slate-500 dark:text-slate-400 border border-dashed border-slate-200 dark:border-white/10">
-              No active trigger rules configured. Click "New Trigger Rule" above to set custom price-drop or volatility alarm triggers.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {alerts.map((alert) => (
-                <div key={alert.id} className="p-4 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-white/10 rounded-xl flex items-start justify-between gap-3 hover:border-slate-300 dark:hover:border-white/20 transition-all">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
-                        alert.type === 'up'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : alert.type === 'down'
-                          ? 'bg-rose-100 text-rose-800'
-                          : alert.type === 'volatility'
-                          ? 'bg-amber-100 text-amber-800'
-                          : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {alert.asset}
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-mono">
-                        {formatTimeAgo(alert.timestamp, alert.lastTriggeredDate)}
-                      </span>
-                      {alert.thresholdPercentage !== undefined && (
-                        <span className="text-[10px] font-mono font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
-                          ±{alert.thresholdPercentage}% Trigger
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-slate-700 font-medium leading-relaxed">{alert.message}</p>
-                    {alert.lastTriggeredDate && (
-                      <div className="text-[10px] text-slate-400 font-mono pt-1">
-                        Last Triggered: {new Date(alert.lastTriggeredDate).toLocaleDateString()} {new Date(alert.lastTriggeredDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} ({formatTimeAgo(undefined, alert.lastTriggeredDate)})
-                      </div>
-                    )}
-                  </div>
-                  {onDeleteAlert && (
-                    <button
-                      onClick={() => onDeleteAlert(alert.id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors shrink-0 cursor-pointer"
-                      title="Remove Trigger Rule"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
 
