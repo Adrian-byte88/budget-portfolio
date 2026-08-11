@@ -1917,6 +1917,8 @@ export default function App() {
             onAddExpense={handleAddExpense}
             onAdjustExpense={handleAdjustExpense}
             onDeleteExpense={handleDeleteExpense}
+            onAdjustBudgetLimit={handleAdjustBudgetLimit}
+            onResyncBudgets={handleResyncBudgets}
             exchangeRates={exchangeRates}
             highlightId={highlightId}
           />

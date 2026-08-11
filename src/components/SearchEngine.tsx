@@ -39,7 +39,7 @@ const STATIC_INDEX: SearchItem[] = [
   { type: 'Section', name: 'Historical Net Worth Curves Chart', id: 'asset-allocation-section', targetTab: 'dashboard', subtitle: 'Dashboard Section', keywords: 'line chart valuation trends net worth curves' },
   { type: 'Section', name: 'Asset Allocation Mix & Target vs Current Weights', id: 'portfolio-charts-section', targetTab: 'dashboard', subtitle: 'Dashboard Section', keywords: 'asset allocation mix target vs current weights pie chart bar chart breakdown' },
   { type: 'Section', name: 'Monthly Spend Overview & Outflow Timeline', id: 'monthly-spend-overview', targetTab: 'dashboard', subtitle: 'Dashboard Section', keywords: 'bar chart monthly spend expenditure trends mom change peak spend timeline' },
-  { type: 'Section', name: 'Category Budget Limits & Progress Tracker', id: 'category-limits-section', targetTab: 'dashboard', subtitle: 'Dashboard Section', keywords: 'budget caps spending thresholds violation tracker limits progress alarms' },
+  { type: 'Section', name: 'Category Budget Limits & Progress Tracker', id: 'category-limits-section', targetTab: 'ledger', subtitle: 'Expense Ledger Section', keywords: 'budget caps spending thresholds violation tracker limits progress alarms desired monthly expense cap' },
 
   // SECTIONS - PORTFOLIO
   { type: 'Section', name: 'Asset Class Breakdown Table & Yields', id: 'portfolio-table-section', targetTab: 'portfolio', subtitle: 'Portfolio Section', keywords: 'holdings table yield php value portfolio percentage return' },

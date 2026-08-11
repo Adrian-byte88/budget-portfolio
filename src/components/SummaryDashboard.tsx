@@ -393,10 +393,10 @@ export default function SummaryDashboard({
             </div>
             <div>
               <h4 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
-                Summary Analytics: Expenditure Analysis, Spend Overview & Category Limits
+                Summary Analytics: Expenditure Analysis & Spend Overview
               </h4>
               <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                You have full access to Historical Expenditure Analysis (Pie Chart), Monthly & Yearly Spend Overview with Year filters, and Category Limit Controls.
+                You have full access to Historical Expenditure Analysis (Pie Chart) and Monthly & Yearly Spend Overview.
               </p>
             </div>
           </div>
@@ -603,366 +603,159 @@ export default function SummaryDashboard({
         </div>
       )}
 
-      {/* Row 1: Historical Expenditure Analysis (Pie Chart with nice transition) & Category Limit Controls */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Historical Expenditure Analysis - PIE CHART */}
-        <div id="historical-expenditure-analysis" className="lg:col-span-2 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-xl p-6 sm:p-8 shadow-xs flex flex-col justify-between space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-white/5 pb-4">
-            <div>
-              <div className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-widest text-xs mb-1">
-                <PieChartIcon className="w-4 h-4 text-indigo-500" />
-                <span>Historical Expenditure Analysis</span>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center space-x-2">
-                  <span>Category Breakdown & Distribution</span>
-                </h2>
-                <button
-                  onClick={() => onNavigateTab ? onNavigateTab('ledger') : onOpenLedger?.()}
-                  className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/70 dark:hover:bg-indigo-900/90 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                  title="Navigate to Expense Ledger / Financial Ledger Registry"
-                >
-                  <Receipt className="w-3.5 h-3.5 text-indigo-500" />
-                  <span>Financial Ledger Registry</span>
-                  <ArrowRight className="w-3 h-3" />
-                </button>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Proportional historical spending breakdown across categories with dynamic transition effects
-              </p>
+      {/* Row 1: Historical Expenditure Analysis (Pie Chart with nice transition) */}
+      <div id="historical-expenditure-analysis" className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-xl p-6 sm:p-8 shadow-xs flex flex-col justify-between space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-white/5 pb-4">
+          <div>
+            <div className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-widest text-xs mb-1">
+              <PieChartIcon className="w-4 h-4 text-indigo-500" />
+              <span>Historical Expenditure Analysis</span>
             </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                <span>Category Breakdown & Distribution</span>
+              </h2>
+              <button
+                onClick={() => onNavigateTab ? onNavigateTab('ledger') : onOpenLedger?.()}
+                className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/70 dark:hover:bg-indigo-900/90 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                title="Navigate to Expense Ledger / Financial Ledger Registry"
+              >
+                <Receipt className="w-3.5 h-3.5 text-indigo-500" />
+                <span>Financial Ledger Registry</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Proportional historical spending breakdown across categories with dynamic transition effects
+            </p>
+          </div>
 
-            {/* Year Selector Linkage */}
-            <div className="flex items-center space-x-2 self-start sm:self-center">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Year:</span>
-              <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-lg border border-slate-200 dark:border-slate-800">
+          {/* Year Selector Linkage */}
+          <div className="flex items-center space-x-2 self-start sm:self-center">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Year:</span>
+            <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-lg border border-slate-200 dark:border-slate-800">
+              <button
+                onClick={() => setSelectedYear('all')}
+                className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                  selectedYear === 'all'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
+                }`}
+              >
+                All
+              </button>
+              {availableYears.map((yr) => (
                 <button
-                  onClick={() => setSelectedYear('all')}
+                  key={yr}
+                  onClick={() => setSelectedYear(yr)}
                   className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                    selectedYear === 'all'
+                    selectedYear === yr
                       ? 'bg-indigo-600 text-white shadow-xs'
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
                   }`}
                 >
-                  All
+                  {yr}
                 </button>
-                {availableYears.map((yr) => (
-                  <button
-                    key={yr}
-                    onClick={() => setSelectedYear(yr)}
-                    className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                      selectedYear === yr
-                        ? 'bg-indigo-600 text-white shadow-xs'
-                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
-                    }`}
-                  >
-                    {yr}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-            {/* Donut / Pie Chart Container with Smooth Transitions */}
-            <div className="relative h-64 w-full min-w-0 flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                <PieChart>
-                  <Pie
-                    data={totalHistoricalExpenditure > 0 ? historicalPieData : [{ name: 'No Expenses Recorded', value: 1, color: '#334155' }]}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={70}
-                    outerRadius={100}
-                    paddingAngle={totalHistoricalExpenditure > 0 ? 4 : 0}
-                    dataKey="value"
-                    animationDuration={800}
-                    animationEasing="ease-out"
-                    onMouseEnter={(_, index) => totalHistoricalExpenditure > 0 && setActivePieIndex(index)}
-                    onMouseLeave={() => setActivePieIndex(null)}
-                  >
-                    {(totalHistoricalExpenditure > 0 ? historicalPieData : [{ name: 'No Expenses Recorded', value: 1, color: '#334155' }]).map((entry, index) => (
-                      <Cell
-                        key={`exp-cell-${index}`}
-                        fill={entry.color}
-                        stroke={activePieIndex === index && totalHistoricalExpenditure > 0 ? '#ffffff' : 'transparent'}
-                        strokeWidth={activePieIndex === index && totalHistoricalExpenditure > 0 ? 3 : 0}
-                        style={{
-                          filter: activePieIndex === index && totalHistoricalExpenditure > 0 ? 'drop-shadow(0 4px 12px rgba(0, 0, 0, 0.25))' : 'none',
-                          transform: activePieIndex === index && totalHistoricalExpenditure > 0 ? 'scale(1.04)' : 'scale(1)',
-                          transformOrigin: 'center center',
-                          transition: 'all 0.3s ease-in-out',
-                          cursor: totalHistoricalExpenditure > 0 ? 'pointer' : 'default',
-                        }}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(val: number, name: string) => [
-                      `₱${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                      name,
-                    ]}
-                    contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
-                    labelClassName="text-white font-bold"
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-
-              {/* Dynamic Center Badge */}
-              <div className="absolute flex flex-col items-center pointer-events-none text-center px-2">
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                  {activePieIndex !== null && totalHistoricalExpenditure > 0 ? historicalPieData[activePieIndex]?.name : 'Total Outflow'}
-                </span>
-                <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white font-mono">
-                  ₱
-                  {activePieIndex !== null && totalHistoricalExpenditure > 0
-                    ? historicalPieData[activePieIndex]?.value.toLocaleString(undefined, { maximumFractionDigits: 0 })
-                    : totalHistoricalExpenditure.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                </span>
-                <span className="text-[10px] text-indigo-500 font-extrabold mt-0.5">
-                  {activePieIndex !== null && totalHistoricalExpenditure > 0
-                    ? `${historicalPieData[activePieIndex]?.percentage.toFixed(1)}% of total`
-                    : totalHistoricalExpenditure === 0 ? '0 Expenses Recorded' : selectedYear === 'all' ? 'All Time' : selectedYear}
-                </span>
-              </div>
-            </div>
-
-            {/* Category Legend & Breakdown List */}
-            <div className="space-y-3 bg-slate-50 dark:bg-slate-950/60 p-4 rounded-xl border border-slate-200/60 dark:border-white/5">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-white/5">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Category</span>
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Amount / Share</span>
-              </div>
-              <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-                {historicalPieData.map((item, idx) => (
-                  <div
-                    key={item.name}
-                    onMouseEnter={() => setActivePieIndex(idx)}
-                    onMouseLeave={() => setActivePieIndex(null)}
-                    className={`flex items-center justify-between p-2 rounded-lg text-xs transition-all cursor-pointer ${
-                      activePieIndex === idx
-                        ? 'bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800'
-                        : 'hover:bg-slate-100 dark:hover:bg-slate-900/80 border border-transparent'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2.5">
-                      <span className="w-3 h-3 rounded-full shrink-0 shadow-xs" style={{ backgroundColor: item.color }} />
-                      <span className="font-bold text-slate-700 dark:text-slate-200">{item.name}</span>
-                    </div>
-                    <div className="flex items-center space-x-2 font-mono font-bold">
-                      <span className="text-slate-900 dark:text-white">₱{item.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                      <span className="text-[10px] bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300">
-                        {item.percentage.toFixed(1)}%
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Category Limit Controls */}
-        <div id="category-limits-section" data-highlight-id="category-limits-section" className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-xl p-6 sm:p-8 flex flex-col justify-between shadow-xs">
-          <div>
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-1 flex justify-between items-center">
-              <span>Category Limit Controls</span>
-              <button
-                onClick={onResyncBudgets}
-                className="text-[10px] bg-indigo-100 dark:bg-indigo-900/60 hover:bg-indigo-200 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-md font-bold transition-all cursor-pointer"
-              >
-                Sync Ledger
-              </button>
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Live threshold meters highlighting monthly spending caps</p>
-
-            {/* Desired Monthly Expense Cap Input & Overview Card */}
-            <div className="mb-5 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-white/10 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                  Desired Monthly Expense Cap
-                </span>
-                {!isEditingDesired ? (
-                  <button
-                    onClick={() => {
-                      setDesiredInputVal(desiredMonthlyBudget.toString());
-                      setIsEditingDesired(true);
-                    }}
-                    className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline uppercase tracking-wider cursor-pointer"
-                  >
-                    Set Amount
-                  </button>
-                ) : null}
-              </div>
-
-              {isEditingDesired ? (
-                <div className="flex items-center space-x-2">
-                  <div className="relative flex-1">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">₱</span>
-                    <input
-                      type="number"
-                      value={desiredInputVal}
-                      onChange={(e) => setDesiredInputVal(e.target.value)}
-                      placeholder="e.g. 25000"
-                      className="w-full pl-6 pr-2 py-1 bg-white dark:bg-slate-900 border border-indigo-400 dark:border-indigo-600 rounded text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    />
-                  </div>
-                  <button
-                    onClick={() => {
-                      const val = Number(desiredInputVal);
-                      if (!isNaN(val) && val > 0) {
-                        setDesiredMonthlyBudget(val);
-                        localStorage.setItem('desired_monthly_expense_limit', val.toString());
-                      }
-                      setIsEditingDesired(false);
-                    }}
-                    className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] rounded cursor-pointer"
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={() => setIsEditingDesired(false)}
-                    className="px-2 py-1 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-[11px] rounded cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-1.5">
-                  <div className="flex items-baseline justify-between text-xs">
-                    <span className="font-mono font-bold text-slate-900 dark:text-white">
-                      ₱{totalSpentCurrentMonth.toLocaleString()} <span className="text-[10px] text-slate-500 font-normal">/ ₱{desiredMonthlyBudget.toLocaleString()}</span>
-                    </span>
-                    <span className={`text-[10px] font-bold font-mono ${
-                      totalSpentCurrentMonth >= desiredMonthlyBudget ? 'text-rose-600 dark:text-rose-400 font-extrabold' : 'text-emerald-600 dark:text-emerald-400'
-                    }`}>
-                      {((totalSpentCurrentMonth / (desiredMonthlyBudget || 1)) * 100).toFixed(1)}% Used
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        totalSpentCurrentMonth >= desiredMonthlyBudget
-                          ? 'bg-rose-600'
-                          : (totalSpentCurrentMonth / desiredMonthlyBudget) > 0.8
-                          ? 'bg-amber-500'
-                          : 'bg-indigo-600'
-                      }`}
-                      style={{ width: `${Math.min((totalSpentCurrentMonth / (desiredMonthlyBudget || 1)) * 100, 100)}%` }}
-                    />
-                  </div>
-                  {totalSpentCurrentMonth >= desiredMonthlyBudget && (
-                    <p className="text-[10px] text-rose-600 dark:text-rose-400 font-extrabold uppercase tracking-wider flex items-center pt-0.5">
-                      <AlertTriangle className="w-3 h-3 mr-1" />
-                      Critical: Overall Monthly Expense Cap Reached!
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Cap Mismatch Warning Alert */}
-            {isCapMismatch && (
-              <div className="mb-5 p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/60 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-amber-900 dark:text-amber-200">
-                <div className="flex items-center space-x-2">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                  <div>
-                    <span className="font-extrabold">Cap Mismatch Warning:</span> Desired Monthly Cap (₱{desiredMonthlyBudget.toLocaleString()}) does not match total category caps (₱{sumCategoryLimits.toLocaleString()}).
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    setDesiredMonthlyBudget(sumCategoryLimits);
-                    localStorage.setItem('desired_monthly_expense_limit', sumCategoryLimits.toString());
-                  }}
-                  className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-[10px] rounded-lg uppercase tracking-wider shrink-0 transition-all cursor-pointer shadow-xs"
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+          {/* Donut / Pie Chart Container with Smooth Transitions */}
+          <div className="relative h-64 w-full min-w-0 flex items-center justify-center">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+              <PieChart>
+                <Pie
+                  data={totalHistoricalExpenditure > 0 ? historicalPieData : [{ name: 'No Expenses Recorded', value: 1, color: '#334155' }]}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={70}
+                  outerRadius={100}
+                  paddingAngle={totalHistoricalExpenditure > 0 ? 4 : 0}
+                  dataKey="value"
+                  animationDuration={800}
+                  animationEasing="ease-out"
+                  onMouseEnter={(_, index) => totalHistoricalExpenditure > 0 && setActivePieIndex(index)}
+                  onMouseLeave={() => setActivePieIndex(null)}
                 >
-                  Sync Cap to ₱{sumCategoryLimits.toLocaleString()}
-                </button>
-              </div>
-            )}
+                  {(totalHistoricalExpenditure > 0 ? historicalPieData : [{ name: 'No Expenses Recorded', value: 1, color: '#334155' }]).map((entry, index) => (
+                    <Cell
+                      key={`exp-cell-${index}`}
+                      fill={entry.color}
+                      stroke={activePieIndex === index && totalHistoricalExpenditure > 0 ? '#ffffff' : 'transparent'}
+                      strokeWidth={activePieIndex === index && totalHistoricalExpenditure > 0 ? 3 : 0}
+                      style={{
+                        filter: activePieIndex === index && totalHistoricalExpenditure > 0 ? 'drop-shadow(0 4px 12px rgba(0, 0, 0, 0.25))' : 'none',
+                        transform: activePieIndex === index && totalHistoricalExpenditure > 0 ? 'scale(1.04)' : 'scale(1)',
+                        transformOrigin: 'center center',
+                        transition: 'all 0.3s ease-in-out',
+                        cursor: totalHistoricalExpenditure > 0 ? 'pointer' : 'default',
+                      }}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(val: number, name: string) => [
+                    `₱${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                    name,
+                  ]}
+                  contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                  labelClassName="text-white font-bold"
+                />
+              </PieChart>
+            </ResponsiveContainer>
+
+            {/* Dynamic Center Badge */}
+            <div className="absolute flex flex-col items-center pointer-events-none text-center px-2">
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                {activePieIndex !== null && totalHistoricalExpenditure > 0 ? historicalPieData[activePieIndex]?.name : 'Total Outflow'}
+              </span>
+              <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white font-mono">
+                ₱
+                {activePieIndex !== null && totalHistoricalExpenditure > 0
+                  ? historicalPieData[activePieIndex]?.value.toLocaleString(undefined, { maximumFractionDigits: 0 })
+                  : totalHistoricalExpenditure.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </span>
+              <span className="text-[10px] text-indigo-500 font-extrabold mt-0.5">
+                {activePieIndex !== null && totalHistoricalExpenditure > 0
+                  ? `${historicalPieData[activePieIndex]?.percentage.toFixed(1)}% of total`
+                  : totalHistoricalExpenditure === 0 ? '0 Expenses Recorded' : selectedYear === 'all' ? 'All Time' : selectedYear}
+              </span>
+            </div>
           </div>
 
-          <div className="space-y-4.5">
-            {budgets.map((b) => {
-              const actualSpent = categorySpentMap[b.category] !== undefined ? categorySpentMap[b.category] : b.spentPHP;
-              const isOverLimit = actualSpent > b.limitPHP && b.limitPHP > 0;
-              const isCapReached = actualSpent >= b.limitPHP && b.limitPHP > 0;
-              const ratio = b.limitPHP > 0 ? (actualSpent / b.limitPHP) * 100 : 0;
-              return (
-                <div key={b.category} id={`budget-${b.category}`} data-highlight-id={`budget-${b.category}`} className={`space-y-1.5 p-2 rounded-xl transition-all ${
-                  isCapReached ? 'bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200/60 dark:border-rose-900/40' : ''
-                }`}>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className={`font-semibold flex items-center gap-1.5 ${isCapReached ? 'text-rose-600 dark:text-rose-400 font-extrabold' : 'text-slate-600 dark:text-slate-300'}`}>
-                      <span>{b.category}</span>
-                      {isCapReached && (
-                        <span className="px-1.5 py-0.5 bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 rounded text-[9px] font-black uppercase tracking-wider">
-                          CAPPED
-                        </span>
-                      )}
+          {/* Category Legend & Breakdown List */}
+          <div className="space-y-3 bg-slate-50 dark:bg-slate-950/60 p-4 rounded-xl border border-slate-200/60 dark:border-white/5">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-white/5">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Category</span>
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Amount / Share</span>
+            </div>
+            <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+              {historicalPieData.map((item, idx) => (
+                <div
+                  key={item.name}
+                  onMouseEnter={() => setActivePieIndex(idx)}
+                  onMouseLeave={() => setActivePieIndex(null)}
+                  className={`flex items-center justify-between p-2 rounded-lg text-xs transition-all cursor-pointer ${
+                    activePieIndex === idx
+                      ? 'bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800'
+                      : 'hover:bg-slate-100 dark:hover:bg-slate-900/80 border border-transparent'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <span className="w-3 h-3 rounded-full shrink-0 shadow-xs" style={{ backgroundColor: item.color }} />
+                    <span className="font-bold text-slate-700 dark:text-slate-200">{item.name}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 font-mono font-bold">
+                    <span className="text-slate-900 dark:text-white">₱{item.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                    <span className="text-[10px] bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300">
+                      {item.percentage.toFixed(1)}%
                     </span>
-                    <div className="flex items-center space-x-2">
-                      {adjustingBudget === b.category ? (
-                        <div className="flex items-center space-x-2">
-                          <SmartCalculatorInput
-                            label=""
-                            value={adjustedLimit}
-                            onChange={setAdjustedLimit}
-                            currencySymbol=""
-                            className="w-20"
-                          />
-                          <button
-                            onClick={() => {
-                              onAdjustBudgetLimit(b.category, Number(adjustedLimit));
-                              setAdjustingBudget(null);
-                            }}
-                            className="text-xs bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-2.5 py-1 rounded cursor-pointer"
-                          >
-                            Save
-                          </button>
-                        </div>
-                      ) : (
-                        <>
-                          <span className={`font-mono font-bold ${isCapReached ? 'text-rose-600 dark:text-rose-400 font-extrabold animate-pulse' : 'text-slate-500 dark:text-slate-400'}`}>
-                            ₱{actualSpent.toLocaleString()} / ₱{b.limitPHP.toLocaleString()}
-                          </span>
-                          <button
-                            onClick={() => {
-                              setAdjustingBudget(b.category);
-                              setAdjustedLimit(b.limitPHP.toString());
-                            }}
-                            className="text-[10px] text-blue-600 dark:text-blue-400 underline uppercase tracking-wider font-bold cursor-pointer"
-                          >
-                            Adjust
-                          </button>
-                        </>
-                      )}
-                    </div>
                   </div>
-                  <div className="w-full bg-slate-100 dark:bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-200/50 dark:border-white/5">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        isCapReached ? 'bg-rose-600' : ratio > 80 ? 'bg-amber-500' : 'bg-blue-600'
-                      }`}
-                      style={{ width: `${Math.min(ratio, 100)}%` }}
-                    />
-                  </div>
-                  {isOverLimit ? (
-                    <p className="text-[10px] text-rose-600 dark:text-rose-400 font-extrabold uppercase tracking-wider flex items-center">
-                      <AlertTriangle className="w-3 h-3 mr-1 text-rose-600 dark:text-rose-400" />
-                      Critical: Budget Limit Exceeded!
-                    </p>
-                  ) : isCapReached ? (
-                    <p className="text-[10px] text-rose-600 dark:text-rose-400 font-extrabold uppercase tracking-wider flex items-center">
-                      <AlertTriangle className="w-3 h-3 mr-1 text-rose-600 dark:text-rose-400" />
-                      Warning: Category Cap Reached (100% Used)
-                    </p>
-                  ) : null}
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
         </div>
       </div>
