@@ -112,7 +112,7 @@ export default function PolicyModal({
                   1. Terms of Service & Software License
                 </h4>
                 <p>
-                  By accessing or using <b>Budget Portfolio (WealthVault)</b>, you agree to be bound by these Terms of Service. Budget Portfolio provides a self-managed, non-custodial financial cockpit, ledger tracking system, and portfolio allocation tool.
+                  By accessing or using <b>Budget Portfolio</b>, you agree to be bound by these Terms of Service. Budget Portfolio provides a self-managed, non-custodial financial cockpit, ledger tracking system, and portfolio allocation tool.
                 </p>
               </div>
 
