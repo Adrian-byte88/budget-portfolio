@@ -261,7 +261,8 @@ export const YahooFinanceChart: React.FC<YahooFinanceChartProps> = ({
 
     try {
       const res = await fetch(`/api/yahoo/chart?symbol=${encodeURIComponent(symbol)}&range=${range}`);
-      if (res.ok) {
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
         const data = await res.json();
         if (data.success && Array.isArray(data.points) && data.points.length > 0) {
           setPoints(data.points);
