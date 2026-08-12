@@ -61,10 +61,18 @@ export const TradingViewAssetModal: React.FC<TradingViewAssetModalProps> = ({
     setChartTheme(isDark ? 'dark' : 'light');
   }, []);
 
-  // Helper to map asset key/type/name to Yahoo Finance ticker format
+  // Helper to map asset key/type/name to Yahoo Finance ticker format with dynamic live price calculation
   const getYahooFinanceSymbolInfo = (a: AssetPosition) => {
     const key = a.key.toLowerCase();
     const name = a.name.toLowerCase();
+
+    // Dynamically calculate USD price and change from live asset position data
+    const currentPHP = a.currentPricePHP > 0
+      ? a.currentPricePHP
+      : (a.costBasisPHP > 0 && a.units > 0 ? a.costBasisPHP / a.units : 0);
+    const usdPriceCalc = currentPHP > 0 ? currentPHP / 58.5 : 0;
+    const changePctCalc = a.change24h || 0;
+    const changeUSDCalc = usdPriceCalc * (changePctCalc / 100);
 
     if (key.includes('btc') || name.includes('bitcoin')) {
       return { 
@@ -73,9 +81,9 @@ export const TradingViewAssetModal: React.FC<TradingViewAssetModalProps> = ({
         ticker: 'BTC-USD', 
         exchange: 'Yahoo Finance Crypto', 
         category: 'crypto', 
-        usdPrice: 64455, 
-        usdChange: -146, 
-        usdChangePct: -0.23, 
+        usdPrice: usdPriceCalc, 
+        usdChange: changeUSDCalc, 
+        usdChangePct: changePctCalc, 
         rank: '#1 Crypto', 
         logo: '₿',
         yahooUrl: 'https://finance.yahoo.com/quote/BTC-USD/'
@@ -88,9 +96,9 @@ export const TradingViewAssetModal: React.FC<TradingViewAssetModalProps> = ({
         ticker: 'ETH-USD', 
         exchange: 'Yahoo Finance Crypto', 
         category: 'crypto', 
-        usdPrice: 3480, 
-        usdChange: 42, 
-        usdChangePct: 1.22, 
+        usdPrice: usdPriceCalc, 
+        usdChange: changeUSDCalc, 
+        usdChangePct: changePctCalc, 
         rank: '#2 Crypto', 
         logo: 'Ξ',
         yahooUrl: 'https://finance.yahoo.com/quote/ETH-USD/'
@@ -103,25 +111,24 @@ export const TradingViewAssetModal: React.FC<TradingViewAssetModalProps> = ({
         ticker: 'SOL-USD', 
         exchange: 'Yahoo Finance Crypto', 
         category: 'crypto', 
-        usdPrice: 178.50, 
-        usdChange: 5.40, 
-        usdChangePct: 3.12, 
+        usdPrice: usdPriceCalc, 
+        usdChange: changeUSDCalc, 
+        usdChangePct: changePctCalc, 
         rank: '#5 Crypto', 
         logo: '◎',
         yahooUrl: 'https://finance.yahoo.com/quote/SOL-USD/'
       };
     }
     if (key.includes('paxg') || key.includes('pax gold') || (key.includes('pax') && !key.includes('spc'))) {
-      const currentUSD = a.currentPricePHP > 0 ? a.currentPricePHP / 58.5 : 2420.80;
       return { 
         yahooSymbol: 'PAXG-USD',
         tvSymbol: 'BINANCE:PAXGUSDT', 
         ticker: 'PAXG-USD', 
         exchange: 'Yahoo Finance Crypto', 
         category: 'crypto', 
-        usdPrice: currentUSD, 
-        usdChange: (a.change24h || 0.77) * (currentUSD / 100), 
-        usdChangePct: a.change24h || 0.77, 
+        usdPrice: usdPriceCalc, 
+        usdChange: changeUSDCalc, 
+        usdChangePct: changePctCalc, 
         rank: '#1 Gold Crypto', 
         logo: '🪙',
         yahooUrl: 'https://finance.yahoo.com/quote/PAXG-USD/'
@@ -134,9 +141,9 @@ export const TradingViewAssetModal: React.FC<TradingViewAssetModalProps> = ({
         ticker: 'GC=F · Gold Futures', 
         exchange: 'COMEX / Yahoo Finance', 
         category: 'commodity', 
-        usdPrice: 2420.80, 
-        usdChange: 18.50, 
-        usdChangePct: 0.77, 
+        usdPrice: usdPriceCalc, 
+        usdChange: changeUSDCalc, 
+        usdChangePct: changePctCalc, 
         rank: '#1 Commodity', 
         logo: '🥇',
         yahooUrl: 'https://finance.yahoo.com/quote/GC=F/'
@@ -149,9 +156,9 @@ export const TradingViewAssetModal: React.FC<TradingViewAssetModalProps> = ({
         ticker: 'SPC.PS · PSE', 
         exchange: 'Philippine Stock Exchange', 
         category: 'equity', 
-        usdPrice: 0.25, 
-        usdChange: 0.01, 
-        usdChangePct: 1.85, 
+        usdPrice: usdPriceCalc, 
+        usdChange: changeUSDCalc, 
+        usdChangePct: changePctCalc, 
         rank: 'PSE Energy', 
         logo: '⚡',
         yahooUrl: 'https://finance.yahoo.com/quote/SPC.PS/'
@@ -164,9 +171,9 @@ export const TradingViewAssetModal: React.FC<TradingViewAssetModalProps> = ({
         ticker: 'SCC.PS · PSE', 
         exchange: 'Philippine Stock Exchange', 
         category: 'equity', 
-        usdPrice: 0.62, 
-        usdChange: -0.02, 
-        usdChangePct: -1.20, 
+        usdPrice: usdPriceCalc, 
+        usdChange: changeUSDCalc, 
+        usdChangePct: changePctCalc, 
         rank: 'PSE Mining', 
         logo: '⛏️',
         yahooUrl: 'https://finance.yahoo.com/quote/SCC.PS/'
@@ -179,9 +186,9 @@ export const TradingViewAssetModal: React.FC<TradingViewAssetModalProps> = ({
         ticker: 'RCR.PS · PSE', 
         exchange: 'Philippine Stock Exchange', 
         category: 'equity', 
-        usdPrice: 0.11, 
-        usdChange: 0.00, 
-        usdChangePct: 0.00, 
+        usdPrice: usdPriceCalc, 
+        usdChange: changeUSDCalc, 
+        usdChangePct: changePctCalc, 
         rank: 'PSE REIT', 
         logo: '🏢',
         yahooUrl: 'https://finance.yahoo.com/quote/RCR.PS/'
@@ -194,9 +201,9 @@ export const TradingViewAssetModal: React.FC<TradingViewAssetModalProps> = ({
         ticker: 'MFC · NYSE', 
         exchange: 'NYSE', 
         category: 'equity', 
-        usdPrice: 26.40, 
-        usdChange: 0.35, 
-        usdChangePct: 1.34, 
+        usdPrice: usdPriceCalc, 
+        usdChange: changeUSDCalc, 
+        usdChangePct: changePctCalc, 
         rank: 'Financials', 
         logo: '🛡️',
         yahooUrl: 'https://finance.yahoo.com/quote/MFC/'
@@ -209,9 +216,9 @@ export const TradingViewAssetModal: React.FC<TradingViewAssetModalProps> = ({
         ticker: 'NVDA · Nasdaq', 
         exchange: 'Nasdaq', 
         category: 'equity', 
-        usdPrice: 128.50, 
-        usdChange: 3.20, 
-        usdChangePct: 2.55, 
+        usdPrice: usdPriceCalc, 
+        usdChange: changeUSDCalc, 
+        usdChangePct: changePctCalc, 
         rank: '#3 Global Equity', 
         logo: '🟢',
         yahooUrl: 'https://finance.yahoo.com/quote/NVDA/'
@@ -224,9 +231,9 @@ export const TradingViewAssetModal: React.FC<TradingViewAssetModalProps> = ({
         ticker: 'AAPL · Nasdaq', 
         exchange: 'Nasdaq', 
         category: 'equity', 
-        usdPrice: 224.10, 
-        usdChange: 1.80, 
-        usdChangePct: 0.81, 
+        usdPrice: usdPriceCalc, 
+        usdChange: changeUSDCalc, 
+        usdChangePct: changePctCalc, 
         rank: '#2 Global Equity', 
         logo: '🍎',
         yahooUrl: 'https://finance.yahoo.com/quote/AAPL/'
@@ -239,9 +246,9 @@ export const TradingViewAssetModal: React.FC<TradingViewAssetModalProps> = ({
         ticker: 'SPY · NYSE Arca', 
         exchange: 'NYSE Arca', 
         category: 'equity', 
-        usdPrice: 552.30, 
-        usdChange: 2.10, 
-        usdChangePct: 0.38, 
+        usdPrice: usdPriceCalc, 
+        usdChange: changeUSDCalc, 
+        usdChangePct: changePctCalc, 
         rank: 'S&P 500 Index ETF', 
         logo: '📈',
         yahooUrl: 'https://finance.yahoo.com/quote/SPY/'
@@ -250,10 +257,6 @@ export const TradingViewAssetModal: React.FC<TradingViewAssetModalProps> = ({
 
     // Default fallback
     const fallbackTicker = a.name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 5) || 'ASSET';
-    const computedPrice = a.currentPricePHP > 0 
-      ? a.currentPricePHP / 58.5 
-      : (a.costBasisPHP > 0 && a.units > 0 ? (a.costBasisPHP / a.units) / 58.5 : 10);
-    const validUsdPrice = (isNaN(computedPrice) || !isFinite(computedPrice) || computedPrice <= 0) ? 10 : computedPrice;
 
     return {
       yahooSymbol: fallbackTicker,
@@ -261,9 +264,9 @@ export const TradingViewAssetModal: React.FC<TradingViewAssetModalProps> = ({
       ticker: `${fallbackTicker} · Yahoo Finance`,
       exchange: a.platform || 'Global Markets',
       category: a.assetType,
-      usdPrice: validUsdPrice,
-      usdChange: (a.change24h || 0) * 1.5,
-      usdChangePct: a.change24h || 0,
+      usdPrice: usdPriceCalc,
+      usdChange: changeUSDCalc,
+      usdChangePct: changePctCalc,
       rank: 'Tracked Asset',
       logo: '📊',
       yahooUrl: `https://finance.yahoo.com/quote/${fallbackTicker}/`
@@ -557,29 +560,33 @@ export const TradingViewAssetModal: React.FC<TradingViewAssetModalProps> = ({
               {/* KEY MARKET METRICS GRID */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="p-4 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 rounded-xl space-y-1 shadow-2xs">
-                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Day Range (High / Low)</span>
+                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Live Asset Quote (USD / PHP)</span>
                   <div className="text-sm font-black font-mono text-slate-900 dark:text-white">
-                    ${(yfInfo.usdPrice * 1.025).toFixed(2)} - ${(yfInfo.usdPrice * 0.975).toFixed(2)}
+                    ${yfInfo.usdPrice > 0 ? yfInfo.usdPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '---'} USD
                   </div>
-                  <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden mt-2">
-                    <div className="bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-500 h-full w-[65%] rounded-full"></div>
-                  </div>
+                  <span className="text-[10px] text-purple-600 dark:text-purple-400 font-mono font-bold">
+                    ₱{currentPricePHP > 0 ? currentPricePHP.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '---'}
+                  </span>
                 </div>
 
                 <div className="p-4 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 rounded-xl space-y-1 shadow-2xs">
-                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Market Cap / Total Value</span>
+                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Total Holding Valuation</span>
                   <div className="text-sm font-black font-mono text-slate-900 dark:text-white">
-                    ${(yfInfo.usdPrice * 19700000 / 1e9).toFixed(2)}B USD
+                    ₱{totalValuationPHP.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">Yahoo Finance Rating: Buy</span>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">
+                    ${(totalValuationPHP / 58.5).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
+                  </span>
                 </div>
 
                 <div className="p-4 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 rounded-xl space-y-1 shadow-2xs">
-                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Avg Daily Volume</span>
+                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Units Held in Portfolio</span>
                   <div className="text-sm font-black font-mono text-slate-900 dark:text-white">
-                    $28.45B USD
+                    {asset.units.toLocaleString()} {asset.key.toUpperCase()}
                   </div>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">High Liquidity</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                    Avg Cost: ₱{(asset.costBasisPHP > 0 && asset.units > 0 ? asset.costBasisPHP / asset.units : 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
                 </div>
 
                 <div className="p-4 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 rounded-xl space-y-1 shadow-2xs">

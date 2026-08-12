@@ -204,9 +204,55 @@ const MARKET_CHANGES_24H = {
   MANULIFE_PHP: 0.00,
 };
 
-// Helper to fetch live spot market prices directly from internet public endpoints (Binance 24hr ticker, Open Exchange Rates, TradingView PSE Scanner)
+// Helper to fetch live spot market prices directly using yahoo-finance2
 async function fetchRealtimeInternetPrices() {
   try {
+    // 1. Primary Engine: yahoo-finance2 bulk quote
+    const yfTickers = ['BTC-USD', 'PAXG-USD', 'USDPHP=X', 'SCC.PS', 'SPC.PS', 'RCR.PS', 'MFC', 'NVDA', 'AAPL', 'SPY'];
+    let yfQuotes: any[] = [];
+    
+    try {
+      const res = await yf.quote(yfTickers);
+      if (Array.isArray(res)) {
+        yfQuotes = res;
+      } else if (res && typeof res === 'object') {
+        yfQuotes = [res];
+      }
+    } catch (e: any) {
+      console.warn('YF bulk quote in fetchRealtimeInternetPrices warning:', e?.message || e);
+    }
+
+    for (const q of yfQuotes) {
+      if (!q || !q.symbol) continue;
+      const sym = String(q.symbol).toUpperCase();
+      const price = q.regularMarketPrice ?? q.price ?? 0;
+      const changePct = q.regularMarketChangePercent ?? 0;
+
+      if (price > 0) {
+        if (sym === 'BTC-USD') {
+          MARKET_PRICES.BTC_USD = price;
+          MARKET_CHANGES_24H.BTC_USD = changePct;
+        } else if (sym === 'PAXG-USD') {
+          MARKET_PRICES.PAXG_USD = price;
+          MARKET_PRICES.GOLD_USD = price;
+          MARKET_CHANGES_24H.PAXG_USD = changePct;
+        } else if (sym === 'USDPHP=X' || sym === 'PHP=X') {
+          MARKET_PRICES.USD_PHP = Number(price.toFixed(4));
+          MARKET_CHANGES_24H.USD_PHP = changePct;
+        } else if (sym === 'SCC.PS') {
+          MARKET_PRICES.SCC_PHP = price;
+          MARKET_CHANGES_24H.SCC_PHP = changePct;
+        } else if (sym === 'SPC.PS') {
+          MARKET_PRICES.SPC_PHP = price;
+          MARKET_CHANGES_24H.SPC_PHP = changePct;
+        } else if (sym === 'RCR.PS') {
+          MARKET_PRICES.RCR_PHP = price;
+          MARKET_CHANGES_24H.RCR_PHP = changePct;
+        }
+      }
+    }
+
+    // 2. Secondary Fallbacks if any key quote was missing
     const fetchFx = async () => {
       try {
         const r = await fetch('https://open.er-api.com/v6/latest/USD');
@@ -231,93 +277,25 @@ async function fetchRealtimeInternetPrices() {
         let livePaxg = binancePaxg?.lastPrice ? Number(binancePaxg.lastPrice) : null;
         let paxgChange = binancePaxg?.priceChangePercent ? Number(binancePaxg.priceChangePercent) : null;
 
-        if (!liveBtc || !livePaxg) {
-          const cg = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,pax-gold&vs_currencies=usd&include_24hr_change=true').then((r) => (r.ok ? r.json() : null)).catch(() => null);
-          if (cg?.bitcoin?.usd && !liveBtc) {
-            liveBtc = Number(cg.bitcoin.usd);
-            btcChange = Number(cg.bitcoin.usd_24h_change || 0);
-          }
-          if (cg?.['pax-gold']?.usd && !livePaxg) {
-            livePaxg = Number(cg['pax-gold'].usd);
-            paxgChange = Number(cg['pax-gold'].usd_24h_change || 0);
-          }
-        }
         return { liveBtc, btcChange, livePaxg, paxgChange };
       } catch (e) {
         return { liveBtc: null, btcChange: null, livePaxg: null, paxgChange: null };
       }
     };
 
-    const fetchStocks = async () => {
-      try {
-        const tvPse = await fetch('https://scanner.tradingview.com/philippines/scan', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            symbols: { tickers: ['PSE:SCC', 'PSE:SPC', 'PSE:RCR'] },
-            columns: ['close', 'change']
-          })
-        }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-
-        let scc = null, sccChange = null;
-        let spc = null, spcChange = null;
-        let rcr = null, rcrChange = null;
-
-        if (tvPse && Array.isArray(tvPse.data)) {
-          for (const item of tvPse.data) {
-            if (item.s === 'PSE:SCC' && item.d?.[0]) {
-              scc = Number(item.d[0]);
-              sccChange = Number(item.d[1] || 0);
-            }
-            if (item.s === 'PSE:SPC' && item.d?.[0]) {
-              spc = Number(item.d[0]);
-              spcChange = Number(item.d[1] || 0);
-            }
-            if (item.s === 'PSE:RCR' && item.d?.[0]) {
-              rcr = Number(item.d[0]);
-              rcrChange = Number(item.d[1] || 0);
-            }
-          }
-        }
-
-        return { scc, sccChange, spc, spcChange, rcr, rcrChange };
-      } catch (e) {
-        return { scc: null, sccChange: null, spc: null, spcChange: null, rcr: null, rcrChange: null };
+    // Fill missing values with secondary sources if YF didn't return them
+    if (!MARKET_PRICES.BTC_USD || !MARKET_PRICES.PAXG_USD || !MARKET_PRICES.USD_PHP) {
+      const [cryptoData, fxData] = await Promise.all([fetchCrypto(), fetchFx()]);
+      if (!MARKET_PRICES.PAXG_USD && cryptoData.livePaxg) {
+        MARKET_PRICES.PAXG_USD = cryptoData.livePaxg;
+        MARKET_PRICES.GOLD_USD = cryptoData.livePaxg;
       }
-    };
-
-    const [cryptoData, fxData, stockData] = await Promise.all([
-      fetchCrypto(),
-      fetchFx(),
-      fetchStocks(),
-    ]);
-
-    if (cryptoData.livePaxg && !isNaN(cryptoData.livePaxg) && cryptoData.livePaxg > 0) {
-      MARKET_PRICES.PAXG_USD = cryptoData.livePaxg;
-      MARKET_PRICES.GOLD_USD = cryptoData.livePaxg;
-      if (cryptoData.paxgChange !== null) MARKET_CHANGES_24H.PAXG_USD = cryptoData.paxgChange;
-    }
-
-    if (cryptoData.liveBtc && !isNaN(cryptoData.liveBtc) && cryptoData.liveBtc > 0) {
-      MARKET_PRICES.BTC_USD = cryptoData.liveBtc;
-      if (cryptoData.btcChange !== null) MARKET_CHANGES_24H.BTC_USD = cryptoData.btcChange;
-    }
-
-    if (fxData?.rate && !isNaN(fxData.rate) && fxData.rate > 0) {
-      MARKET_PRICES.USD_PHP = Number(fxData.rate.toFixed(4));
-    }
-
-    if (stockData.scc && stockData.scc > 0) {
-      MARKET_PRICES.SCC_PHP = stockData.scc;
-      if (stockData.sccChange !== null) MARKET_CHANGES_24H.SCC_PHP = stockData.sccChange;
-    }
-    if (stockData.spc && stockData.spc > 0) {
-      MARKET_PRICES.SPC_PHP = stockData.spc;
-      if (stockData.spcChange !== null) MARKET_CHANGES_24H.SPC_PHP = stockData.spcChange;
-    }
-    if (stockData.rcr && stockData.rcr > 0) {
-      MARKET_PRICES.RCR_PHP = stockData.rcr;
-      if (stockData.rcrChange !== null) MARKET_CHANGES_24H.RCR_PHP = stockData.rcrChange;
+      if (!MARKET_PRICES.BTC_USD && cryptoData.liveBtc) {
+        MARKET_PRICES.BTC_USD = cryptoData.liveBtc;
+      }
+      if (!MARKET_PRICES.USD_PHP && fxData?.rate) {
+        MARKET_PRICES.USD_PHP = Number(fxData.rate.toFixed(4));
+      }
     }
   } catch (err) {
     console.error('Realtime internet market price fetch error:', err);
