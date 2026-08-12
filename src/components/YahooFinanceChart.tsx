@@ -89,11 +89,59 @@ export const YahooFinanceChart: React.FC<YahooFinanceChartProps> = ({
     return 'max';
   }, []);
 
+  // Parse direct Yahoo Finance v8 chart API JSON payload (for static deployments without backend)
+  const parseYahooDirectChartData = (data: any) => {
+    try {
+      const res = data?.chart?.result?.[0];
+      if (!res) return null;
+
+      const timestamps = res.timestamp || [];
+      const quote = res.indicators?.quote?.[0] || {};
+      const meta = res.meta || {};
+      const previousClose = meta.previousClose || meta.chartPreviousClose || 0;
+
+      const points: ChartPoint[] = [];
+      const closes = quote.close || [];
+      const opens = quote.open || [];
+      const highs = quote.high || [];
+      const lows = quote.low || [];
+      const volumes = quote.volume || [];
+
+      for (let i = 0; i < timestamps.length; i++) {
+        const p = closes[i];
+        if (p === null || p === undefined || isNaN(p)) continue;
+
+        const ts = timestamps[i] * 1000;
+        const d = new Date(ts);
+        const timeLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const fullDate = d.toLocaleString('en-US');
+
+        points.push({
+          timeLabel,
+          fullDate,
+          price: p,
+          open: opens[i] ?? p,
+          high: highs[i] ?? p,
+          low: lows[i] ?? p,
+          close: p,
+          volume: volumes[i] ?? 0,
+          changePct: previousClose > 0 ? ((p - previousClose) / previousClose) * 100 : 0
+        });
+      }
+
+      if (points.length === 0) return null;
+      return { points, previousClose };
+    } catch (e) {
+      return null;
+    }
+  };
+
   // Fetch real-time live chart history directly from finance.yahoo.com
   const fetchLiveYahooChartData = useCallback(async (isManualRefresh = false) => {
     setIsSyncing(true);
     const range = mapTimeframeToRange(timeframe);
 
+    // 1. Primary backend server route (if running full-stack / backend server)
     try {
       const res = await fetch(`/api/yahoo/chart?symbol=${encodeURIComponent(symbol)}&range=${range}`);
       const contentType = res.headers.get('content-type') || '';
@@ -113,10 +161,32 @@ export const YahooFinanceChart: React.FC<YahooFinanceChartProps> = ({
         }
       }
     } catch (err) {
-      console.warn('Live Yahoo Finance fetch error:', err);
+      console.warn('Backend Yahoo Finance route unavailable, trying direct client fetch:', err);
     }
 
-    // No simulation: if live network fails, clear points and indicate offline state
+    // 2. Client-side direct Yahoo Finance fetch for static hostings (Cloudflare Pages, GitHub Pages on digitalplat.com)
+    try {
+      const interval = range === '1d' ? '15m' : (range === '5d' ? '1h' : '1d');
+      const directUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${range}&interval=${interval}`;
+      const directRes = await fetch(directUrl);
+      const directType = directRes.headers.get('content-type') || '';
+      if (directRes.ok && directType.includes('application/json')) {
+        const directJson = await directRes.json();
+        const parsed = parseYahooDirectChartData(directJson);
+        if (parsed && parsed.points.length > 0) {
+          setPoints(parsed.points);
+          if (parsed.previousClose) setPrevClose(parsed.previousClose);
+          setLastSyncTime(new Date().toLocaleTimeString());
+          setIsLiveSource(true);
+          setIsSyncing(false);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('Direct client-side Yahoo Finance chart fetch error:', err);
+    }
+
+    // Indicate offline state if direct live fetch is blocked by CORS/network
     setPoints([]);
     setIsLiveSource(false);
     setIsSyncing(false);

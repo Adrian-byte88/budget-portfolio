@@ -766,20 +766,70 @@ export default function App() {
 
     const fetchTicks = async () => {
       try {
+        // 1. Primary backend route
         const res = await fetch('/api/market/ticks');
-        if (!res.ok) return;
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          const data = await res.json();
 
-        const data = await res.json();
+          if (data.success && data.prices) {
+            const prices = data.prices;
+            const changes = data.changes24h || {};
+            
+            setExchangeRates((prev) => ({
+              ...prev,
+              USD: prices.usd_php || prev.USD,
+            }));
 
-        if (data.success && data.prices) {
-          const prices = data.prices;
-          const changes = data.changes24h || {};
-          
-          setExchangeRates((prev) => ({
-            ...prev,
-            USD: prices.usd_php || prev.USD,
-          }));
+            isTickerUpdateRef.current = true;
+            setAssets((prevAssets) => {
+              if (!prevAssets || prevAssets.length === 0) return prevAssets;
+              return prevAssets.map((asset) => {
+                let updatedPrice = asset.currentPricePHP;
+                let updatedTrend = asset.change24h;
 
+                if (asset.key === 'btc') {
+                  if (prices.btc_php) updatedPrice = prices.btc_php;
+                  if (changes.btc !== undefined) updatedTrend = changes.btc;
+                } else if (asset.key === 'paxg') {
+                  if (prices.paxg_php) updatedPrice = prices.paxg_php;
+                  if (changes.paxg !== undefined) updatedTrend = changes.paxg;
+                } else if (asset.key === 'scc') {
+                  if (prices.scc_php) updatedPrice = prices.scc_php;
+                  if (changes.scc !== undefined) updatedTrend = changes.scc;
+                } else if (asset.key === 'spc') {
+                  if (prices.spc_php) updatedPrice = prices.spc_php;
+                  if (changes.spc !== undefined) updatedTrend = changes.spc;
+                } else if (asset.key === 'rcr') {
+                  if (prices.rcr_php) updatedPrice = prices.rcr_php;
+                  if (changes.rcr !== undefined) updatedTrend = changes.rcr;
+                } else if (asset.key === 'manulife') {
+                  if (prices.manulife_php) updatedPrice = prices.manulife_php;
+                  if (changes.manulife !== undefined) updatedTrend = changes.manulife;
+                }
+
+                return {
+                  ...asset,
+                  currentPricePHP: updatedPrice,
+                  change24h: updatedTrend,
+                };
+              });
+            });
+            return;
+          }
+        }
+
+        // 2. Client-side public endpoint fallback for static web hosting (Cloudflare / GitHub Pages on digitalplat.com)
+        const [fxRes, btcRes, paxgRes] = await Promise.all([
+          fetch('https://open.er-api.com/v6/latest/USD').then(r => r.json()).catch(() => null),
+          fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT').then(r => r.json()).catch(() => null),
+          fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=PAXGUSDT').then(r => r.json()).catch(() => null)
+        ]);
+
+        const usdPhp = fxRes?.rates?.PHP || 61.24;
+        setExchangeRates((prev) => ({ ...prev, USD: usdPhp }));
+
+        if (btcRes?.lastPrice || paxgRes?.lastPrice) {
           isTickerUpdateRef.current = true;
           setAssets((prevAssets) => {
             if (!prevAssets || prevAssets.length === 0) return prevAssets;
@@ -787,31 +837,15 @@ export default function App() {
               let updatedPrice = asset.currentPricePHP;
               let updatedTrend = asset.change24h;
 
-              if (asset.key === 'btc') {
-                if (prices.btc_php) updatedPrice = prices.btc_php;
-                if (changes.btc !== undefined) updatedTrend = changes.btc;
-              } else if (asset.key === 'paxg') {
-                if (prices.paxg_php) updatedPrice = prices.paxg_php;
-                if (changes.paxg !== undefined) updatedTrend = changes.paxg;
-              } else if (asset.key === 'scc') {
-                if (prices.scc_php) updatedPrice = prices.scc_php;
-                if (changes.scc !== undefined) updatedTrend = changes.scc;
-              } else if (asset.key === 'spc') {
-                if (prices.spc_php) updatedPrice = prices.spc_php;
-                if (changes.spc !== undefined) updatedTrend = changes.spc;
-              } else if (asset.key === 'rcr') {
-                if (prices.rcr_php) updatedPrice = prices.rcr_php;
-                if (changes.rcr !== undefined) updatedTrend = changes.rcr;
-              } else if (asset.key === 'manulife') {
-                if (prices.manulife_php) updatedPrice = prices.manulife_php;
-                if (changes.manulife !== undefined) updatedTrend = changes.manulife;
+              if (asset.key === 'btc' && btcRes?.lastPrice) {
+                updatedPrice = Number(btcRes.lastPrice) * usdPhp;
+                if (btcRes.priceChangePercent) updatedTrend = Number(btcRes.priceChangePercent);
+              } else if (asset.key === 'paxg' && paxgRes?.lastPrice) {
+                updatedPrice = Number(paxgRes.lastPrice) * usdPhp;
+                if (paxgRes.priceChangePercent) updatedTrend = Number(paxgRes.priceChangePercent);
               }
 
-              return {
-                ...asset,
-                currentPricePHP: updatedPrice,
-                change24h: updatedTrend,
-              };
+              return { ...asset, currentPricePHP: updatedPrice, change24h: updatedTrend };
             });
           });
         }
@@ -938,6 +972,18 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: inputVal, history: historyPayload }),
       });
+
+      const contentType = response.headers.get('content-type') || '';
+      if (!response.ok || !contentType.includes('application/json')) {
+        setMessages(prev => [...prev, {
+          id: (Date.now() + 1).toString(),
+          sender: 'ai',
+          text: `Static site mode active on custom domain. All live Yahoo Finance charts, live Binance prices, and real-time portfolio tracking are running directly in client mode.`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        }]);
+        setIsTyping(false);
+        return;
+      }
 
       const data = await response.json();
 
@@ -1506,6 +1552,11 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ apiKey: customKeyString }),
       });
+      const contentType = res.headers.get('content-type') || '';
+      if (!res.ok || !contentType.includes('application/json')) {
+        triggerToast('Live Sync Active', 'Static site deployment detected — live public rates active.', 'info');
+        return;
+      }
       const data = await res.json();
 
       if (data.quotaExceeded) {

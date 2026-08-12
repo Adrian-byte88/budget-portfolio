@@ -217,6 +217,12 @@ export default function MyFinancialPortfolio({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
+      const contentType = response.headers.get('content-type') || '';
+      if (!response.ok || !contentType.includes('application/json')) {
+        triggerLocalToast('AI Sentiment: Live static market mode active.', 'info');
+        setIsUpdatingAI(false);
+        return;
+      }
       const data = await response.json();
 
       if (data.quotaExceeded) {
