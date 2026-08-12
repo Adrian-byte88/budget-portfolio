@@ -346,6 +346,164 @@ async function startServer() {
     });
   });
 
+  // API 2.5: Direct Live Yahoo Finance Chart Data Proxy
+  app.get('/api/yahoo/chart', async (req: Request, res: Response) => {
+    try {
+      const symbol = String(req.query.symbol || 'BTC-USD').trim();
+      const range = String(req.query.range || '1mo').trim();
+      
+      let interval = String(req.query.interval || '').trim();
+      if (!interval) {
+        if (range === '1d') interval = '5m';
+        else if (range === '5d') interval = '15m';
+        else if (range === '1mo') interval = '1d';
+        else if (range === '6mo') interval = '1d';
+        else if (range === '1y') interval = '1wk';
+        else if (range === '5y') interval = '1wk';
+        else interval = '1mo';
+      }
+
+      const yfUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${range}&interval=${interval}&includePrePost=false`;
+
+      const response = await fetch(yfUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'application/json, text/plain, */*',
+          'Accept-Language': 'en-US,en;q=0.9',
+        }
+      });
+
+      if (!response.ok) {
+        return res.status(response.status).json({ success: false, error: `Yahoo Finance API returned status ${response.status}` });
+      }
+
+      const json = await response.json();
+      const result = json?.chart?.result?.[0];
+
+      if (!result) {
+        return res.status(404).json({ success: false, error: 'No result found in Yahoo Finance response' });
+      }
+
+      const meta = result.meta || {};
+      const timestamps = result.timestamp || [];
+      const quote = result.indicators?.quote?.[0] || {};
+      const opens = quote.open || [];
+      const highs = quote.high || [];
+      const lows = quote.low || [];
+      const closes = quote.close || [];
+      const volumes = quote.volume || [];
+
+      const points = [];
+      for (let i = 0; i < timestamps.length; i++) {
+        const ts = timestamps[i];
+        const closeVal = closes[i];
+        if (closeVal === null || closeVal === undefined || isNaN(closeVal)) continue;
+
+        const dateObj = new Date(ts * 1000);
+        const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
+        const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        const openVal = opens[i] ?? closeVal;
+        const highVal = highs[i] ?? Math.max(openVal, closeVal);
+        const lowVal = lows[i] ?? Math.min(openVal, closeVal);
+        const volVal = volumes[i] ?? 0;
+        const changePctVal = openVal > 0 ? ((closeVal - openVal) / openVal) * 100 : 0;
+
+        points.push({
+          time: dateStr,
+          fullDate: `${dateStr} ${timeStr}`,
+          fullTime: `${dateStr} ${timeStr}`,
+          timestamp: ts,
+          price: closeVal,
+          open: openVal,
+          high: highVal,
+          low: lowVal,
+          close: closeVal,
+          volume: volVal,
+          changePct: changePctVal,
+        });
+      }
+
+      // Calculate SMAs
+      for (let i = 0; i < points.length; i++) {
+        if (i >= 5) {
+          const slice20 = points.slice(Math.max(0, i - 19), i + 1);
+          points[i].sma20 = slice20.reduce((acc, p) => acc + p.price, 0) / slice20.length;
+        }
+        if (i >= 12) {
+          const slice50 = points.slice(Math.max(0, i - 49), i + 1);
+          points[i].sma50 = slice50.reduce((acc, p) => acc + p.price, 0) / slice50.length;
+        }
+      }
+
+      return res.json({
+        success: true,
+        symbol,
+        range,
+        interval,
+        currency: meta.currency || 'USD',
+        currentPrice: meta.regularMarketPrice || meta.chartPreviousClose || (points.length > 0 ? points[points.length - 1].price : 0),
+        previousClose: meta.previousClose || meta.chartPreviousClose || (points.length > 0 ? points[0].price : 0),
+        points
+      });
+
+    } catch (err: any) {
+      console.error('Error fetching Yahoo Finance chart:', err?.message || err);
+      return res.status(500).json({ success: false, error: err?.message || 'Failed to query Yahoo Finance chart' });
+    }
+  });
+
+  // API 2.6: Direct Live Yahoo Finance News Proxy
+  app.get('/api/yahoo/news', async (req: Request, res: Response) => {
+    try {
+      const symbol = String(req.query.symbol || 'BTC-USD').trim();
+      const yfNewsUrl = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(symbol)}&quotesCount=1&newsCount=10`;
+
+      const response = await fetch(yfNewsUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'application/json, text/plain, */*'
+        }
+      });
+
+      if (!response.ok) {
+        return res.status(response.status).json({ success: false, error: `Yahoo Search API returned status ${response.status}` });
+      }
+
+      const json = await response.json();
+      const rawNews = json?.news || [];
+
+      const news = rawNews.map((n: any, idx: number) => {
+        const pubTime = n.providerPublishTime ? new Date(n.providerPublishTime * 1000) : new Date();
+        const minsAgo = Math.floor((Date.now() - pubTime.getTime()) / 60000);
+        let timeAgoStr = `${minsAgo}m ago`;
+        if (minsAgo >= 60 && minsAgo < 1440) {
+          timeAgoStr = `${Math.floor(minsAgo / 60)}h ago`;
+        } else if (minsAgo >= 1440) {
+          timeAgoStr = `${Math.floor(minsAgo / 1440)}d ago`;
+        }
+
+        return {
+          id: n.uuid || `news-${idx}`,
+          title: n.title,
+          publisher: n.publisher || 'Yahoo Finance',
+          link: n.link || `https://finance.yahoo.com/quote/${symbol}/news/`,
+          timeAgo: timeAgoStr,
+          publishTime: pubTime.toISOString()
+        };
+      });
+
+      return res.json({
+        success: true,
+        symbol,
+        news
+      });
+    } catch (err: any) {
+      console.error('Error fetching Yahoo Finance news:', err?.message || err);
+      return res.status(500).json({ success: false, error: err?.message || 'Failed to fetch Yahoo Finance news' });
+    }
+  });
+
 // Helper to check if an error is a Gemini API quota limit (429 / RESOURCE_EXHAUSTED / rate limit)
 function checkIsQuotaError(error: any): boolean {
   if (!error) return false;

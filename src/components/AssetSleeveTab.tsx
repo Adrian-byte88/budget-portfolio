@@ -772,7 +772,7 @@ export default function AssetSleeveTab({
                   </span>
                 </h4>
                 <p className="text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-                  Click any risk asset below or the <b className="text-slate-900 dark:text-white bg-slate-200/70 dark:bg-purple-950/60 border border-slate-300 dark:border-purple-500/30 px-1.5 py-0.5 rounded">Yahoo Finance 📈</b> badge to launch Yahoo Finance® live price quotes, technical analysis, community polls, and breaking news.
+                  Click any risk asset below or the <b className="text-slate-900 dark:text-white bg-slate-200/70 dark:bg-purple-950/60 border border-slate-300 dark:border-purple-500/30 px-1.5 py-0.5 rounded">Yahoo Finance 📈</b> badge to launch Yahoo Finance® live price quotes, technical analysis, community polls, and breaking news. All live chart streams run strictly in-memory — <span className="text-emerald-700 dark:text-emerald-400 font-bold">0 Firestore reads/writes consumed</span>.
                 </p>
               </div>
             </div>
@@ -840,7 +840,9 @@ export default function AssetSleeveTab({
                             </span>
                           )}
                         </div>
-                        <span className="text-[10px] text-slate-400 mt-0.5 capitalize">{asset.assetType} index</span>
+                        <span className="text-[10px] text-slate-400 mt-0.5 capitalize">
+                          {(asset.key === 'paxg' || asset.name.toLowerCase().includes('pax gold') || asset.name.toLowerCase().includes('gold') || asset.assetType === 'commodity') ? 'crypto' : asset.assetType} index
+                        </span>
                       </div>
                     </td>
                     <td className="p-5 text-slate-500 dark:text-slate-400 text-xs">{asset.platform}</td>

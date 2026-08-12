@@ -105,7 +105,7 @@ const DEFAULT_INITIAL_ASSETS: AssetPosition[] = [
     units: 1.5,
     currentPricePHP: 237386.23,
     costBasisPHP: 135000,
-    assetType: 'commodity',
+    assetType: 'crypto',
     change24h: 0.85
   },
   {
@@ -467,7 +467,7 @@ export default function App() {
         isRemoteUpdate.current = true;
 
         const rawAssets: AssetPosition[] = Array.isArray(data.assets) ? data.assets : (isAdmin ? DEFAULT_INITIAL_ASSETS : []);
-        const userAssets = rawAssets.map(a => a.key === 'paxg' && a.class === 'safe' ? { ...a, class: 'risk' as const } : a);
+        const userAssets = rawAssets.map(a => (a.key === 'paxg' || a.name.toLowerCase().includes('pax gold') || a.name.toLowerCase().includes('gold')) ? { ...a, class: 'risk' as const, assetType: 'crypto' as const } : a);
         const userExpenses = Array.isArray(data.expenses) ? data.expenses : [];
         const userTransactions = Array.isArray(data.transactions) ? data.transactions : (isAdmin ? INITIAL_HISTORICAL_TXS : []);
         const userGoals = Array.isArray(data.goals) ? data.goals : [];
@@ -541,7 +541,7 @@ export default function App() {
         if (localAssets) {
           try {
             const parsed = JSON.parse(localAssets);
-            if (Array.isArray(parsed)) initAssets = parsed.map(a => a.key === 'paxg' && a.class === 'safe' ? { ...a, class: 'risk' as const } : a);
+            if (Array.isArray(parsed)) initAssets = parsed.map(a => (a.key === 'paxg' || a.name.toLowerCase().includes('pax gold') || a.name.toLowerCase().includes('gold')) ? { ...a, class: 'risk' as const, assetType: 'crypto' as const } : a);
           } catch {}
         }
 
