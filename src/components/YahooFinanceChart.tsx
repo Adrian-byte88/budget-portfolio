@@ -47,171 +47,6 @@ export interface ChartPoint {
   sma200?: number;
 }
 
-// Deterministic Pseudo-Random Generator based on seed
-function pseudoRandom(seed: number) {
-  const x = Math.sin(seed++) * 10000;
-  return x - Math.floor(x);
-}
-
-// Generator for realistic financial price series
-export function generateYahooFinanceData(
-  symbol: string,
-  basePrice: number,
-  timeframe: string
-): { points: ChartPoint[]; prevClose: number } {
-  let count = 60;
-  let volatility = 0.008;
-  let trend = 0.0001;
-
-  switch (timeframe) {
-    case '24H':
-      count = 60;
-      volatility = 0.006;
-      trend = -0.001;
-      break;
-    case '5D':
-      count = 70;
-      volatility = 0.012;
-      trend = 0.002;
-      break;
-    case '1M':
-      count = 90;
-      volatility = 0.018;
-      trend = 0.005;
-      break;
-    case '6M':
-      count = 100;
-      volatility = 0.025;
-      trend = 0.012;
-      break;
-    case 'YTD':
-      count = 110;
-      volatility = 0.022;
-      trend = 0.008;
-      break;
-    case '1Y':
-      count = 120;
-      volatility = 0.03;
-      trend = 0.018;
-      break;
-    case '5Y':
-      count = 140;
-      volatility = 0.045;
-      trend = 0.035;
-      break;
-    case 'All':
-      count = 160;
-      volatility = 0.055;
-      trend = 0.05;
-      break;
-    default:
-      count = 60;
-  }
-
-  // Seed numeric hash from symbol
-  let seed = 0;
-  for (let i = 0; i < symbol.length; i++) {
-    seed += symbol.charCodeAt(i) * (i + 1);
-  }
-
-  // Generate starting price roughly consistent with current base price
-  const points: ChartPoint[] = [];
-  let currentP = basePrice * (1 - trend * (count / 2));
-  if (currentP <= 0) currentP = basePrice * 0.8;
-
-  const now = new Date();
-
-  for (let i = 0; i < count; i++) {
-    const r = pseudoRandom(seed + i);
-    const r2 = pseudoRandom(seed + i * 17);
-    const r3 = pseudoRandom(seed + i * 31);
-
-    const pctChange = (r - 0.49) * volatility + trend;
-    const openP = currentP;
-    let closeP = openP * (1 + pctChange);
-
-    // Force the last point to equal basePrice
-    if (i === count - 1) {
-      closeP = basePrice;
-    }
-
-    const highP = Math.max(openP, closeP) * (1 + r2 * volatility * 0.8);
-    const lowP = Math.min(openP, closeP) * (1 - r3 * volatility * 0.8);
-    const vol = Math.floor(1000000 + r * 50000000 + (highP - lowP) * 10000000);
-
-    // Compute timestamp string based on timeframe
-    let timeLabel = '';
-    let fullDate = '';
-    const dateOffset = new Date(now.getTime());
-
-    if (timeframe === '24H') {
-      const minutesBack = (count - 1 - i) * 24; // 24 hours total
-      dateOffset.setMinutes(now.getMinutes() - minutesBack);
-      const hours = dateOffset.getHours();
-      const mins = dateOffset.getMinutes();
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      const formattedHours = hours % 12 || 12;
-      const formattedMins = mins < 10 ? `0${mins}` : mins;
-
-      timeLabel = `${formattedHours}:${formattedMins} ${ampm}`;
-      fullDate = `${dateOffset.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' })}, ${timeLabel}`;
-    } else if (timeframe === '5D') {
-      const daysBack = (count - 1 - i) * (5 / count);
-      dateOffset.setTime(now.getTime() - daysBack * 24 * 3600 * 1000);
-      timeLabel = dateOffset.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      fullDate = `${timeLabel}, ${dateOffset.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
-    } else if (timeframe === '1M') {
-      const daysBack = (count - 1 - i) * (30 / count);
-      dateOffset.setTime(now.getTime() - daysBack * 24 * 3600 * 1000);
-      timeLabel = dateOffset.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      fullDate = dateOffset.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    } else if (timeframe === '6M' || timeframe === 'YTD' || timeframe === '1Y') {
-      const daysBack = (count - 1 - i) * (365 / count);
-      dateOffset.setTime(now.getTime() - daysBack * 24 * 3600 * 1000);
-      timeLabel = dateOffset.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      fullDate = dateOffset.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    } else {
-      const daysBack = (count - 1 - i) * (1825 / count);
-      dateOffset.setTime(now.getTime() - daysBack * 24 * 3600 * 1000);
-      timeLabel = dateOffset.toLocaleDateString('en-US', { year: '2-digit', month: 'short' });
-      fullDate = dateOffset.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    }
-
-    points.push({
-      timeLabel,
-      fullDate,
-      price: closeP,
-      open: openP,
-      high: highP,
-      low: lowP,
-      close: closeP,
-      volume: vol,
-      changePct: ((closeP - openP) / openP) * 100
-    });
-
-    currentP = closeP;
-  }
-
-  // Calculate Simple Moving Averages (SMA)
-  for (let i = 0; i < points.length; i++) {
-    // SMA 20
-    if (i >= 5) {
-      const slice20 = points.slice(Math.max(0, i - 19), i + 1);
-      const sum20 = slice20.reduce((acc, p) => acc + p.price, 0);
-      points[i].sma20 = sum20 / slice20.length;
-    }
-    // SMA 50
-    if (i >= 12) {
-      const slice50 = points.slice(Math.max(0, i - 49), i + 1);
-      const sum50 = slice50.reduce((acc, p) => acc + p.price, 0);
-      points[i].sma50 = sum50 / slice50.length;
-    }
-  }
-
-  const prevClose = points[0].price;
-  return { points, prevClose };
-}
-
 export const YahooFinanceChart: React.FC<YahooFinanceChartProps> = ({
   symbol,
   assetName,
@@ -265,7 +100,11 @@ export const YahooFinanceChart: React.FC<YahooFinanceChartProps> = ({
       if (res.ok && contentType.includes('application/json')) {
         const data = await res.json();
         if (data.success && Array.isArray(data.points) && data.points.length > 0) {
-          setPoints(data.points);
+          const normalizedPoints = data.points.map((p: any) => ({
+            ...p,
+            timeLabel: p.timeLabel || p.time || p.fullDate || ''
+          }));
+          setPoints(normalizedPoints);
           if (data.previousClose) setPrevClose(data.previousClose);
           setLastSyncTime(new Date().toLocaleTimeString());
           setIsLiveSource(true);
@@ -274,17 +113,14 @@ export const YahooFinanceChart: React.FC<YahooFinanceChartProps> = ({
         }
       }
     } catch (err) {
-      console.warn('Live Yahoo Finance fetch fallback triggered:', err);
+      console.warn('Live Yahoo Finance fetch error:', err);
     }
 
-    // Seamless fallback to generated curve if network/offline
-    const generated = generateYahooFinanceData(symbol, usdPrice, timeframe);
-    setPoints(generated.points);
-    setPrevClose(generated.prevClose);
-    setLastSyncTime(new Date().toLocaleTimeString());
+    // No simulation: if live network fails, clear points and indicate offline state
+    setPoints([]);
     setIsLiveSource(false);
     setIsSyncing(false);
-  }, [symbol, timeframe, usdPrice, mapTimeframeToRange]);
+  }, [symbol, timeframe, mapTimeframeToRange]);
 
   // Initial load and timeframe/symbol sync
   useEffect(() => {
