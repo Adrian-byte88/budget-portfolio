@@ -308,44 +308,42 @@ setInterval(() => {
   fetchRealtimeInternetPrices().catch((err) => console.error('Periodic internet price fetch error:', err));
 }, 30000);
 
-async function startServer() {
-  const app = express();
-  const PORT = 3000;
+export const app = express();
+app.use(express.json({ limit: '10mb' }));
 
-  app.use(express.json({ limit: '10mb' }));
+// API 1: Health Check
+app.get('/api/health', (req: Request, res: Response) => {
+  res.json({ status: 'ok', time: new Date().toISOString() });
+});
 
-  // API 1: Health Check
-  app.get('/api/health', (req: Request, res: Response) => {
-    res.json({ status: 'ok', time: new Date().toISOString() });
+// API 2: Dynamic Live Prices & Ticker feeds (to support WebSockets-like updates)
+app.get('/api/market/ticks', async (req: Request, res: Response) => {
+  await fetchRealtimeInternetPrices();
+  res.json({
+    success: true,
+    timestamp: new Date().toISOString(),
+    prices: {
+      usd_php: MARKET_PRICES.USD_PHP,
+      btc_php: Number((MARKET_PRICES.BTC_USD * MARKET_PRICES.USD_PHP).toFixed(2)),
+      btc_usd: Number(MARKET_PRICES.BTC_USD.toFixed(2)),
+      paxg_php: Number((MARKET_PRICES.PAXG_USD * MARKET_PRICES.USD_PHP).toFixed(2)),
+      paxg_usd: Number(MARKET_PRICES.PAXG_USD.toFixed(2)),
+      scc_php: MARKET_PRICES.SCC_PHP,
+      spc_php: MARKET_PRICES.SPC_PHP,
+      rcr_php: MARKET_PRICES.RCR_PHP,
+      manulife_php: MARKET_PRICES.MANULIFE_PHP,
+    },
+    changes24h: {
+      usd_php: MARKET_CHANGES_24H.USD_PHP,
+      btc: MARKET_CHANGES_24H.BTC_USD,
+      paxg: MARKET_CHANGES_24H.PAXG_USD,
+      scc: MARKET_CHANGES_24H.SCC_PHP,
+      spc: MARKET_CHANGES_24H.SPC_PHP,
+      rcr: MARKET_CHANGES_24H.RCR_PHP,
+      manulife: MARKET_CHANGES_24H.MANULIFE_PHP,
+    }
   });
-
-  // API 2: Dynamic Live Prices & Ticker feeds (to support WebSockets-like updates)
-  app.get('/api/market/ticks', (req: Request, res: Response) => {
-    res.json({
-      success: true,
-      timestamp: new Date().toISOString(),
-      prices: {
-        usd_php: MARKET_PRICES.USD_PHP,
-        btc_php: Number((MARKET_PRICES.BTC_USD * MARKET_PRICES.USD_PHP).toFixed(2)),
-        btc_usd: Number(MARKET_PRICES.BTC_USD.toFixed(2)),
-        paxg_php: Number((MARKET_PRICES.PAXG_USD * MARKET_PRICES.USD_PHP).toFixed(2)),
-        paxg_usd: Number(MARKET_PRICES.PAXG_USD.toFixed(2)),
-        scc_php: MARKET_PRICES.SCC_PHP,
-        spc_php: MARKET_PRICES.SPC_PHP,
-        rcr_php: MARKET_PRICES.RCR_PHP,
-        manulife_php: MARKET_PRICES.MANULIFE_PHP,
-      },
-      changes24h: {
-        usd_php: MARKET_CHANGES_24H.USD_PHP,
-        btc: MARKET_CHANGES_24H.BTC_USD,
-        paxg: MARKET_CHANGES_24H.PAXG_USD,
-        scc: MARKET_CHANGES_24H.SCC_PHP,
-        spc: MARKET_CHANGES_24H.SPC_PHP,
-        rcr: MARKET_CHANGES_24H.RCR_PHP,
-        manulife: MARKET_CHANGES_24H.MANULIFE_PHP,
-      }
-    });
-  });
+});
 
   // Cache for Yahoo session cookie & crumb
   let yahooCookie: string | null = null;
@@ -1310,6 +1308,7 @@ async function getPortfolioUpdateData(apiKey: string | undefined): Promise<any> 
     });
   });
 
+async function startServer() {
   // Vite integration
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
@@ -1317,7 +1316,7 @@ async function getPortfolioUpdateData(apiKey: string | undefined): Promise<any> 
       appType: 'spa',
     });
     app.use(vite.middlewares);
-  } else {
+  } else if (!process.env.VERCEL) {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req: Request, res: Response) => {
@@ -1325,9 +1324,16 @@ async function getPortfolioUpdateData(apiKey: string | undefined): Promise<any> 
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server listening on port ${PORT}`);
-  });
+  if (!process.env.VERCEL) {
+    const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server listening on port ${PORT}`);
+    });
+  }
+
+  return app;
 }
 
 startServer();
+
+export default app;

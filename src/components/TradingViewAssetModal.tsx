@@ -282,7 +282,6 @@ export const TradingViewAssetModal: React.FC<TradingViewAssetModalProps> = ({
       const fetchLiveNews = async () => {
         setIsNewsLoading(true);
         try {
-          // 1. Primary server route (if running full-stack / backend server)
           const res = await fetch(`/api/yahoo/news?symbol=${encodeURIComponent(yfInfo.yahooSymbol)}`);
           const contentType = res.headers.get('content-type') || '';
           if (res.ok && contentType.includes('application/json')) {
@@ -293,29 +292,8 @@ export const TradingViewAssetModal: React.FC<TradingViewAssetModalProps> = ({
               return;
             }
           }
-
-          // 2. Client-side direct fetch for static hostings (Cloudflare Pages, GitHub Pages on custom domains)
-          const directRes = await fetch(`https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(yfInfo.yahooSymbol)}`);
-          const directType = directRes.headers.get('content-type') || '';
-          if (directRes.ok && directType.includes('application/json')) {
-            const directData = await directRes.json();
-            if (directData && Array.isArray(directData.news) && directData.news.length > 0) {
-              const mapped = directData.news.map((item: any) => ({
-                id: item.uuid || item.id || Math.random().toString(),
-                title: item.title,
-                publisher: item.publisher || 'Yahoo Finance',
-                link: item.link || `https://finance.yahoo.com/quote/${yfInfo.yahooSymbol}/news/`,
-                timeAgo: item.providerPublishTime
-                  ? new Date(item.providerPublishTime * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                  : 'Live'
-              }));
-              setLiveNews(mapped);
-              setIsNewsLoading(false);
-              return;
-            }
-          }
         } catch (err) {
-          console.warn('Yahoo Finance live news fetch fallback:', err);
+          console.warn('Yahoo Finance live news fetch error:', err);
         }
         setIsNewsLoading(false);
       };

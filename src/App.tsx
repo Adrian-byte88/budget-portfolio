@@ -760,13 +760,12 @@ export default function App() {
     });
   }, [expenses]);
 
-  // 1. Live Market Fluctuations Polling Ticker (Supports both Backend Server & Static Deployment)
+  // 1. Live Market Fluctuations Polling Ticker via Node Server API
   useEffect(() => {
     if (!email) return;
 
     const fetchTicks = async () => {
       try {
-        // 1. Primary backend route
         const res = await fetch('/api/market/ticks');
         const contentType = res.headers.get('content-type') || '';
         if (res.ok && contentType.includes('application/json')) {
@@ -815,39 +814,7 @@ export default function App() {
                 };
               });
             });
-            return;
           }
-        }
-
-        // 2. Client-side public endpoint fallback for static web hosting (Cloudflare / GitHub Pages on digitalplat.com)
-        const [fxRes, btcRes, paxgRes] = await Promise.all([
-          fetch('https://open.er-api.com/v6/latest/USD').then(r => r.json()).catch(() => null),
-          fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT').then(r => r.json()).catch(() => null),
-          fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=PAXGUSDT').then(r => r.json()).catch(() => null)
-        ]);
-
-        const usdPhp = fxRes?.rates?.PHP || 61.24;
-        setExchangeRates((prev) => ({ ...prev, USD: usdPhp }));
-
-        if (btcRes?.lastPrice || paxgRes?.lastPrice) {
-          isTickerUpdateRef.current = true;
-          setAssets((prevAssets) => {
-            if (!prevAssets || prevAssets.length === 0) return prevAssets;
-            return prevAssets.map((asset) => {
-              let updatedPrice = asset.currentPricePHP;
-              let updatedTrend = asset.change24h;
-
-              if (asset.key === 'btc' && btcRes?.lastPrice) {
-                updatedPrice = Number(btcRes.lastPrice) * usdPhp;
-                if (btcRes.priceChangePercent) updatedTrend = Number(btcRes.priceChangePercent);
-              } else if (asset.key === 'paxg' && paxgRes?.lastPrice) {
-                updatedPrice = Number(paxgRes.lastPrice) * usdPhp;
-                if (paxgRes.priceChangePercent) updatedTrend = Number(paxgRes.priceChangePercent);
-              }
-
-              return { ...asset, currentPricePHP: updatedPrice, change24h: updatedTrend };
-            });
-          });
         }
       } catch (err) {
         // Silent catch
@@ -1554,7 +1521,7 @@ export default function App() {
       });
       const contentType = res.headers.get('content-type') || '';
       if (!res.ok || !contentType.includes('application/json')) {
-        triggerToast('Live Sync Active', 'Static site deployment detected — live public rates active.', 'info');
+        triggerToast('Live Sync Active', 'Static site deployment detected — live public rates active.', 'warning');
         return;
       }
       const data = await res.json();
