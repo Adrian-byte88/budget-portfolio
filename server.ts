@@ -170,16 +170,24 @@ function getDbAdmin() {
     }
 
     if (!getApps().length) {
-      initializeApp({
-        projectId: projectId,
-        credential: applicationDefault(),
-      });
+      try {
+        initializeApp({
+          projectId: projectId,
+        });
+      } catch (e) {
+        console.warn('Firebase admin initializeApp notice:', e);
+      }
     }
 
-    if (databaseId && databaseId !== '(default)') {
-      dbAdmin = getFirestore(databaseId);
-    } else {
-      dbAdmin = getFirestore();
+    try {
+      if (databaseId && databaseId !== '(default)') {
+        dbAdmin = getFirestore(databaseId);
+      } else {
+        dbAdmin = getFirestore();
+      }
+    } catch (e) {
+      console.warn('getFirestore initialization notice:', e);
+      dbAdmin = null;
     }
   }
   return dbAdmin;
@@ -314,13 +322,26 @@ async function fetchRealtimeInternetPrices() {
 }
 
 // Initialize real-time internet prices on server startup and poll every 30 seconds
-fetchRealtimeInternetPrices().catch((err) => console.error('Initial internet price fetch error:', err));
-setInterval(() => {
-  fetchRealtimeInternetPrices().catch((err) => console.error('Periodic internet price fetch error:', err));
-}, 30000);
+if (!process.env.VERCEL) {
+  fetchRealtimeInternetPrices().catch((err) => console.error('Initial internet price fetch error:', err));
+  setInterval(() => {
+    fetchRealtimeInternetPrices().catch((err) => console.error('Periodic internet price fetch error:', err));
+  }, 30000);
+}
 
 export const app = express();
 app.use(express.json({ limit: '10mb' }));
+
+// CORS headers for all environments (Vercel, Cloud Run, Custom Domains)
+app.use((req: Request, res: Response, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
 
 // API 1: Health Check
 app.get('/api/health', (req: Request, res: Response) => {

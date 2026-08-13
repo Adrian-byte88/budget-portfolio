@@ -175,60 +175,7 @@ export const YahooFinanceChart: React.FC<YahooFinanceChartProps> = ({
         }
       }
     } catch (err) {
-      console.warn('Backend Yahoo Finance route error:', err);
-    }
-
-    // Direct Yahoo v8 client-side fallback
-    try {
-      const intervalMap: Record<string, string> = { '1d': '5m', '5d': '15m', '1mo': '1d', '6mo': '1d', '1y': '1wk', '5y': '1wk', 'max': '1mo' };
-      const interval = intervalMap[range] || '1d';
-      const directUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${range}&interval=${interval}`;
-      const directRes = await fetch(directUrl);
-      if (directRes.ok) {
-        const json = await directRes.json();
-        const result = json?.chart?.result?.[0];
-        const timestamps = result?.timestamp || [];
-        const closes = result?.indicators?.quote?.[0]?.close || [];
-        const opens = result?.indicators?.quote?.[0]?.open || [];
-        const highs = result?.indicators?.quote?.[0]?.high || [];
-        const lows = result?.indicators?.quote?.[0]?.low || [];
-        const volumes = result?.indicators?.quote?.[0]?.volume || [];
-
-        if (timestamps.length > 0 && closes.length > 0) {
-          const parsedPoints = [];
-          for (let i = 0; i < timestamps.length; i++) {
-            const c = closes[i];
-            if (c === null || c === undefined || isNaN(c)) continue;
-            const ts = timestamps[i];
-            const dateObj = new Date(ts * 1000);
-            const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
-            const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            parsedPoints.push({
-              time: dateStr,
-              timeLabel: `${dateStr} ${timeStr}`,
-              fullDate: `${dateStr} ${timeStr}`,
-              timestamp: ts,
-              price: c,
-              open: opens[i] ?? c,
-              high: highs[i] ?? c,
-              low: lows[i] ?? c,
-              close: c,
-              volume: volumes[i] ?? 0,
-              changePct: 0.1
-            });
-          }
-
-          if (parsedPoints.length > 0) {
-            setPoints(parsedPoints);
-            setLastSyncTime(new Date().toLocaleTimeString());
-            setIsLiveSource(true);
-            setIsSyncing(false);
-            return;
-          }
-        }
-      }
-    } catch (cErr) {
-      console.warn('Direct client Yahoo fetch info:', cErr);
+      console.warn('Backend Yahoo Finance route notice:', err);
     }
 
     // Client-side Failover Time-Series Generator (Ensures interactive chart is ALWAYS live)
