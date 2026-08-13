@@ -437,17 +437,27 @@ export default function App() {
   // Real-time state synchronization from Firestore across all devices and previews
   useEffect(() => {
     if (!email) {
-      setAssets([]);
+      const localGuestAssets = localStorage.getItem('wealth_vault_assets_guest');
+      let guestAssets = DEFAULT_INITIAL_ASSETS;
+      if (localGuestAssets) {
+        try {
+          const parsed = JSON.parse(localGuestAssets);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            guestAssets = parsed.map(a => (a.key === 'paxg' || a.name.toLowerCase().includes('pax gold') || a.name.toLowerCase().includes('gold')) ? { ...a, class: 'risk' as const, assetType: 'crypto' as const } : a);
+          }
+        } catch {}
+      }
+      setAssets(guestAssets);
       setExpenses([]);
-      setTransactions([]);
+      setTransactions(INITIAL_HISTORICAL_TXS);
       setGoals([]);
-      setBudgets(DEFAULT_BUDGETS.map(b => ({ ...b, spentPHP: 0 })));
-      setCycleItems([]);
-      setDevaluationItems([]);
-      setDevaluationTactics('');
-      setAuditChanges([]);
-      setDeploymentItems([]);
-      setBudgetCap('');
+      setBudgets(DEFAULT_BUDGETS);
+      setCycleItems(INITIAL_CYCLE_ITEMS);
+      setDevaluationItems(INITIAL_DEVALUATION_ITEMS);
+      setDevaluationTactics('🛡️ USD Defense Tactics: Crypto positions (BTC) and Commodities (PAX Gold) act as proxy hedges, effectively minimizing raw PHP purchasing power devaluations.');
+      setAuditChanges(INITIAL_AUDIT_CHANGES);
+      setDeploymentItems(INITIAL_DEPLOYMENT_ITEMS);
+      setBudgetCap('Budget Cap: ₱20,000 Total (100% Allocation to Safe Shield, unchanged mandate)');
       return;
     }
 
@@ -762,8 +772,6 @@ export default function App() {
 
   // 1. Live Market Fluctuations Polling Ticker via Node Server API
   useEffect(() => {
-    if (!email) return;
-
     const fetchTicks = async () => {
       try {
         const res = await fetch('/api/market/ticks');
