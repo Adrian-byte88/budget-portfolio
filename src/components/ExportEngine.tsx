@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import { AssetPosition, ExpenseEntry, TradeEntry, FamilyGoal, BudgetLimit } from '../types';
 import { getAssetValuation } from '../lib/formatters';
@@ -157,14 +157,37 @@ III. FINANCIAL FREEDOM & CASH FLOW METRIC
     URL.revokeObjectURL(url);
   };
 
-  const handleBackupExportExcel = () => {
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(assets), 'Assets');
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(expenses), 'Expenses');
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(trades), 'Trades');
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(goals), 'Goals');
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(budgets), 'Budgets');
-    XLSX.writeFile(wb, `wealth_vault_backup_${new Date().toISOString().split('T')[0]}.xlsx`);
+  const handleBackupExportExcel = async () => {
+    try {
+      const wb = new ExcelJS.Workbook();
+
+      const addSheet = (name: string, data: any[]) => {
+        const ws = wb.addWorksheet(name);
+        if (data && data.length > 0) {
+          const keys = Object.keys(data[0]);
+          ws.columns = keys.map((k) => ({ header: k, key: k }));
+          data.forEach((item) => ws.addRow(item));
+        }
+      };
+
+      addSheet('Assets', assets);
+      addSheet('Expenses', expenses);
+      addSheet('Trades', trades);
+      addSheet('Goals', goals);
+      addSheet('Budgets', budgets);
+
+      const buffer = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `wealth_vault_backup_${new Date().toISOString().split('T')[0]}.xlsx`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to export Excel backup:', err);
+      alert('Failed to generate Excel backup.');
+    }
   };
 
   const handleBackupImportExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -172,19 +195,54 @@ III. FINANCIAL FREEDOM & CASH FLOW METRIC
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
-        const data = new Uint8Array(event.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const parsed = {
-          assets: XLSX.utils.sheet_to_json(workbook.Sheets['Assets']),
-          expenses: XLSX.utils.sheet_to_json(workbook.Sheets['Expenses']),
-          trades: XLSX.utils.sheet_to_json(workbook.Sheets['Trades']),
-          goals: XLSX.utils.sheet_to_json(workbook.Sheets['Goals']),
-          budgets: XLSX.utils.sheet_to_json(workbook.Sheets['Budgets']),
+        const buffer = event.target?.result as ArrayBuffer;
+        const wb = new ExcelJS.Workbook();
+        await wb.xlsx.load(buffer);
+
+        const parseSheet = (sheetName: string) => {
+          const ws = wb.getWorksheet(sheetName);
+          if (!ws) return [];
+          const rows: any[] = [];
+          let headers: string[] = [];
+
+          ws.eachRow((row, rowNumber) => {
+            const rowValues = row.values as any[];
+            // ExcelJS row.values is 1-indexed (index 0 is undefined)
+            const rowData = Array.isArray(rowValues) ? rowValues.slice(1) : [];
+
+            if (rowNumber === 1) {
+              headers = rowData.map((v) => String(v ?? ''));
+            } else {
+              const obj: any = {};
+              headers.forEach((h, idx) => {
+                if (h) {
+                  let val = rowData[idx];
+                  if (val && typeof val === 'object' && 'result' in val) {
+                    val = val.result;
+                  }
+                  obj[h] = val;
+                }
+              });
+              rows.push(obj);
+            }
+          });
+
+          return rows;
         };
+
+        const parsed = {
+          assets: parseSheet('Assets'),
+          expenses: parseSheet('Expenses'),
+          trades: parseSheet('Trades'),
+          goals: parseSheet('Goals'),
+          budgets: parseSheet('Budgets'),
+        };
+
         onUploadBackup(parsed);
       } catch (err) {
+        console.error('Excel parse error:', err);
         alert('Invalid backup Excel format. Parsing terminated.');
       }
     };
