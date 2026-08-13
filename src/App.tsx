@@ -434,6 +434,26 @@ export default function App() {
     );
   };
 
+  // Helper to ensure ONLY asset price quotation, 24hr change, units, cost basis, and rate terms are synced to Firestore (never Yahoo chart objects or large time-series)
+  const sanitizeAssetsForFirestore = (assetList: AssetPosition[]): AssetPosition[] => {
+    return assetList.map((a) => ({
+      key: a.key,
+      name: a.name,
+      platform: a.platform,
+      class: a.class,
+      assetType: a.assetType,
+      units: Number(a.units || 0),
+      costBasisPHP: Number(a.costBasisPHP || 0),
+      currentPricePHP: Number(a.currentPricePHP || 0),
+      change24h: Number(a.change24h || 0),
+      ...(a.startDate ? { startDate: a.startDate } : {}),
+      ...(a.maturityDate ? { maturityDate: a.maturityDate } : {}),
+      ...(a.yieldPercent !== undefined ? { yieldPercent: Number(a.yieldPercent) } : {}),
+      ...(a.yieldFrequency ? { yieldFrequency: a.yieldFrequency } : {}),
+      ...(a.withholdingTaxPercent !== undefined ? { withholdingTaxPercent: Number(a.withholdingTaxPercent) } : {}),
+    }));
+  };
+
   // Real-time state synchronization from Firestore across all devices and previews
   useEffect(() => {
     if (!email) {
@@ -607,7 +627,7 @@ export default function App() {
 
         // Seed initial record in Firestore
         const initialDocData = {
-          assets: initAssets,
+          assets: sanitizeAssetsForFirestore(initAssets),
           expenses: initExpenses,
           transactions: initTxs,
           goals: initGoals,
@@ -721,7 +741,7 @@ export default function App() {
       localStorage.setItem(`wealth_vault_budget_cap_${email}`, budgetCap);
 
       const dataToSync = {
-        assets,
+        assets: sanitizeAssetsForFirestore(assets),
         expenses,
         transactions,
         goals,
@@ -770,9 +790,10 @@ export default function App() {
     });
   }, [expenses]);
 
-  // 1. Live Market Fluctuations Polling Ticker via Node Server API
+  // 1. Live Market Fluctuations Polling Ticker (Supports both Backend Proxy and Direct Client Static Fallback for GitHub Pages)
   useEffect(() => {
     const fetchTicks = async () => {
+      let fetchedSuccessfully = false;
       try {
         const res = await fetch('/api/market/ticks');
         const contentType = res.headers.get('content-type') || '';
@@ -780,6 +801,7 @@ export default function App() {
           const data = await res.json();
 
           if (data.success && data.prices) {
+            fetchedSuccessfully = true;
             const prices = data.prices;
             const changes = data.changes24h || {};
             
@@ -825,7 +847,64 @@ export default function App() {
           }
         }
       } catch (err) {
-        // Silent catch
+        // Fallback to direct client-side fetch below
+      }
+
+      // Fallback for static hosting (GitHub Pages) where /api/market/ticks is unavailable
+      if (!fetchedSuccessfully) {
+        try {
+          const [usdRes, btcRes, paxgRes] = await Promise.allSettled([
+            fetch('https://open.er-api.com/v6/latest/USD'),
+            fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT'),
+            fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=PAXGUSDT')
+          ]);
+
+          let liveUsdPhp = 58.5;
+          if (usdRes.status === 'fulfilled' && usdRes.value.ok) {
+            const usdData = await usdRes.value.json();
+            if (usdData?.rates?.PHP) {
+              liveUsdPhp = usdData.rates.PHP;
+              setExchangeRates((prev) => ({ ...prev, USD: liveUsdPhp }));
+            }
+          }
+
+          let btcPriceUsd = 67500, btcChange = 1.25;
+          if (btcRes.status === 'fulfilled' && btcRes.value.ok) {
+            const btcData = await btcRes.value.json();
+            if (btcData?.lastPrice) {
+              btcPriceUsd = parseFloat(btcData.lastPrice);
+              btcChange = parseFloat(btcData.priceChangePercent);
+            }
+          }
+
+          let paxgPriceUsd = 2380, paxgChange = 0.45;
+          if (paxgRes.status === 'fulfilled' && paxgRes.value.ok) {
+            const paxgData = await paxgRes.value.json();
+            if (paxgData?.lastPrice) {
+              paxgPriceUsd = parseFloat(paxgData.lastPrice);
+              paxgChange = parseFloat(paxgData.priceChangePercent);
+            }
+          }
+
+          const btcPhp = btcPriceUsd * liveUsdPhp;
+          const paxgPhp = paxgPriceUsd * liveUsdPhp;
+
+          isTickerUpdateRef.current = true;
+          setAssets((prevAssets) => {
+            if (!prevAssets || prevAssets.length === 0) return prevAssets;
+            return prevAssets.map((asset) => {
+              if (asset.key === 'btc') {
+                return { ...asset, currentPricePHP: btcPhp, change24h: btcChange };
+              }
+              if (asset.key === 'paxg') {
+                return { ...asset, currentPricePHP: paxgPhp, change24h: paxgChange };
+              }
+              return asset;
+            });
+          });
+        } catch (clientErr) {
+          console.warn('Direct client asset price auto-fetch notice:', clientErr);
+        }
       }
     };
 

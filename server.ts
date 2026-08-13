@@ -2,7 +2,6 @@ import express, { Request, Response } from 'express';
 import path from 'path';
 import fs from 'fs';
 import dotenv from 'dotenv';
-import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import { initializeApp, getApps, applicationDefault } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
@@ -322,17 +321,15 @@ async function fetchRealtimeInternetPrices() {
 }
 
 // Initialize real-time internet prices on server startup and poll every 30 seconds
-if (!process.env.VERCEL) {
-  fetchRealtimeInternetPrices().catch((err) => console.error('Initial internet price fetch error:', err));
-  setInterval(() => {
-    fetchRealtimeInternetPrices().catch((err) => console.error('Periodic internet price fetch error:', err));
-  }, 30000);
-}
+fetchRealtimeInternetPrices().catch((err) => console.error('Initial internet price fetch error:', err));
+setInterval(() => {
+  fetchRealtimeInternetPrices().catch((err) => console.error('Periodic internet price fetch error:', err));
+}, 30000);
 
 export const app = express();
 app.use(express.json({ limit: '10mb' }));
 
-// CORS headers for all environments (Vercel, Cloud Run, Custom Domains)
+// Universal CORS headers
 app.use((req: Request, res: Response, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -350,7 +347,11 @@ app.get('/api/health', (req: Request, res: Response) => {
 
 // API 2: Dynamic Live Prices & Ticker feeds (to support WebSockets-like updates)
 app.get('/api/market/ticks', async (req: Request, res: Response) => {
-  await fetchRealtimeInternetPrices();
+  try {
+    await fetchRealtimeInternetPrices();
+  } catch (err) {
+    console.warn('Market ticks fetch notice:', err);
+  }
   res.json({
     success: true,
     timestamp: new Date().toISOString(),
@@ -1514,8 +1515,9 @@ async function getPortfolioUpdateData(apiKey: string | undefined): Promise<any> 
   });
 
 async function startServer() {
-  // Vite integration
+  // Vite integration (development only)
   if (process.env.NODE_ENV !== 'production') {
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
