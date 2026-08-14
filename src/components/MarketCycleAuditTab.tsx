@@ -751,21 +751,21 @@ export default function MarketCycleAuditTab({
         </div>
       </div>
 
-      {/* SECTION 1: YAHOO FINANCE® LIVE TECHNICAL ANALYSIS, COMMUNITY POLLS & BREAKING NEWS HUB */}
+      {/* SECTION 1: TRADINGVIEW® LIVE TECHNICAL ANALYSIS & MARKET CYCLE HUB */}
       <div id="cycle-audit-section" data-highlight-id="cycle-audit-section" className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
           <div>
-            <div className="flex items-center gap-2 text-purple-700 dark:text-purple-300 font-extrabold text-xs uppercase tracking-wider">
-              <BarChart2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-              <span>Yahoo Finance® Live Technical Analysis, Community Polls & Breaking News Hub</span>
+            <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-300 font-extrabold text-xs uppercase tracking-wider">
+              <BarChart2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <span>TradingView® Live Technical Analysis, Oscillators & Market Cycle Hub</span>
             </div>
             <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-              Click any risk asset below to open its live interactive chart, technical indicator dashboard, breaking news feed, and community sentiment poll.
+              Click any risk asset below to open its live interactive TradingView® chart, technical indicators (RSI, MACD, SMAs), and market timeline.
             </p>
           </div>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-100 dark:bg-purple-500/20 text-purple-800 dark:text-purple-300 rounded-lg text-[10px] font-mono font-bold border border-purple-200 dark:border-purple-500/30 shrink-0">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-800 dark:text-indigo-300 rounded-lg text-[10px] font-mono font-bold border border-indigo-200 dark:border-indigo-500/30 shrink-0">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Real-Time Market Sync Active</span>
+            <span>TradingView Widget Active</span>
           </span>
         </div>
 

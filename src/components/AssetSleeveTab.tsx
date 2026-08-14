@@ -761,18 +761,18 @@ export default function AssetSleeveTab({
         {activeSubTab === 'risk' && (
           <div className="bg-slate-50/90 dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 p-4 sm:p-5 rounded-2xl mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs shadow-2xs transition-colors">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 rounded-xl border border-purple-200 dark:border-purple-500/30 shrink-0">
+              <div className="p-2.5 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 rounded-xl border border-indigo-200 dark:border-indigo-500/30 shrink-0">
                 <BarChart2 className="w-5 h-5" />
               </div>
               <div>
                 <h4 className="font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2 flex-wrap">
-                  <span>Yahoo Finance® Live Technical Charts & Market Quotations</span>
-                  <span className="px-2 py-0.5 bg-purple-600 dark:bg-purple-500 text-white rounded text-[9px] font-mono font-black shadow-2xs">
-                    LIVE
+                  <span>TradingView® Live Technical Charts & Market Analysis</span>
+                  <span className="px-2 py-0.5 bg-indigo-600 dark:bg-indigo-500 text-white rounded text-[9px] font-mono font-black shadow-2xs">
+                    LIVE WIDGET
                   </span>
                 </h4>
                 <p className="text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-                  Click any risk asset below or the <b className="text-slate-900 dark:text-white bg-slate-200/70 dark:bg-purple-950/60 border border-slate-300 dark:border-purple-500/30 px-1.5 py-0.5 rounded">Yahoo Finance 📈</b> badge to launch Yahoo Finance® live price quotes, technical analysis, community polls, and breaking news. All live chart streams run strictly in-memory — <span className="text-emerald-700 dark:text-emerald-400 font-bold">0 Firestore reads/writes consumed</span>.
+                  Click any risk asset below or the <b className="text-slate-900 dark:text-white bg-slate-200/70 dark:bg-indigo-950/60 border border-slate-300 dark:border-indigo-500/30 px-1.5 py-0.5 rounded">TradingView 📊</b> badge to launch the full TradingView® interactive chart, technical indicators (RSI, MACD, SMAs), asset financials, and market news timeline.
                 </p>
               </div>
             </div>
@@ -826,12 +826,12 @@ export default function AssetSleeveTab({
                           {activeSubTab === 'risk' ? (
                             <button
                               onClick={() => setSelectedTradingViewAsset(asset)}
-                              className="font-bold text-slate-900 dark:text-slate-200 text-xs hover:text-purple-600 dark:hover:text-purple-400 transition-colors text-left cursor-pointer flex items-center gap-1.5 group"
-                              title="Click to view Yahoo Finance® Live Chart, Technical Analysis & Quotations"
+                              className="font-bold text-slate-900 dark:text-slate-200 text-xs hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-left cursor-pointer flex items-center gap-1.5 group"
+                              title="Click to view TradingView® Interactive Chart & Technical Indicators"
                             >
                               <span>{asset.name}</span>
-                              <span className="px-1.5 py-0.5 bg-purple-500/10 group-hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30 rounded text-[9px] font-extrabold flex items-center gap-1 transition-all shrink-0">
-                                <span>Yahoo Finance 📈</span>
+                              <span className="px-1.5 py-0.5 bg-indigo-500/10 group-hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 rounded text-[9px] font-extrabold flex items-center gap-1 transition-all shrink-0">
+                                <span>TradingView 📊</span>
                               </span>
                             </button>
                           ) : (
