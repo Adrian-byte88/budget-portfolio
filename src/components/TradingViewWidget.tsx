@@ -110,7 +110,19 @@ export const getTradingViewSymbolDetails = (assetKey: string, assetName: string 
     };
   }
 
-  if (key.includes('mfc') || name.includes('manulife')) {
+  if (key.includes('manulife') || name.includes('manulife')) {
+    return {
+      tvSymbol: 'MYX:MREIT',
+      ticker: 'Manulife Asia-Pac FoF',
+      name: 'Manulife Asia Pacific REIT Fund of Funds',
+      exchange: 'Philippine UITF / Asia-Pac REITs',
+      category: 'equity',
+      logo: '🏢',
+      tradingViewUrl: 'https://www.tradingview.com/symbols/MYX-MREIT/'
+    };
+  }
+
+  if (key.includes('mfc')) {
     return {
       tvSymbol: 'NYSE:MFC',
       ticker: 'MFC',

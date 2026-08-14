@@ -1294,7 +1294,7 @@ export default function AssetSleeveTab({
                   Risk Sleeve Growth — Total Gains & Performance
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Aggregate unrealized net gain/loss performance across SPC Power, SCC Energy, RCR REIT, Manulife, BTC & PAXG Gold
+                  Aggregate unrealized net gain/loss performance across SPC Power, SCC Energy, RCR REIT, Manulife Asia Pacific REIT Fund of Funds, BTC & PAXG Gold
                 </p>
               </div>
             </div>

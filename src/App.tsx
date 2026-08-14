@@ -154,11 +154,11 @@ const DEFAULT_INITIAL_ASSETS: AssetPosition[] = [
   },
   {
     key: 'manulife',
-    name: 'Manulife Asia Pacific REIT Fund',
+    name: 'Manulife Asia Pacific REIT Fund of Funds',
     class: 'risk',
     platform: 'Manulife Trust',
     units: 2000,
-    currentPricePHP: 51.12,
+    currentPricePHP: 50.47,
     costBasisPHP: 100000,
     assetType: 'equity',
     change24h: 0.00
@@ -463,7 +463,15 @@ export default function App() {
         try {
           const parsed = JSON.parse(localGuestAssets);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            guestAssets = parsed.map(a => (a.key === 'paxg' || a.name.toLowerCase().includes('pax gold') || a.name.toLowerCase().includes('gold')) ? { ...a, class: 'risk' as const, assetType: 'crypto' as const } : a);
+            guestAssets = parsed.map(a => {
+              if (a.key === 'paxg' || a.name.toLowerCase().includes('pax gold') || a.name.toLowerCase().includes('gold')) {
+                return { ...a, class: 'risk' as const, assetType: 'crypto' as const };
+              }
+              if (a.key === 'manulife' || a.name.toLowerCase().includes('manulife')) {
+                return { ...a, name: 'Manulife Asia Pacific REIT Fund of Funds' };
+              }
+              return a;
+            });
           }
         } catch {}
       }
@@ -497,7 +505,15 @@ export default function App() {
         isRemoteUpdate.current = true;
 
         const rawAssets: AssetPosition[] = Array.isArray(data.assets) ? data.assets : (isAdmin ? DEFAULT_INITIAL_ASSETS : []);
-        const userAssets = rawAssets.map(a => (a.key === 'paxg' || a.name.toLowerCase().includes('pax gold') || a.name.toLowerCase().includes('gold')) ? { ...a, class: 'risk' as const, assetType: 'crypto' as const } : a);
+        const userAssets = rawAssets.map(a => {
+          if (a.key === 'paxg' || a.name.toLowerCase().includes('pax gold') || a.name.toLowerCase().includes('gold')) {
+            return { ...a, class: 'risk' as const, assetType: 'crypto' as const };
+          }
+          if (a.key === 'manulife' || a.name.toLowerCase().includes('manulife')) {
+            return { ...a, name: 'Manulife Asia Pacific REIT Fund of Funds' };
+          }
+          return a;
+        });
         const userExpenses = Array.isArray(data.expenses) ? data.expenses : [];
         const userTransactions = Array.isArray(data.transactions) ? data.transactions : (isAdmin ? INITIAL_HISTORICAL_TXS : []);
         const userGoals = Array.isArray(data.goals) ? data.goals : [];
@@ -794,111 +810,159 @@ export default function App() {
   useEffect(() => {
     const fetchTicks = async () => {
       let fetchedSuccessfully = false;
-      try {
-        const res = await fetch('/api/market/ticks');
-        const contentType = res.headers.get('content-type') || '';
-        if (res.ok && contentType.includes('application/json')) {
-          const data = await res.json();
 
-          if (data.success && data.prices) {
-            fetchedSuccessfully = true;
-            const prices = data.prices;
-            const changes = data.changes24h || {};
-            
-            setExchangeRates((prev) => ({
-              ...prev,
-              USD: prices.usd_php || prev.USD,
-            }));
+      // Check if we are running in full-stack server environment or static hosting (GitHub Pages/Custom Domain)
+      const isStaticDomain = 
+        typeof window !== 'undefined' && 
+        (window.location.hostname.includes('github.io') || 
+         window.location.hostname.includes('dpdns.org') ||
+         window.location.protocol === 'file:');
 
-            isTickerUpdateRef.current = true;
-            setAssets((prevAssets) => {
-              if (!prevAssets || prevAssets.length === 0) return prevAssets;
-              return prevAssets.map((asset) => {
-                let updatedPrice = asset.currentPricePHP;
-                let updatedTrend = asset.change24h;
+      if (!isStaticDomain) {
+        try {
+          const res = await fetch('/api/market/ticks');
+          const contentType = res.headers.get('content-type') || '';
+          if (res.ok && contentType.includes('application/json')) {
+            const data = await res.json();
 
-                if (asset.key === 'btc') {
-                  if (prices.btc_php) updatedPrice = prices.btc_php;
-                  if (changes.btc !== undefined) updatedTrend = changes.btc;
-                } else if (asset.key === 'paxg') {
-                  if (prices.paxg_php) updatedPrice = prices.paxg_php;
-                  if (changes.paxg !== undefined) updatedTrend = changes.paxg;
-                } else if (asset.key === 'scc') {
-                  if (prices.scc_php) updatedPrice = prices.scc_php;
-                  if (changes.scc !== undefined) updatedTrend = changes.scc;
-                } else if (asset.key === 'spc') {
-                  if (prices.spc_php) updatedPrice = prices.spc_php;
-                  if (changes.spc !== undefined) updatedTrend = changes.spc;
-                } else if (asset.key === 'rcr') {
-                  if (prices.rcr_php) updatedPrice = prices.rcr_php;
-                  if (changes.rcr !== undefined) updatedTrend = changes.rcr;
-                } else if (asset.key === 'manulife') {
-                  if (prices.manulife_php) updatedPrice = prices.manulife_php;
-                  if (changes.manulife !== undefined) updatedTrend = changes.manulife;
-                }
+            if (data.success && data.prices) {
+              fetchedSuccessfully = true;
+              const prices = data.prices;
+              const changes = data.changes24h || {};
+              
+              setExchangeRates((prev) => ({
+                ...prev,
+                USD: prices.usd_php || prev.USD,
+              }));
 
-                return {
-                  ...asset,
-                  currentPricePHP: updatedPrice,
-                  change24h: updatedTrend,
-                };
+              isTickerUpdateRef.current = true;
+              setAssets((prevAssets) => {
+                if (!prevAssets || prevAssets.length === 0) return prevAssets;
+                return prevAssets.map((asset) => {
+                  let updatedPrice = asset.currentPricePHP;
+                  let updatedTrend = asset.change24h;
+
+                  if (asset.key === 'btc') {
+                    if (prices.btc_php) updatedPrice = prices.btc_php;
+                    if (changes.btc !== undefined) updatedTrend = changes.btc;
+                  } else if (asset.key === 'paxg') {
+                    if (prices.paxg_php) updatedPrice = prices.paxg_php;
+                    if (changes.paxg !== undefined) updatedTrend = changes.paxg;
+                  } else if (asset.key === 'scc') {
+                    if (prices.scc_php) updatedPrice = prices.scc_php;
+                    if (changes.scc !== undefined) updatedTrend = changes.scc;
+                  } else if (asset.key === 'spc') {
+                    if (prices.spc_php) updatedPrice = prices.spc_php;
+                    if (changes.spc !== undefined) updatedTrend = changes.spc;
+                  } else if (asset.key === 'rcr') {
+                    if (prices.rcr_php) updatedPrice = prices.rcr_php;
+                    if (changes.rcr !== undefined) updatedTrend = changes.rcr;
+                  } else if (asset.key === 'manulife') {
+                    if (prices.manulife_php) updatedPrice = prices.manulife_php;
+                    if (changes.manulife !== undefined) updatedTrend = changes.manulife;
+                  }
+
+                  return {
+                    ...asset,
+                    currentPricePHP: updatedPrice,
+                    change24h: updatedTrend,
+                  };
+                });
               });
-            });
+            }
           }
+        } catch (err) {
+          // Fallback to direct client-side fetch below
         }
-      } catch (err) {
-        // Fallback to direct client-side fetch below
       }
 
-      // Fallback for static hosting (GitHub Pages) where /api/market/ticks is unavailable
+      // Fallback for static hosting (GitHub Pages) or direct multi-asset live fetching
       if (!fetchedSuccessfully) {
         try {
-          const [usdRes, btcRes, paxgRes] = await Promise.allSettled([
-            fetch('https://open.er-api.com/v6/latest/USD'),
-            fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT'),
-            fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=PAXGUSDT')
-          ]);
-
+          // 1. Fetch live USD/PHP exchange rate
+          const usdRes = await fetch('https://open.er-api.com/v6/latest/USD').catch(() => null);
           let liveUsdPhp = 58.5;
-          if (usdRes.status === 'fulfilled' && usdRes.value.ok) {
-            const usdData = await usdRes.value.json();
+          if (usdRes && usdRes.ok) {
+            const usdData = await usdRes.json();
             if (usdData?.rates?.PHP) {
-              liveUsdPhp = usdData.rates.PHP;
+              liveUsdPhp = Number(usdData.rates.PHP);
               setExchangeRates((prev) => ({ ...prev, USD: liveUsdPhp }));
             }
           }
 
-          let btcPriceUsd = 67500, btcChange = 1.25;
-          if (btcRes.status === 'fulfilled' && btcRes.value.ok) {
-            const btcData = await btcRes.value.json();
-            if (btcData?.lastPrice) {
-              btcPriceUsd = parseFloat(btcData.lastPrice);
-              btcChange = parseFloat(btcData.priceChangePercent);
-            }
-          }
+          // 2. Fetch live crypto tickers from Binance in parallel
+          const cryptoSymbols = ['BTCUSDT', 'PAXGUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT', 'DOGEUSDT', 'AVAXUSDT', 'SUIUSDT'];
+          const binanceFetchPromises = cryptoSymbols.map((sym) =>
+            fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${sym}`)
+              .then((r) => (r.ok ? r.json() : null))
+              .catch(() => null)
+          );
 
-          let paxgPriceUsd = 2380, paxgChange = 0.45;
-          if (paxgRes.status === 'fulfilled' && paxgRes.value.ok) {
-            const paxgData = await paxgRes.value.json();
-            if (paxgData?.lastPrice) {
-              paxgPriceUsd = parseFloat(paxgData.lastPrice);
-              paxgChange = parseFloat(paxgData.priceChangePercent);
-            }
-          }
+          const binanceResults = await Promise.allSettled(binanceFetchPromises);
+          const cryptoPriceMap: Record<string, { priceUSD: number; change24h: number }> = {};
 
-          const btcPhp = btcPriceUsd * liveUsdPhp;
-          const paxgPhp = paxgPriceUsd * liveUsdPhp;
+          binanceResults.forEach((res) => {
+            if (res.status === 'fulfilled' && res.value && res.value.symbol && res.value.lastPrice) {
+              const sym = String(res.value.symbol).toUpperCase();
+              const base = sym.replace('USDT', '').toLowerCase();
+              cryptoPriceMap[base] = {
+                priceUSD: parseFloat(res.value.lastPrice),
+                change24h: parseFloat(res.value.priceChangePercent || '0'),
+              };
+            }
+          });
+
+          // 3. Fallback benchmark rates for PSE equities & REITs
+          const psePrices: Record<string, { pricePHP: number; change24h: number }> = {
+            scc: { pricePHP: 20.80, change24h: -1.19 },
+            spc: { pricePHP: 10.28, change24h: 0.00 },
+            rcr: { pricePHP: 7.16, change24h: -0.28 },
+            areit: { pricePHP: 34.50, change24h: 0.29 },
+            creit: { pricePHP: 2.85, change24h: 0.00 },
+            mreit: { pricePHP: 12.80, change24h: 0.16 },
+            manulife: { pricePHP: 50.47, change24h: 0.00 },
+          };
 
           isTickerUpdateRef.current = true;
           setAssets((prevAssets) => {
             if (!prevAssets || prevAssets.length === 0) return prevAssets;
             return prevAssets.map((asset) => {
-              if (asset.key === 'btc') {
-                return { ...asset, currentPricePHP: btcPhp, change24h: btcChange };
+              const k = (asset.key || '').toLowerCase();
+              const n = (asset.name || '').toLowerCase();
+
+              // Match crypto asset
+              let matchedCryptoKey = '';
+              if (k === 'btc' || n.includes('bitcoin')) matchedCryptoKey = 'btc';
+              else if (k === 'paxg' || n.includes('pax gold') || (k.includes('pax') && !k.includes('spc'))) matchedCryptoKey = 'paxg';
+              else if (k === 'eth' || n.includes('ethereum')) matchedCryptoKey = 'eth';
+              else if (k === 'sol' || n.includes('solana')) matchedCryptoKey = 'sol';
+              else if (k === 'bnb' || n.includes('binance coin')) matchedCryptoKey = 'bnb';
+              else if (k === 'xrp' || n.includes('ripple')) matchedCryptoKey = 'xrp';
+              else if (k === 'ada' || n.includes('cardano')) matchedCryptoKey = 'ada';
+              else if (k === 'doge' || n.includes('dogecoin')) matchedCryptoKey = 'doge';
+              else if (k === 'avax' || n.includes('avalanche')) matchedCryptoKey = 'avax';
+              else if (k === 'sui' || n.includes('sui')) matchedCryptoKey = 'sui';
+              else if (cryptoPriceMap[k]) matchedCryptoKey = k;
+
+              if (matchedCryptoKey && cryptoPriceMap[matchedCryptoKey]) {
+                const liveCrypto = cryptoPriceMap[matchedCryptoKey];
+                const phpPrice = liveCrypto.priceUSD * liveUsdPhp;
+                return {
+                  ...asset,
+                  currentPricePHP: Number(phpPrice.toFixed(2)),
+                  change24h: liveCrypto.change24h,
+                };
               }
-              if (asset.key === 'paxg') {
-                return { ...asset, currentPricePHP: paxgPhp, change24h: paxgChange };
+
+              // Match PSE equities & REITs
+              if (psePrices[k]) {
+                return {
+                  ...asset,
+                  currentPricePHP: psePrices[k].pricePHP,
+                  change24h: psePrices[k].change24h,
+                };
               }
+
               return asset;
             });
           });
@@ -1623,7 +1687,7 @@ export default function App() {
         triggerPopupModal(
           'search_grounding',
           'Search Grounding Successful',
-          'Google Search Grounding successfully retrieved live 2026 market prices for USD/PHP, BTC, PAXG, SCC, SPC, RCR, and Manulife REIT!'
+          'Google Search Grounding successfully retrieved live 2026 market prices for USD/PHP, BTC, PAXG, SCC, SPC, RCR, and Manulife Asia Pacific REIT Fund of Funds!'
         );
         triggerToast('Search Grounding Successful', 'Latest PSE shares and commodity pricing verified via Google Search Grounding.', 'success');
       }

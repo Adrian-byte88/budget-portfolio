@@ -209,7 +209,7 @@ const MARKET_PRICES = {
   SCC_PHP: 20.80,
   SPC_PHP: 10.28,
   RCR_PHP: 7.16,
-  MANULIFE_PHP: 51.12,
+  MANULIFE_PHP: 50.47,
 };
 
 const MARKET_CHANGES_24H = {
@@ -226,7 +226,11 @@ const MARKET_CHANGES_24H = {
 async function fetchRealtimeInternetPrices() {
   try {
     // 1. Primary Engine: yahoo-finance2 bulk quote
-    const yfTickers = ['BTC-USD', 'PAXG-USD', 'USDPHP=X', 'SCC.PS', 'SPC.PS', 'RCR.PS', 'MFC', 'NVDA', 'AAPL', 'SPY'];
+    const yfTickers = [
+      'BTC-USD', 'PAXG-USD', 'ETH-USD', 'SOL-USD', 'USDPHP=X',
+      'SCC.PS', 'SPC.PS', 'RCR.PS', 'AREIT.PS', 'CREIT.PS', 'MREIT.PS', 'SMPH.PS', 'ALI.PS', 'BDO.PS', 'TEL.PS', 'GLO.PS',
+      'NVDA', 'AAPL', 'MSFT', 'SPY'
+    ];
     let yfQuotes: any[] = [];
     
     try {
@@ -964,7 +968,6 @@ function parseOfflineAIIntent(sanitizedUserMessage: string): { reply: string; ac
       if (key.includes('spc') || name.includes('spc power')) set.add('SPC.PS');
       if (key.includes('scc') || name.includes('semirara')) set.add('SCC.PS');
       if (key.includes('rcr') || name.includes('rcr reit')) set.add('RCR.PS');
-      if (key.includes('mfc') || name.includes('manulife')) set.add('MFC');
       if (key.includes('nvda') || name.includes('nvidia')) set.add('NVDA');
       if (key.includes('aapl') || name.includes('apple')) set.add('AAPL');
       if (key.includes('spy') || name.includes('s&p')) set.add('SPY');
@@ -975,7 +978,7 @@ function parseOfflineAIIntent(sanitizedUserMessage: string): { reply: string; ac
   async function getDynamicTickersFromFirestore(): Promise<string[]> {
     const defaultTickers = [
       'BTC-USD', 'ETH-USD', 'SOL-USD', 'PAXG-USD', 'GC=F',
-      'SPC.PS', 'SCC.PS', 'RCR.PS', 'MFC', 'NVDA', 'AAPL', 'SPY',
+      'SPC.PS', 'SCC.PS', 'RCR.PS', 'NVDA', 'AAPL', 'SPY',
       'USDPHP=X', 'PHP=X'
     ];
 
@@ -1138,7 +1141,7 @@ function parseOfflineAIIntent(sanitizedUserMessage: string): { reply: string; ac
       success: true,
       source: 'realtime_internet_sync',
       quotaExceeded: false,
-      message: 'Synced real-time live spot prices for PAXG, BTC, USD/PHP, PSE stocks (SCC, SPC, RCR) and Manulife Asia Pacific REIT Fund NAVPU.',
+      message: 'Synced real-time live spot prices for PAXG, BTC, USD/PHP, PSE stocks (SCC, SPC, RCR) and Manulife Asia Pacific REIT Fund of Funds NAVPU.',
       prices: {
         usd_php: MARKET_PRICES.USD_PHP,
         btc_usd: MARKET_PRICES.BTC_USD,
@@ -1181,7 +1184,7 @@ async function getPortfolioUpdateData(apiKey: string | undefined): Promise<any> 
       cycleItems: [
         { id: 'cy-1', asset: 'Bitcoin (BTC)', phase: 'Bull Market Consolidation', sentiment: 'Bullish', logic: 'Consolidating above support levels in mid-2026. Spot inflows steady.' },
         { id: 'cy-2', asset: 'PAX Gold (PAXG)', phase: 'Safe-Haven Peak', sentiment: 'Bullish', logic: 'Gold trading at record highs amid central bank hoarding and global hedge interest.' },
-        { id: 'cy-3', asset: 'REITs (RCR / Manulife)', phase: 'Yield Compression Recovery', sentiment: 'Neutral', logic: 'Stabilizing dividend yields as inflation trends downward to 3.4% in the Philippines.' },
+        { id: 'cy-3', asset: 'REITs (RCR / Manulife Asia Pacific REIT Fund of Funds)', phase: 'Yield Compression Recovery', sentiment: 'Neutral', logic: 'Stabilizing dividend yields as inflation trends downward to 3.4% in the Philippines.' },
         { id: 'cy-4', asset: 'PSE Equities (SCC / SPC)', phase: 'Value Consolidation', sentiment: 'Bearish', logic: 'SCC Energy faces mild price correction on softer thermal coal indices; SPC is solid yield play.' },
       ],
       devaluationItems: [
@@ -1218,7 +1221,7 @@ async function getPortfolioUpdateData(apiKey: string | undefined): Promise<any> 
       Perform a Google Search to analyze the latest market sentiment as of July 18, 2026 for:
       1. Bitcoin (BTC) and Gold (PAXG) price trends, phases, and sentiments.
       2. Philippine Inflation (BSP rate, CPI index, PHP/USD rate which is around ₱61.60).
-      3. Philippine stock equities: SCC Energy, SPC Power, RCR REIT, Manulife Asia REIT.
+      3. Philippine stock equities: SCC Energy, SPC Power, RCR REIT, Manulife Asia Pacific REIT Fund of Funds.
 
       Generate a JSON object containing updated structure values for these sections PLUS custom alert trigger rules based on current market volatility and drawdowns.
       Return ONLY valid JSON matching this schema:

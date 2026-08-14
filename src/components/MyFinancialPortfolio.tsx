@@ -60,7 +60,7 @@ const INITIAL_HISTORICAL_TXS: HistoricalTx[] = [
   { id: 'h-3', date: '2025-12-30', asset: 'Bitcoin', type: 'Buy', amount: '₱10,000.00', details: 'Initial GCrypto entry.' },
   { id: 'h-4', date: '2026-02-24', asset: 'PAX Gold', type: 'Sell', amount: '-₱1,000.00', details: 'Tactical trim.' },
   { id: 'h-5', date: '2026-03-02', asset: 'PAX Gold', type: 'Sell', amount: '-₱1,000.00', details: 'Profit take.' },
-  { id: 'h-6', date: '2026-03-03', asset: 'Manulife REIT', type: 'Buy', amount: '₱10,000.00', details: 'Asia-Pacific REIT Entry.' },
+  { id: 'h-6', date: '2026-03-03', asset: 'Manulife Asia Pacific REIT Fund of Funds', type: 'Buy', amount: '₱10,000.00', details: 'Asia-Pacific REIT Entry.' },
   { id: 'h-7', date: '2026-03-04', asset: 'Bond', type: 'Buy', amount: '₱25,000.00', details: 'Principal locked.' },
   { id: 'h-8', date: '2026-03-11', asset: 'PAX Gold', type: 'Buy', amount: '+₱12,000.00', details: 'Major scale-in.' },
   { id: 'h-9', date: '2026-04-08', asset: 'HYS Savings', type: 'Deposit', amount: '+₱1,000.00', details: 'Shield hardening.' },
@@ -1207,7 +1207,7 @@ export default function MyFinancialPortfolio({
                 </tr>
                 <tr className="hover:bg-slate-50/50 dark:hover:bg-white/[0.01]">
                   <td className="py-3.5 pl-5 text-xs font-bold text-slate-800 dark:text-slate-200">2. REITs</td>
-                  <td className="py-3.5 text-xs text-slate-500 font-mono">Manulife + RCR</td>
+                  <td className="py-3.5 text-xs text-slate-500 font-mono">Manulife Asia-Pac FoF + RCR</td>
                   <td className="py-3.5 text-xs font-mono text-right font-bold text-slate-800 dark:text-slate-200">
                     ₱{reitValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
