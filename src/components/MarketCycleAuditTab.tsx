@@ -148,7 +148,7 @@ export interface MarketCycleAuditTabProps {
   alerts?: MarketAlert[];
   onAddAlert?: (alert: Omit<MarketAlert, 'id' | 'timestamp'>) => void;
   onDeleteAlert?: (alertId: string) => void;
-  highlightId?: { id: string; type?: string; timestamp: number } | null;
+  highlightId?: { id: string; type?: string; tab?: string; timestamp?: number } | null;
   cycleItems?: CycleItem[];
   onUpdateCycleItems?: (items: CycleItem[]) => void;
   devaluationItems?: DevaluationItem[];

@@ -1031,9 +1031,8 @@ export default function App() {
       if (!response.ok || !contentType.includes('application/json')) {
         setMessages(prev => [...prev, {
           id: (Date.now() + 1).toString(),
-          sender: 'ai',
-          text: `Static site mode active on custom domain. All live Yahoo Finance charts, live Binance prices, and real-time portfolio tracking are running directly in client mode.`,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          sender: 'assistant',
+          text: `Static site mode active on custom domain. All live TradingView charts, live Binance prices, and real-time portfolio tracking are running directly in client mode.`,
         }]);
         setIsTyping(false);
         return;

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 
 export interface TradingViewSymbolDetails {
   tvSymbol: string;
@@ -196,7 +196,7 @@ export const getTradingViewSymbolDetails = (assetKey: string, assetName: string 
 };
 
 /**
- * 1. Advanced Real-Time Chart Widget
+ * 1. Advanced Real-Time Chart Widget (Isolated Iframe Embed)
  */
 export interface TradingViewAdvancedChartProps {
   symbol: string;
@@ -225,88 +225,33 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
   timezone = 'Asia/Manila',
   style = '1',
   locale = 'en',
-  enable_publishing = false,
   allow_symbol_change = true,
   height = '100%',
   width = '100%',
   hide_side_toolbar = false,
-  hide_top_toolbar = false,
-  withdateranges = true,
-  details = true,
-  hotlist = false,
-  calendar = false,
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    // Clear previous widget
-    container.innerHTML = '';
-
-    const widgetContainer = document.createElement('div');
-    widgetContainer.className = 'tradingview-widget-container';
-    widgetContainer.style.height = '100%';
-    widgetContainer.style.width = '100%';
-
-    const widgetDiv = document.createElement('div');
-    widgetDiv.className = 'tradingview-widget-container__widget';
-    widgetDiv.style.height = 'calc(100% - 32px)';
-    widgetDiv.style.width = '100%';
-    widgetContainer.appendChild(widgetDiv);
-
-    const script = document.createElement('script');
-    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
-    script.type = 'text/javascript';
-    script.async = true;
-
-    const widgetConfig = {
-      autosize: true,
-      symbol: symbol || 'BITSTAMP:BTCUSD',
-      interval: interval,
-      timezone: timezone,
-      theme: theme,
-      style: style,
-      locale: locale,
-      enable_publishing: enable_publishing,
-      allow_symbol_change: allow_symbol_change,
-      calendar: calendar,
-      support_host: 'https://www.tradingview.com',
-      hide_side_toolbar: hide_side_toolbar,
-      hide_top_toolbar: hide_top_toolbar,
-      withdateranges: withdateranges,
-      details: details,
-      hotlist: hotlist,
-      studies: [
-        'STD;SMA',
-        'STD;RSI',
-        'STD;MACD'
-      ]
-    };
-
-    script.innerHTML = JSON.stringify(widgetConfig);
-    widgetContainer.appendChild(script);
-    container.appendChild(widgetContainer);
-
-    return () => {
-      if (container) {
-        container.innerHTML = '';
-      }
-    };
-  }, [symbol, theme, interval, timezone, style, locale, allow_symbol_change, hide_side_toolbar, hide_top_toolbar]);
+  const cleanSymbol = symbol || 'BITSTAMP:BTCUSD';
+  const iframeSrc = `https://s.tradingview.com/widgetembed/?frameElementId=tradingview_widget&symbol=${encodeURIComponent(cleanSymbol)}&interval=${interval}&theme=${theme}&style=${style}&locale=${locale}&timezone=${encodeURIComponent(timezone)}&withdateranges=1&studies=STD%3BSMA%1FSTD%3BRSI%1FSTD%3BMACD&hide_side_toolbar=${hide_side_toolbar ? '1' : '0'}&allow_symbol_change=${allow_symbol_change ? '1' : '0'}`;
 
   return (
     <div 
-      ref={containerRef} 
-      className="w-full h-full min-h-[520px] rounded-xl overflow-hidden bg-slate-900/50" 
+      className="w-full h-full min-h-[520px] rounded-xl overflow-hidden bg-slate-900" 
       style={{ height, width }}
-    />
+    >
+      <iframe
+        title={`TradingView Advanced Chart - ${cleanSymbol}`}
+        src={iframeSrc}
+        className="w-full h-full border-0"
+        style={{ minHeight: '520px', height: '100%', width: '100%' }}
+        allowFullScreen
+        referrerPolicy="no-referrer-when-downgrade"
+      />
+    </div>
   );
 };
 
 /**
- * 2. Technical Analysis Gauge Widget
+ * 2. Technical Analysis Gauge Widget (Isolated Iframe Embed)
  */
 export interface TradingViewTechnicalAnalysisProps {
   symbol: string;
@@ -323,61 +268,39 @@ export const TradingViewTechnicalAnalysis: React.FC<TradingViewTechnicalAnalysis
   height = 460,
   width = '100%'
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    container.innerHTML = '';
-
-    const widgetContainer = document.createElement('div');
-    widgetContainer.className = 'tradingview-widget-container';
-    widgetContainer.style.height = '100%';
-    widgetContainer.style.width = '100%';
-
-    const widgetDiv = document.createElement('div');
-    widgetDiv.className = 'tradingview-widget-container__widget';
-    widgetDiv.style.height = 'calc(100% - 32px)';
-    widgetDiv.style.width = '100%';
-    widgetContainer.appendChild(widgetDiv);
-
-    const script = document.createElement('script');
-    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js';
-    script.type = 'text/javascript';
-    script.async = true;
-
-    script.innerHTML = JSON.stringify({
-      interval: interval,
-      width: '100%',
-      isTransparent: false,
-      height: '100%',
-      symbol: symbol || 'BITSTAMP:BTCUSD',
-      showIntervalTabs: true,
-      displayMode: 'multiple',
-      locale: 'en',
-      colorTheme: theme
-    });
-
-    widgetContainer.appendChild(script);
-    container.appendChild(widgetContainer);
-
-    return () => {
-      if (container) container.innerHTML = '';
-    };
-  }, [symbol, theme, interval]);
+  const cleanSymbol = symbol || 'BITSTAMP:BTCUSD';
+  const config = {
+    interval: interval,
+    width: '100%',
+    isTransparent: false,
+    height: '100%',
+    symbol: cleanSymbol,
+    showIntervalTabs: true,
+    displayMode: 'multiple',
+    locale: 'en',
+    colorTheme: theme
+  };
+  const iframeSrc = `https://www.tradingview-widget.com/embed-widget/technical-analysis/?locale=en#${encodeURIComponent(JSON.stringify(config))}`;
 
   return (
     <div 
-      ref={containerRef} 
       style={{ height, width }} 
-      className="w-full rounded-xl overflow-hidden" 
-    />
+      className="w-full rounded-xl overflow-hidden bg-slate-900/30"
+    >
+      <iframe
+        title={`TradingView Technical Analysis - ${cleanSymbol}`}
+        src={iframeSrc}
+        className="w-full h-full border-0"
+        style={{ height: '100%', width: '100%' }}
+        allowFullScreen
+        referrerPolicy="no-referrer-when-downgrade"
+      />
+    </div>
   );
 };
 
 /**
- * 3. Symbol Profile & Overview Widget
+ * 3. Symbol Profile & Overview Widget (Isolated Iframe Embed)
  */
 export interface TradingViewSymbolProfileProps {
   symbol: string;
@@ -392,58 +315,36 @@ export const TradingViewSymbolProfile: React.FC<TradingViewSymbolProfileProps> =
   height = 460,
   width = '100%'
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    container.innerHTML = '';
-
-    const widgetContainer = document.createElement('div');
-    widgetContainer.className = 'tradingview-widget-container';
-    widgetContainer.style.height = '100%';
-    widgetContainer.style.width = '100%';
-
-    const widgetDiv = document.createElement('div');
-    widgetDiv.className = 'tradingview-widget-container__widget';
-    widgetDiv.style.height = 'calc(100% - 32px)';
-    widgetDiv.style.width = '100%';
-    widgetContainer.appendChild(widgetDiv);
-
-    const script = document.createElement('script');
-    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-profile.js';
-    script.type = 'text/javascript';
-    script.async = true;
-
-    script.innerHTML = JSON.stringify({
-      width: '100%',
-      height: '100%',
-      isTransparent: false,
-      colorTheme: theme,
-      symbol: symbol || 'BITSTAMP:BTCUSD',
-      locale: 'en'
-    });
-
-    widgetContainer.appendChild(script);
-    container.appendChild(widgetContainer);
-
-    return () => {
-      if (container) container.innerHTML = '';
-    };
-  }, [symbol, theme]);
+  const cleanSymbol = symbol || 'BITSTAMP:BTCUSD';
+  const config = {
+    width: '100%',
+    height: '100%',
+    isTransparent: false,
+    colorTheme: theme,
+    symbol: cleanSymbol,
+    locale: 'en'
+  };
+  const iframeSrc = `https://www.tradingview-widget.com/embed-widget/symbol-profile/?locale=en#${encodeURIComponent(JSON.stringify(config))}`;
 
   return (
     <div 
-      ref={containerRef} 
       style={{ height, width }} 
-      className="w-full rounded-xl overflow-hidden" 
-    />
+      className="w-full rounded-xl overflow-hidden bg-slate-900/30"
+    >
+      <iframe
+        title={`TradingView Symbol Profile - ${cleanSymbol}`}
+        src={iframeSrc}
+        className="w-full h-full border-0"
+        style={{ height: '100%', width: '100%' }}
+        allowFullScreen
+        referrerPolicy="no-referrer-when-downgrade"
+      />
+    </div>
   );
 };
 
 /**
- * 4. Timeline / Market News Widget
+ * 4. Timeline / Market News Widget (Isolated Iframe Embed)
  */
 export interface TradingViewTimelineNewsProps {
   symbol?: string;
@@ -460,60 +361,38 @@ export const TradingViewTimelineNews: React.FC<TradingViewTimelineNewsProps> = (
   height = 540,
   width = '100%'
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    container.innerHTML = '';
-
-    const widgetContainer = document.createElement('div');
-    widgetContainer.className = 'tradingview-widget-container';
-    widgetContainer.style.height = '100%';
-    widgetContainer.style.width = '100%';
-
-    const widgetDiv = document.createElement('div');
-    widgetDiv.className = 'tradingview-widget-container__widget';
-    widgetDiv.style.height = 'calc(100% - 32px)';
-    widgetDiv.style.width = '100%';
-    widgetContainer.appendChild(widgetDiv);
-
-    const script = document.createElement('script');
-    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-timeline.js';
-    script.type = 'text/javascript';
-    script.async = true;
-
-    script.innerHTML = JSON.stringify({
-      feedMode: feedMode === 'symbol' && symbol ? 'symbol' : 'market',
-      symbol: symbol || 'BITSTAMP:BTCUSD',
-      isTransparent: false,
-      displayMode: 'regular',
-      width: '100%',
-      height: '100%',
-      colorTheme: theme,
-      locale: 'en'
-    });
-
-    widgetContainer.appendChild(script);
-    container.appendChild(widgetContainer);
-
-    return () => {
-      if (container) container.innerHTML = '';
-    };
-  }, [symbol, theme, feedMode]);
+  const cleanSymbol = symbol || 'BITSTAMP:BTCUSD';
+  const config = {
+    feedMode: feedMode === 'symbol' && symbol ? 'symbol' : 'market',
+    symbol: cleanSymbol,
+    isTransparent: false,
+    displayMode: 'regular',
+    width: '100%',
+    height: '100%',
+    colorTheme: theme,
+    locale: 'en'
+  };
+  const iframeSrc = `https://www.tradingview-widget.com/embed-widget/timeline/?locale=en#${encodeURIComponent(JSON.stringify(config))}`;
 
   return (
     <div 
-      ref={containerRef} 
       style={{ height, width }} 
-      className="w-full rounded-xl overflow-hidden" 
-    />
+      className="w-full rounded-xl overflow-hidden bg-slate-900/30"
+    >
+      <iframe
+        title={`TradingView Timeline News - ${cleanSymbol}`}
+        src={iframeSrc}
+        className="w-full h-full border-0"
+        style={{ height: '100%', width: '100%' }}
+        allowFullScreen
+        referrerPolicy="no-referrer-when-downgrade"
+      />
+    </div>
   );
 };
 
 /**
- * 5. Mini Symbol Overview Widget
+ * 5. Mini Symbol Overview Widget (Isolated Iframe Embed)
  */
 export interface TradingViewMiniChartProps {
   symbol: string;
@@ -528,55 +407,32 @@ export const TradingViewMiniChart: React.FC<TradingViewMiniChartProps> = ({
   width = '100%',
   height = 220
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    container.innerHTML = '';
-
-    const widgetContainer = document.createElement('div');
-    widgetContainer.className = 'tradingview-widget-container';
-    widgetContainer.style.height = '100%';
-    widgetContainer.style.width = '100%';
-
-    const widgetDiv = document.createElement('div');
-    widgetDiv.className = 'tradingview-widget-container__widget';
-    widgetDiv.style.height = '100%';
-    widgetDiv.style.width = '100%';
-    widgetContainer.appendChild(widgetDiv);
-
-    const script = document.createElement('script');
-    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
-    script.type = 'text/javascript';
-    script.async = true;
-
-    script.innerHTML = JSON.stringify({
-      symbol: symbol || 'BITSTAMP:BTCUSD',
-      width: '100%',
-      height: '100%',
-      locale: 'en',
-      dateRange: '12M',
-      colorTheme: theme,
-      isTransparent: false,
-      autosize: true,
-      largeChartUrl: ''
-    });
-
-    widgetContainer.appendChild(script);
-    container.appendChild(widgetContainer);
-
-    return () => {
-      if (container) container.innerHTML = '';
-    };
-  }, [symbol, theme]);
+  const cleanSymbol = symbol || 'BITSTAMP:BTCUSD';
+  const config = {
+    symbol: cleanSymbol,
+    width: '100%',
+    height: '100%',
+    locale: 'en',
+    dateRange: '12M',
+    colorTheme: theme,
+    isTransparent: false,
+    autosize: true
+  };
+  const iframeSrc = `https://www.tradingview-widget.com/embed-widget/mini-symbol-overview/?locale=en#${encodeURIComponent(JSON.stringify(config))}`;
 
   return (
     <div 
-      ref={containerRef} 
       style={{ height, width }} 
-      className="w-full rounded-xl overflow-hidden" 
-    />
+      className="w-full rounded-xl overflow-hidden bg-slate-900/30"
+    >
+      <iframe
+        title={`TradingView Mini Chart - ${cleanSymbol}`}
+        src={iframeSrc}
+        className="w-full h-full border-0"
+        style={{ height: '100%', width: '100%' }}
+        allowFullScreen
+        referrerPolicy="no-referrer-when-downgrade"
+      />
+    </div>
   );
 };

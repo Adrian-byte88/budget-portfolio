@@ -35,12 +35,14 @@ interface TradingViewAssetModalProps {
   asset: AssetPosition;
   onClose: () => void;
   triggerToast?: (title: string, message: string, type: 'success' | 'warning' | 'info') => void;
+  usdPhpRate?: number;
 }
 
 export const TradingViewAssetModal: React.FC<TradingViewAssetModalProps> = ({
   asset,
   onClose,
-  triggerToast
+  triggerToast,
+  usdPhpRate = 58.5
 }) => {
   const [activeTab, setActiveTab] = useState<'chart' | 'technicals' | 'profile' | 'news' | 'holdings'>('chart');
   const [chartInterval, setChartInterval] = useState<string>('D'); // D, W, M, 60, 15

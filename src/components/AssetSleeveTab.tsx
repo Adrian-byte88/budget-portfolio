@@ -83,8 +83,8 @@ export default function AssetSleeveTab({
   const [editUnits, setEditUnits] = useState('');
   const [editCost, setEditCost] = useState('');
   const [editPrice, setEditPrice] = useState('');
-  const [editClass, setEditClass] = useState<'safe' | 'risk' | 'physical' | 'liability'>('safe');
-  const [editAssetType, setEditAssetType] = useState<'cash' | 'deposit' | 'crypto' | 'commodity' | 'equity' | 'property' | 'liability'>('cash');
+  const [editClass, setEditClass] = useState<'safe' | 'risk' | 'physical' | 'liability' | 'hys'>('safe');
+  const [editAssetType, setEditAssetType] = useState<'cash' | 'deposit' | 'hys' | 'crypto' | 'commodity' | 'equity' | 'property' | 'liability'>('cash');
   const [editStartDate, setEditStartDate] = useState('');
   const [editMaturityDate, setEditMaturityDate] = useState('');
   const [editYieldPercent, setEditYieldPercent] = useState('');
@@ -223,7 +223,7 @@ export default function AssetSleeveTab({
   const [paydayTargetKey, setPaydayTargetKey] = useState<string>('available_cash');
   const [paydayAmount, setPaydayAmount] = useState<string>('');
   const [paydayDate, setPaydayDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [paydayType, setPaydayType] = useState<'15th' | '30th' | 'bonus' | 'custom'>('15th');
+  const [paydayType, setPaydayType] = useState<string>('semimonthly');
   const [paydayNotes, setPaydayNotes] = useState<string>('15th Payday Salary Deposit');
   const [paydayError, setPaydayError] = useState<string>('');
 
@@ -477,7 +477,7 @@ export default function AssetSleeveTab({
   const [newAssetKey, setNewAssetKey] = useState('');
   const [newAssetName, setNewAssetName] = useState('');
   const [newAssetPlatform, setNewAssetPlatform] = useState('');
-  const [newAssetClass, setNewAssetClass] = useState<'safe' | 'risk' | 'physical'>('safe');
+  const [newAssetClass, setNewAssetClass] = useState<'safe' | 'risk' | 'physical' | 'liability' | 'hys'>('safe');
   const [newAssetType, setNewAssetType] = useState<'cash' | 'deposit' | 'hys' | 'crypto' | 'commodity' | 'equity' | 'property' | 'liability'>('cash');
   const [newAssetUnits, setNewAssetUnits] = useState('1');
   const [newAssetCost, setNewAssetCost] = useState('0');
