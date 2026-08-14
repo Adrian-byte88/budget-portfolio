@@ -221,17 +221,30 @@ export default function AssetSleeveTab({
   // Bi-Monthly Payday Income Deposit state (15th & 30th)
   const [showPaydayModal, setShowPaydayModal] = useState(false);
   const [paydayTargetKey, setPaydayTargetKey] = useState<string>('available_cash');
-  const [paydayAmount, setPaydayAmount] = useState<string>('');
+  const [paydayAmount, setPaydayAmount] = useState<string>('10000');
   const [paydayDate, setPaydayDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [paydayType, setPaydayType] = useState<string>('semimonthly');
+  const [isRecurringPayday, setIsRecurringPayday] = useState<boolean>(true);
   const [paydayNotes, setPaydayNotes] = useState<string>('15th Payday Salary Deposit');
   const [paydayError, setPaydayError] = useState<string>('');
 
-  // Scheduled Paydays state
+  // Scheduled Paydays state with deduplication cleanup
   const [scheduledPaydays, setScheduledPaydays] = useState<any[]>(() => {
     try {
       const saved = localStorage.getItem('wealthvault_scheduled_paydays');
-      return saved ? JSON.parse(saved) : [];
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      if (!Array.isArray(parsed)) return [];
+      
+      // Deduplicate items by id and targetKey+paydayDate
+      const seen = new Set<string>();
+      return parsed.filter(item => {
+        if (!item || !item.id) return false;
+        const key = `${item.targetKey || 'cash'}_${item.paydayDate}_${item.amountPHP}`;
+        if (seen.has(key) && item.status === 'pending') return false;
+        seen.add(key);
+        return true;
+      });
     } catch {
       return [];
     }
@@ -245,23 +258,14 @@ export default function AssetSleeveTab({
     const todayStr = today.toISOString().split('T')[0];
 
     // Calculate 15th payday date
-    let p15Date: Date;
-    if (day <= 15) {
-      p15Date = new Date(year, month, 15);
-    } else {
-      p15Date = new Date(year, month + 1, 15);
-    }
+    const p15Date = day <= 15 ? new Date(year, month, 15) : new Date(year, month + 1, 15);
     const p15Str = p15Date.toISOString().split('T')[0];
 
-    // Calculate End of Month payday date
+    // Calculate End of Month payday date (30th/31st/28th)
     const lastDayThisMonth = new Date(year, month + 1, 0).getDate();
-    let pEndOfMonthDate: Date;
-    if (day <= lastDayThisMonth) {
-      pEndOfMonthDate = new Date(year, month, lastDayThisMonth);
-    } else {
-      const lastDayNextMonth = new Date(year, month + 2, 0).getDate();
-      pEndOfMonthDate = new Date(year, month + 1, lastDayNextMonth);
-    }
+    const pEndOfMonthDate = day <= lastDayThisMonth
+      ? new Date(year, month, lastDayThisMonth)
+      : new Date(year, month + 1, new Date(year, month + 2, 0).getDate());
     const p30Str = pEndOfMonthDate.toISOString().split('T')[0];
 
     let paydayTitle = '15th Payday';
@@ -312,49 +316,51 @@ export default function AssetSleeveTab({
     return { paydayTitle, paydayTypeLabel, badgeText, diffDays, daysText, todayStr, p15Str, p30Str, targetPaydayDateStr };
   };
 
-  const computeSchedulePresetInfo = (presetKey: string) => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
-    const day = today.getDate();
-    const todayStr = today.toISOString().split('T')[0];
+  const computeSchedulePresetInfo = (presetKey: string, baseDateStr: string = '') => {
+    const base = baseDateStr ? new Date(baseDateStr + 'T00:00:00') : new Date();
+    const year = base.getFullYear();
+    const month = base.getMonth();
+    const day = base.getDate();
+    const todayStr = new Date().toISOString().split('T')[0];
 
     // 15th
-    let p15Date = day <= 15 ? new Date(year, month, 15) : new Date(year, month + 1, 15);
+    const p15Date = day <= 15 ? new Date(year, month, 15) : new Date(year, month + 1, 15);
     const p15Str = p15Date.toISOString().split('T')[0];
 
     // End of Month
     const lastDayThisMonth = new Date(year, month + 1, 0).getDate();
-    let pEndOfMonthDate = day <= lastDayThisMonth ? new Date(year, month, lastDayThisMonth) : new Date(year, month + 1, new Date(year, month + 2, 0).getDate());
+    const pEndOfMonthDate = day <= lastDayThisMonth
+      ? new Date(year, month, lastDayThisMonth)
+      : new Date(year, month + 1, new Date(year, month + 2, 0).getDate());
     const pEndOfMonthStr = pEndOfMonthDate.toISOString().split('T')[0];
 
-    // Every 15th & End of Month (Next upcoming 15th or End of Month)
-    const pdNext = getNextPaydayInfo();
-    const semimonthlyStr = pdNext.targetPaydayDateStr;
-
-    // Weekly (Every 7 days)
-    const weeklyDate = new Date(today);
-    weeklyDate.setDate(weeklyDate.getDate() + 7);
-    const weeklyStr = weeklyDate.toISOString().split('T')[0];
-
-    // Monthly (1st of Next Month)
-    const monthlyDate = new Date(year, month + 1, 1);
-    const monthlyStr = monthlyDate.toISOString().split('T')[0];
+    // Next after today/base
+    if (presetKey === 'semimonthly' || presetKey === '15th_30th') {
+      if (day < 15) {
+        return { dateStr: p15Str, defaultNote: '15th Semi-Monthly Salary Deposit', label: 'Every 15th & End of Month' };
+      } else if (day >= 15 && day < lastDayThisMonth) {
+        return { dateStr: pEndOfMonthStr, defaultNote: 'End of Month Salary Deposit', label: 'Every 15th & End of Month' };
+      } else {
+        const next15 = new Date(year, month + 1, 15);
+        return { dateStr: next15.toISOString().split('T')[0], defaultNote: '15th Semi-Monthly Salary Deposit', label: 'Every 15th & End of Month' };
+      }
+    }
 
     switch (presetKey) {
-      case 'semimonthly':
-      case '15th_30th':
-      case '15th_endofmonth':
-        return { dateStr: semimonthlyStr, defaultNote: 'Semi-Monthly Salary Deposit (Every 15th & End of Month)', label: 'Every 15th & End of Month' };
       case '15th':
         return { dateStr: p15Str, defaultNote: '15th Payday Salary Deposit', label: '15th Payday' };
       case '30th':
       case 'endofmonth':
         return { dateStr: pEndOfMonthStr, defaultNote: 'End of Month Salary Deposit', label: 'End of Month Payday' };
-      case 'weekly':
-        return { dateStr: weeklyStr, defaultNote: 'Weekly Income Deposit', label: 'Weekly Income (Every 7 Days)' };
-      case 'monthly':
-        return { dateStr: monthlyStr, defaultNote: 'Monthly Salary Deposit', label: 'Monthly Salary (1st of Next Month)' };
+      case 'weekly': {
+        const weeklyDate = new Date(base);
+        weeklyDate.setDate(weeklyDate.getDate() + 7);
+        return { dateStr: weeklyDate.toISOString().split('T')[0], defaultNote: 'Weekly Income Deposit', label: 'Weekly Income (Every 7 Days)' };
+      }
+      case 'monthly': {
+        const monthlyDate = new Date(year, month + 1, 1);
+        return { dateStr: monthlyDate.toISOString().split('T')[0], defaultNote: 'Monthly Salary Deposit', label: 'Monthly Salary (1st of Next Month)' };
+      }
       case 'today':
         return { dateStr: todayStr, defaultNote: 'Immediate Cash Deposit', label: 'Immediate Deposit (Today)' };
       default:
@@ -362,8 +368,46 @@ export default function AssetSleeveTab({
     }
   };
 
+  const computeNextUpcomingDate = (frequency: string, fromDateStr: string) => {
+    const base = new Date(fromDateStr + 'T00:00:00');
+    const year = base.getFullYear();
+    const month = base.getMonth();
+    const day = base.getDate();
+
+    if (frequency === 'semimonthly' || frequency === '15th_30th') {
+      const lastDayThisMonth = new Date(year, month + 1, 0).getDate();
+      if (day <= 15) {
+        // If 15th just completed, the next one is End of Month (30th/31st)
+        const dEnd = new Date(year, month, lastDayThisMonth);
+        return dEnd.toISOString().split('T')[0];
+      } else {
+        // If End of Month just completed, the next one is 15th of next month
+        const dNext15 = new Date(year, month + 1, 15);
+        return dNext15.toISOString().split('T')[0];
+      }
+    } else if (frequency === '15th') {
+      const next15 = new Date(year, month + 1, 15);
+      return next15.toISOString().split('T')[0];
+    } else if (frequency === 'endofmonth' || frequency === '30th') {
+      const lastDayNextMonth = new Date(year, month + 2, 0).getDate();
+      const nextEnd = new Date(year, month + 1, lastDayNextMonth);
+      return nextEnd.toISOString().split('T')[0];
+    } else if (frequency === 'weekly') {
+      const nextWeek = new Date(base);
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      return nextWeek.toISOString().split('T')[0];
+    } else if (frequency === 'monthly') {
+      const nextMonth = new Date(year, month + 1, 1);
+      return nextMonth.toISOString().split('T')[0];
+    }
+    return fromDateStr;
+  };
+
   const depositToCashOrHys = (targetKey: string, amountPHP: number, notes: string) => {
-    let targetAsset = assets.find((a) => a.key === targetKey) || assets.find((a) => a.key === 'available_cash') || assets.find((a) => a.assetType === 'cash' || a.assetType === 'hys');
+    let targetAsset = assets.find((a) => a.key === targetKey)
+      || assets.find((a) => a.key === 'hys' || a.assetType === 'hys')
+      || assets.find((a) => a.key === 'available_cash')
+      || assets.find((a) => a.assetType === 'cash');
 
     if (!targetAsset) {
       const newCashAsset: AssetPosition = {
@@ -410,29 +454,87 @@ export default function AssetSleeveTab({
     }
   };
 
-  // Auto-process due paydays on mount or asset update
-  useEffect(() => {
-    const todayStr = new Date().toISOString().split('T')[0];
-    let updated = false;
+  // Execution protection ref to prevent duplicate trigger during React state changes
+  const isAutoProcessingRef = React.useRef(false);
 
-    const newList = scheduledPaydays.map((item) => {
-      if (item.status === 'pending' && item.paydayDate <= todayStr) {
+  // Auto-process due paydays once on mount or when scheduled list changes
+  useEffect(() => {
+    if (isAutoProcessingRef.current) return;
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    let currentSchedules: any[] = [];
+    try {
+      const saved = localStorage.getItem('wealthvault_scheduled_paydays');
+      currentSchedules = saved ? JSON.parse(saved) : [];
+    } catch {
+      currentSchedules = [];
+    }
+
+    let executedHistory: Record<string, boolean> = {};
+    try {
+      const savedHist = localStorage.getItem('wealthvault_executed_paydays');
+      executedHistory = savedHist ? JSON.parse(savedHist) : {};
+    } catch {
+      executedHistory = {};
+    }
+
+    let hasChanges = false;
+    const updatedSchedules: any[] = [];
+
+    for (const item of currentSchedules) {
+      if (!item || item.status === 'paused' || item.status === 'cancelled') {
+        updatedSchedules.push(item);
+        continue;
+      }
+
+      const isDue = item.paydayDate && item.paydayDate <= todayStr;
+      const executionKey = `${item.id}_${item.paydayDate}`;
+      const alreadyExecuted = !!executedHistory[executionKey] || (item.lastExecutedDate === item.paydayDate);
+
+      if (isDue && !alreadyExecuted) {
+        // Execute deposit EXACTLY ONCE
+        isAutoProcessingRef.current = true;
         depositToCashOrHys(
           item.targetKey,
           item.amountPHP,
           item.notes || `Automatic Payday Deposit on ${item.paydayDate}`
         );
-        updated = true;
-        return { ...item, status: 'executed', executedAt: todayStr };
-      }
-      return item;
-    });
+        executedHistory[executionKey] = true;
+        hasChanges = true;
 
-    if (updated) {
-      setScheduledPaydays(newList);
-      localStorage.setItem('wealthvault_scheduled_paydays', JSON.stringify(newList));
+        if (item.isRecurring || item.paydayType === 'semimonthly' || item.frequency === 'semimonthly') {
+          // Advance to the next upcoming payday (e.g. from 15th to 30th/31st, or from 30th to 15th of next month)
+          const nextDate = computeNextUpcomingDate(item.frequency || item.paydayType || 'semimonthly', item.paydayDate);
+          const nextPreset = computeSchedulePresetInfo(item.frequency || item.paydayType || 'semimonthly', nextDate);
+          
+          updatedSchedules.push({
+            ...item,
+            isRecurring: true,
+            status: 'pending',
+            lastExecutedDate: item.paydayDate,
+            paydayDate: nextDate,
+            notes: nextPreset.defaultNote
+          });
+        } else {
+          updatedSchedules.push({
+            ...item,
+            status: 'executed',
+            lastExecutedDate: item.paydayDate,
+            executedAt: todayStr
+          });
+        }
+      } else {
+        updatedSchedules.push(item);
+      }
     }
-  }, [assets]);
+
+    if (hasChanges) {
+      setScheduledPaydays(updatedSchedules);
+      localStorage.setItem('wealthvault_scheduled_paydays', JSON.stringify(updatedSchedules));
+      localStorage.setItem('wealthvault_executed_paydays', JSON.stringify(executedHistory));
+    }
+    isAutoProcessingRef.current = false;
+  }, []); // Run on mount
 
   const handleExecutePaydayDeposit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -445,13 +547,64 @@ export default function AssetSleeveTab({
     }
 
     const todayStr = new Date().toISOString().split('T')[0];
+    const isToday = paydayDate <= todayStr;
+    const scheduleId = 'payday_' + Date.now();
 
-    if (paydayDate > todayStr) {
-      // Schedule for selected payday date
+    // Read executed history
+    let executedHistory: Record<string, boolean> = {};
+    try {
+      const savedHist = localStorage.getItem('wealthvault_executed_paydays');
+      executedHistory = savedHist ? JSON.parse(savedHist) : {};
+    } catch {
+      executedHistory = {};
+    }
+
+    let updatedList = [...scheduledPaydays];
+
+    if (isToday) {
+      // 1. Execute SINGLE deposit immediately for today
+      depositToCashOrHys(paydayTargetKey, amountPHP, paydayNotes || `Payday Income Deposit (${todayStr})`);
+      executedHistory[`${scheduleId}_${todayStr}`] = true;
+
+      // 2. If recurring, schedule the NEXT payday date (e.g. if today is 15th, next is 30th/End of Month)
+      if (isRecurringPayday || paydayType === 'semimonthly') {
+        const nextDate = computeNextUpcomingDate(paydayType, todayStr);
+        const nextPreset = computeSchedulePresetInfo(paydayType, nextDate);
+
+        // Remove any old conflicting pending semi-monthly schedules for this target
+        updatedList = updatedList.filter(
+          (p) => !(p.targetKey === paydayTargetKey && p.status === 'pending' && (p.isRecurring || p.paydayType === 'semimonthly'))
+        );
+
+        const recurringItem = {
+          id: scheduleId,
+          amountPHP,
+          paydayType,
+          frequency: paydayType,
+          isRecurring: true,
+          targetKey: paydayTargetKey,
+          paydayDate: nextDate,
+          lastExecutedDate: todayStr,
+          notes: nextPreset.defaultNote,
+          createdAt: todayStr,
+          status: 'pending',
+        };
+
+        updatedList = [recurringItem, ...updatedList];
+      }
+    } else {
+      // Future target date: schedule without immediate deposit
+      // Remove any conflicting pending schedule for same target and date
+      updatedList = updatedList.filter(
+        (p) => !(p.targetKey === paydayTargetKey && p.paydayDate === paydayDate && p.status === 'pending')
+      );
+
       const newItem = {
-        id: 'payday_' + Date.now(),
+        id: scheduleId,
         amountPHP,
         paydayType,
+        frequency: paydayType,
+        isRecurring: isRecurringPayday || paydayType === 'semimonthly',
         targetKey: paydayTargetKey,
         paydayDate,
         notes: paydayNotes || `${paydayType === '15th' ? '15th' : paydayType === '30th' ? '30th' : 'Payday'} Income Deposit`,
@@ -459,16 +612,15 @@ export default function AssetSleeveTab({
         status: 'pending',
       };
 
-      const updatedList = [newItem, ...scheduledPaydays];
-      setScheduledPaydays(updatedList);
-      localStorage.setItem('wealthvault_scheduled_paydays', JSON.stringify(updatedList));
-    } else {
-      // Payday date is today or past, deposit immediately
-      depositToCashOrHys(paydayTargetKey, amountPHP, paydayNotes);
+      updatedList = [newItem, ...updatedList];
     }
 
+    setScheduledPaydays(updatedList);
+    localStorage.setItem('wealthvault_scheduled_paydays', JSON.stringify(updatedList));
+    localStorage.setItem('wealthvault_executed_paydays', JSON.stringify(executedHistory));
+
     setShowPaydayModal(false);
-    setPaydayAmount('');
+    setPaydayAmount('10000');
     setPaydayNotes('');
   };
 
@@ -693,7 +845,9 @@ export default function AssetSleeveTab({
                       {pendingItems.map((item) => (
                         <div key={item.id} className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-500/15 dark:bg-amber-400/10 border border-amber-300/80 dark:border-amber-500/30 rounded-lg text-amber-950 dark:text-amber-100 font-mono text-xs font-semibold">
                           <Calendar className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                          <span>Payday Auto-Deposit Scheduled ({item.paydayDate}):</span>
+                          <span>
+                            {item.isRecurring || item.paydayType === 'semimonthly' ? '🔁 Auto-Deposit (15th & 30th) • Next:' : 'Payday Deposit Scheduled:'} ({item.paydayDate}):
+                          </span>
                           <span className="font-black text-amber-700 dark:text-amber-300">
                             +₱{item.amountPHP.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
@@ -1869,6 +2023,30 @@ export default function AssetSleeveTab({
             )}
 
             <form onSubmit={handleExecutePaydayDeposit} className="space-y-4">
+              {/* Destination Asset Selector (HYS vs Cash) */}
+              <div>
+                <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1 flex items-center justify-between">
+                  <span>Destination Account</span>
+                  <span className="text-teal-600 dark:text-teal-400 font-bold">Safe Shield Asset</span>
+                </label>
+                <select
+                  value={paydayTargetKey}
+                  onChange={(e) => setPaydayTargetKey(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-teal-500 cursor-pointer shadow-2xs"
+                >
+                  {assets
+                    .filter((a) => a.class === 'safe' || a.assetType === 'cash' || a.assetType === 'hys' || a.assetType === 'deposit' || a.key === 'hys' || a.key === 'available_cash')
+                    .map((a) => (
+                      <option key={a.key} value={a.key}>
+                        {a.name} ({a.platform || (a.assetType === 'hys' ? 'High-Yield Savings 5%' : 'Cash Reserve')}) — ₱{getAssetValuation(a).totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </option>
+                    ))}
+                  {assets.filter((a) => a.class === 'safe' || a.assetType === 'cash' || a.assetType === 'hys' || a.assetType === 'deposit').length === 0 && (
+                    <option value="available_cash">Available Cash Reserve (5% High-Yield Savings)</option>
+                  )}
+                </select>
+              </div>
+
               {/* Payday Date & Schedule Frequency Selector */}
               {(() => {
                 const todayStr = new Date().toISOString().split('T')[0];
@@ -1886,7 +2064,7 @@ export default function AssetSleeveTab({
                       <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5 flex items-center justify-between">
                         <span>Deposit Schedule / Frequency</span>
                         <span className="text-[10px] text-teal-600 dark:text-teal-400 font-mono font-bold">
-                          {paydayDate > todayStr ? `Auto-credits on ${paydayDate}` : 'Immediate Deposit'}
+                          {paydayDate > todayStr ? `Auto-credits on ${paydayDate}` : 'Deposits Today (Single)'}
                         </span>
                       </label>
                       <select
@@ -1902,7 +2080,7 @@ export default function AssetSleeveTab({
                         }}
                         className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-teal-500 cursor-pointer shadow-2xs"
                       >
-                        <option value="semimonthly">🗓️ Every 15th & End of Month ({pSemimonthly.dateStr})</option>
+                        <option value="semimonthly">🗓️ Every 15th & End of Month (Next target: {pSemimonthly.dateStr})</option>
                         <option value="15th">🗓️ Specific 15th Payday ({p15.dateStr})</option>
                         <option value="endofmonth">🗓️ Specific End of Month Payday ({pEndOfMonth.dateStr})</option>
                         <option value="weekly">📅 Weekly Income ({pWeekly.dateStr})</option>
@@ -1950,20 +2128,33 @@ export default function AssetSleeveTab({
                       </div>
                     </div>
 
-                    {/* Target Date Input */}
-                    <div>
-                      <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">
-                        Target Payday Date
-                      </label>
-                      <input
-                        type="date"
-                        value={paydayDate}
-                        onChange={(e) => {
-                          setPaydayType('custom');
-                          setPaydayDate(e.target.value);
-                        }}
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono font-bold focus:outline-none focus:border-teal-500"
-                      />
+                    {/* Target Date Input & Recurring Checkbox */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      <div>
+                        <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">
+                          Target Payday Date
+                        </label>
+                        <input
+                          type="date"
+                          value={paydayDate}
+                          onChange={(e) => {
+                            setPaydayType('custom');
+                            setPaydayDate(e.target.value);
+                          }}
+                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono font-bold focus:outline-none focus:border-teal-500"
+                        />
+                      </div>
+                      <div className="flex items-end">
+                        <label className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 cursor-pointer w-full text-xs font-bold text-slate-700 dark:text-slate-300">
+                          <input
+                            type="checkbox"
+                            checked={isRecurringPayday}
+                            onChange={(e) => setIsRecurringPayday(e.target.checked)}
+                            className="rounded text-teal-600 focus:ring-teal-500"
+                          />
+                          <span>🔁 Keep recurring automatically</span>
+                        </label>
+                      </div>
                     </div>
                   </div>
                 );
@@ -1979,7 +2170,7 @@ export default function AssetSleeveTab({
                 {/* Quick Fill Buttons */}
                 <div className="flex flex-wrap items-center gap-2 mt-2">
                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Quick Fill:</span>
-                  {[10000, 15000, 25000, 30000, 50000].map((amt) => (
+                  {[10000, 15000, 20000, 25000, 30000, 50000].map((amt) => (
                     <button
                       key={amt}
                       type="button"
@@ -1995,13 +2186,16 @@ export default function AssetSleeveTab({
               {/* Live Preview Card & Auto-Deposit Explanation */}
               {(() => {
                 const amountPHP = parseFormattedNumber(paydayAmount);
-                const availableCashAsset = assets.find((a) => a.key === 'available_cash');
+                const targetAsset = assets.find((a) => a.key === paydayTargetKey)
+                  || assets.find((a) => a.key === 'hys' || a.assetType === 'hys')
+                  || assets.find((a) => a.key === 'available_cash');
                 const todayStr = new Date().toISOString().split('T')[0];
                 const isScheduledFuture = paydayDate > todayStr;
+                const nextRecurringDate = computeNextUpcomingDate(paydayType, isScheduledFuture ? paydayDate : todayStr);
 
                 if (!amountPHP || amountPHP <= 0) return null;
 
-                const currentBal = availableCashAsset ? getAssetValuation(availableCashAsset).totalValue : 0;
+                const currentBal = targetAsset ? getAssetValuation(targetAsset).totalValue : 0;
                 const newBal = currentBal + amountPHP;
 
                 return (
@@ -2013,17 +2207,22 @@ export default function AssetSleeveTab({
                           <span>🗓️ Automatic Deposit Scheduled for Payday</span>
                         </div>
                         <p className="text-[11px] text-amber-900/90 dark:text-amber-200/80 leading-relaxed font-sans">
-                          This <b>₱{amountPHP.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b> will be <b>automatically deposited</b> into <b>Available Cash Reserve</b> on <b>{paydayDate}</b>. You don't need to do anything manually on payday!
+                          Single <b>₱{amountPHP.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b> will be <b>automatically deposited</b> into <b>{targetAsset?.name || 'High-Yield Savings / Cash Reserve'}</b> on <b>{paydayDate}</b>.
                         </p>
                       </div>
                     ) : (
                       <div className="p-3.5 bg-teal-50/90 dark:bg-teal-950/40 border border-teal-300 dark:border-teal-800/60 rounded-xl space-y-1.5 text-xs">
                         <div className="flex items-center gap-2 font-bold text-teal-950 dark:text-teal-200">
                           <Sparkles className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
-                          <span>⚡ Immediate Deposit Today</span>
+                          <span>⚡ Immediate Deposit Today (Single ₱{amountPHP.toLocaleString()})</span>
                         </div>
                         <p className="text-[11px] text-teal-900/90 dark:text-teal-200/80 leading-relaxed font-sans">
-                          This <b>₱{amountPHP.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b> will be credited directly into <b>Available Cash Reserve</b> today.
+                          Exactly <b>₱{amountPHP.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b> will be credited once today into <b>{targetAsset?.name || 'High-Yield Savings / Cash Reserve'}</b>.
+                          {(isRecurringPayday || paydayType === 'semimonthly') && (
+                            <span className="block mt-1 text-teal-800 dark:text-teal-300 font-semibold">
+                              🗓️ Next scheduled automatic deposit of ₱{amountPHP.toLocaleString()} will occur on <b>{nextRecurringDate}</b>.
+                            </span>
+                          )}
                         </p>
                       </div>
                     )}
@@ -2035,7 +2234,7 @@ export default function AssetSleeveTab({
                           <span className="text-slate-700 dark:text-slate-300 font-bold block">₱{currentBal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
                         <div className="p-2 bg-white/80 dark:bg-slate-900/80 rounded-lg border border-teal-100 dark:border-teal-900/50">
-                          <span className="text-[9px] text-slate-400 uppercase tracking-wider block font-sans">{isScheduledFuture ? 'Projected Payday Balance:' : 'New Cash Balance:'}</span>
+                          <span className="text-[9px] text-slate-400 uppercase tracking-wider block font-sans">{isScheduledFuture ? 'Projected Payday Balance:' : 'New Balance After Deposit:'}</span>
                           <span className="text-teal-600 dark:text-teal-400 font-bold block">₱{newBal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
                       </div>
