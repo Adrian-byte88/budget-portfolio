@@ -382,6 +382,217 @@ app.get('/api/market/ticks', async (req: Request, res: Response) => {
   });
 });
 
+// Curated Philippine & Global Master Tickers for instant autocomplete matching
+const MASTER_ASSET_DICTIONARY = [
+  // Crypto & Metals
+  { key: 'btc', symbol: 'BTC-USD', binancePair: 'BTCUSDT', name: 'Bitcoin (BTC)', platform: 'GCrypto / Binance', class: 'risk' as const, assetType: 'crypto' as const, exchange: 'Binance / Crypto Spot', source: 'binance' as const },
+  { key: 'paxg', symbol: 'PAXG-USD', binancePair: 'PAXGUSDT', name: 'PAX Gold (PAXG)', platform: 'GCrypto / Paxos', class: 'risk' as const, assetType: 'crypto' as const, exchange: 'Paxos / Binance Spot', source: 'binance' as const },
+  { key: 'eth', symbol: 'ETH-USD', binancePair: 'ETHUSDT', name: 'Ethereum (ETH)', platform: 'GCrypto / Binance', class: 'risk' as const, assetType: 'crypto' as const, exchange: 'Binance / Crypto Spot', source: 'binance' as const },
+  { key: 'sol', symbol: 'SOL-USD', binancePair: 'SOLUSDT', name: 'Solana (SOL)', platform: 'GCrypto / Binance', class: 'risk' as const, assetType: 'crypto' as const, exchange: 'Binance / Crypto Spot', source: 'binance' as const },
+  { key: 'bnb', symbol: 'BNB-USD', binancePair: 'BNBUSDT', name: 'BNB (Binance Coin)', platform: 'Binance', class: 'risk' as const, assetType: 'crypto' as const, exchange: 'Binance Spot', source: 'binance' as const },
+  { key: 'xrp', symbol: 'XRP-USD', binancePair: 'XRPUSDT', name: 'XRP (Ripple)', platform: 'GCrypto / Binance', class: 'risk' as const, assetType: 'crypto' as const, exchange: 'Binance Spot', source: 'binance' as const },
+  { key: 'ada', symbol: 'ADA-USD', binancePair: 'ADAUSDT', name: 'Cardano (ADA)', platform: 'GCrypto / Binance', class: 'risk' as const, assetType: 'crypto' as const, exchange: 'Binance Spot', source: 'binance' as const },
+  { key: 'doge', symbol: 'DOGE-USD', binancePair: 'DOGEUSDT', name: 'Dogecoin (DOGE)', platform: 'GCrypto / Binance', class: 'risk' as const, assetType: 'crypto' as const, exchange: 'Binance Spot', source: 'binance' as const },
+  { key: 'avax', symbol: 'AVAX-USD', binancePair: 'AVAXUSDT', name: 'Avalanche (AVAX)', platform: 'Binance', class: 'risk' as const, assetType: 'crypto' as const, exchange: 'Binance Spot', source: 'binance' as const },
+  { key: 'sui', symbol: 'SUI-USD', binancePair: 'SUIUSDT', name: 'Sui Network (SUI)', platform: 'Binance', class: 'risk' as const, assetType: 'crypto' as const, exchange: 'Binance Spot', source: 'binance' as const },
+  
+  // Philippine Equities (PSE)
+  { key: 'scc', symbol: 'SCC.PS', name: 'Semirara Mining and Power Corp (SCC)', platform: 'DragonFi / PSE', class: 'risk' as const, assetType: 'equity' as const, exchange: 'Philippine Stock Exchange', defaultPricePHP: 20.80, source: 'pse' as const },
+  { key: 'spc', symbol: 'SPC.PS', name: 'SPC Power Corporation (SPC)', platform: 'DragonFi / PSE', class: 'risk' as const, assetType: 'equity' as const, exchange: 'Philippine Stock Exchange', defaultPricePHP: 10.28, source: 'pse' as const },
+  { key: 'smph', symbol: 'SMPH.PS', name: 'SM Prime Holdings (SMPH)', platform: 'DragonFi / PSE', class: 'risk' as const, assetType: 'equity' as const, exchange: 'Philippine Stock Exchange', defaultPricePHP: 26.50, source: 'pse' as const },
+  { key: 'ali', symbol: 'ALI.PS', name: 'Ayala Land Inc. (ALI)', platform: 'DragonFi / PSE', class: 'risk' as const, assetType: 'equity' as const, exchange: 'Philippine Stock Exchange', defaultPricePHP: 29.80, source: 'pse' as const },
+  { key: 'bdo', symbol: 'BDO.PS', name: 'BDO Unibank Inc. (BDO)', platform: 'DragonFi / PSE', class: 'risk' as const, assetType: 'equity' as const, exchange: 'Philippine Stock Exchange', defaultPricePHP: 145.00, source: 'pse' as const },
+  { key: 'bpi', symbol: 'BPI.PS', name: 'Bank of the Philippine Islands (BPI)', platform: 'DragonFi / PSE', class: 'risk' as const, assetType: 'equity' as const, exchange: 'Philippine Stock Exchange', defaultPricePHP: 118.00, source: 'pse' as const },
+  { key: 'tel', symbol: 'TEL.PS', name: 'PLDT Inc. (TEL)', platform: 'DragonFi / PSE', class: 'risk' as const, assetType: 'equity' as const, exchange: 'Philippine Stock Exchange', defaultPricePHP: 1420.00, source: 'pse' as const },
+  { key: 'glo', symbol: 'GLO.PS', name: 'Globe Telecom Inc. (GLO)', platform: 'DragonFi / PSE', class: 'risk' as const, assetType: 'equity' as const, exchange: 'Philippine Stock Exchange', defaultPricePHP: 2150.00, source: 'pse' as const },
+  { key: 'jfc', symbol: 'JFC.PS', name: 'Jollibee Foods Corp (JFC)', platform: 'DragonFi / PSE', class: 'risk' as const, assetType: 'equity' as const, exchange: 'Philippine Stock Exchange', defaultPricePHP: 242.00, source: 'pse' as const },
+  { key: 'ict', symbol: 'ICT.PS', name: 'International Container Terminal (ICT)', platform: 'DragonFi / PSE', class: 'risk' as const, assetType: 'equity' as const, exchange: 'Philippine Stock Exchange', defaultPricePHP: 395.00, source: 'pse' as const },
+  { key: 'monde', symbol: 'MONDE.PS', name: 'Monde Nissin Corp (MONDE)', platform: 'DragonFi / PSE', class: 'risk' as const, assetType: 'equity' as const, exchange: 'Philippine Stock Exchange', defaultPricePHP: 9.20, source: 'pse' as const },
+  { key: 'acen', symbol: 'ACEN.PS', name: 'ACEN Corporation (ACEN)', platform: 'DragonFi / PSE', class: 'risk' as const, assetType: 'equity' as const, exchange: 'Philippine Stock Exchange', defaultPricePHP: 3.90, source: 'pse' as const },
+
+  // Philippine REITs & Trust Funds
+  { key: 'rcr', symbol: 'RCR.PS', name: 'RL Commercial REIT Inc. (RCR)', platform: 'DragonFi / PSE', class: 'risk' as const, assetType: 'equity' as const, exchange: 'Philippine REIT / PSE', defaultPricePHP: 7.16, source: 'pse' as const },
+  { key: 'areit', symbol: 'AREIT.PS', name: 'AREIT Inc. (AREIT)', platform: 'DragonFi / PSE', class: 'risk' as const, assetType: 'equity' as const, exchange: 'Philippine REIT / PSE', defaultPricePHP: 34.50, source: 'pse' as const },
+  { key: 'creit', symbol: 'CREIT.PS', name: 'Citicore Energy REIT Corp (CREIT)', platform: 'DragonFi / PSE', class: 'risk' as const, assetType: 'equity' as const, exchange: 'Philippine REIT / PSE', defaultPricePHP: 2.85, source: 'pse' as const },
+  { key: 'mreit', symbol: 'MREIT.PS', name: 'MREIT Inc. (MREIT)', platform: 'DragonFi / PSE', class: 'risk' as const, assetType: 'equity' as const, exchange: 'Philippine REIT / PSE', defaultPricePHP: 12.80, source: 'pse' as const },
+  { key: 'ddmpr', symbol: 'DDMPR.PS', name: 'DDMP REIT Inc. (DDMPR)', platform: 'DragonFi / PSE', class: 'risk' as const, assetType: 'equity' as const, exchange: 'Philippine REIT / PSE', defaultPricePHP: 1.15, source: 'pse' as const },
+  { key: 'filrt', symbol: 'FILRT.PS', name: 'Filinvest REIT Corp (FILRT)', platform: 'DragonFi / PSE', class: 'risk' as const, assetType: 'equity' as const, exchange: 'Philippine REIT / PSE', defaultPricePHP: 2.80, source: 'pse' as const },
+  { key: 'preit', symbol: 'PREIT.PS', name: 'Premiere Island Power REIT (PREIT)', platform: 'DragonFi / PSE', class: 'risk' as const, assetType: 'equity' as const, exchange: 'Philippine REIT / PSE', defaultPricePHP: 1.55, source: 'pse' as const },
+  { key: 'manulife', symbol: 'MANULIFE-FOF', name: 'Manulife Asia Pacific REIT Fund of Funds', platform: 'Manulife Trust', class: 'risk' as const, assetType: 'equity' as const, exchange: 'Philippine Trust Fund / UITF', defaultPricePHP: 50.47, source: 'uitf' as const },
+
+  // US Equities & Global ETFs
+  { key: 'spy', symbol: 'SPY', name: 'SPDR S&P 500 ETF Trust (SPY)', platform: 'Interactive Brokers / Gotrade', class: 'risk' as const, assetType: 'equity' as const, exchange: 'NYSE Arca', source: 'yahoo' as const },
+  { key: 'qqq', symbol: 'QQQ', name: 'Invesco QQQ Trust Series 1 (QQQ)', platform: 'Interactive Brokers / Gotrade', class: 'risk' as const, assetType: 'equity' as const, exchange: 'NASDAQ', source: 'yahoo' as const },
+  { key: 'vti', symbol: 'VTI', name: 'Vanguard Total Stock Market ETF (VTI)', platform: 'Interactive Brokers / Gotrade', class: 'risk' as const, assetType: 'equity' as const, exchange: 'NYSE Arca', source: 'yahoo' as const },
+  { key: 'nvda', symbol: 'NVDA', name: 'NVIDIA Corporation (NVDA)', platform: 'Interactive Brokers / Gotrade', class: 'risk' as const, assetType: 'equity' as const, exchange: 'NASDAQ', source: 'yahoo' as const },
+  { key: 'aapl', symbol: 'AAPL', name: 'Apple Inc. (AAPL)', platform: 'Interactive Brokers / Gotrade', class: 'risk' as const, assetType: 'equity' as const, exchange: 'NASDAQ', source: 'yahoo' as const },
+  { key: 'msft', symbol: 'MSFT', name: 'Microsoft Corporation (MSFT)', platform: 'Interactive Brokers / Gotrade', class: 'risk' as const, assetType: 'equity' as const, exchange: 'NASDAQ', source: 'yahoo' as const },
+  { key: 'tsla', symbol: 'TSLA', name: 'Tesla Inc. (TSLA)', platform: 'Interactive Brokers / Gotrade', class: 'risk' as const, assetType: 'equity' as const, exchange: 'NASDAQ', source: 'yahoo' as const },
+  { key: 'amzn', symbol: 'AMZN', name: 'Amazon.com Inc. (AMZN)', platform: 'Interactive Brokers / Gotrade', class: 'risk' as const, assetType: 'equity' as const, exchange: 'NASDAQ', source: 'yahoo' as const },
+  { key: 'googl', symbol: 'GOOGL', name: 'Alphabet Inc. Class A (GOOGL)', platform: 'Interactive Brokers / Gotrade', class: 'risk' as const, assetType: 'equity' as const, exchange: 'NASDAQ', source: 'yahoo' as const },
+];
+
+// API 2.4: Real-time Asset Search & Autocomplete across Yahoo Finance, Binance, and PSE
+app.get('/api/market/search', async (req: Request, res: Response) => {
+  try {
+    const rawQuery = String(req.query.q || '').trim();
+    if (!rawQuery || rawQuery.length < 1) {
+      return res.json({
+        success: true,
+        query: rawQuery,
+        results: MASTER_ASSET_DICTIONARY.slice(0, 15).map((item) => ({
+          key: item.key,
+          symbol: item.symbol,
+          name: item.name,
+          platform: item.platform,
+          class: item.class,
+          assetType: item.assetType,
+          exchange: item.exchange,
+          currentPricePHP: (item as any).defaultPricePHP || (item.key === 'btc' ? Number((MARKET_PRICES.BTC_USD * MARKET_PRICES.USD_PHP).toFixed(2)) : item.key === 'paxg' ? Number((MARKET_PRICES.PAXG_USD * MARKET_PRICES.USD_PHP).toFixed(2)) : undefined),
+          source: item.source,
+        }))
+      });
+    }
+
+    const qLower = rawQuery.toLowerCase();
+    const liveUsdPhp = MARKET_PRICES.USD_PHP || 60.0;
+
+    // 1. Check matching in Master Asset Dictionary
+    const localMatches = MASTER_ASSET_DICTIONARY.filter((item) => {
+      return item.key.includes(qLower) ||
+        item.symbol.toLowerCase().includes(qLower) ||
+        item.name.toLowerCase().includes(qLower) ||
+        item.platform.toLowerCase().includes(qLower);
+    });
+
+    const resultsMap = new Map<string, any>();
+
+    // Add local matches first
+    for (const item of localMatches) {
+      let phpPrice = (item as any).defaultPricePHP;
+      let usdPrice = undefined;
+      if (item.key === 'btc') {
+        usdPrice = MARKET_PRICES.BTC_USD;
+        phpPrice = Number((usdPrice * liveUsdPhp).toFixed(2));
+      } else if (item.key === 'paxg') {
+        usdPrice = MARKET_PRICES.PAXG_USD;
+        phpPrice = Number((usdPrice * liveUsdPhp).toFixed(2));
+      } else if (item.key === 'scc') {
+        phpPrice = MARKET_PRICES.SCC_PHP;
+      } else if (item.key === 'spc') {
+        phpPrice = MARKET_PRICES.SPC_PHP;
+      } else if (item.key === 'rcr') {
+        phpPrice = MARKET_PRICES.RCR_PHP;
+      } else if (item.key === 'manulife') {
+        phpPrice = MARKET_PRICES.MANULIFE_PHP;
+      }
+
+      resultsMap.set(item.key, {
+        key: item.key,
+        symbol: item.symbol,
+        name: item.name,
+        platform: item.platform,
+        class: item.class,
+        assetType: item.assetType,
+        exchange: item.exchange,
+        currentPricePHP: phpPrice,
+        currentPriceUSD: usdPrice,
+        source: item.source,
+      });
+    }
+
+    // 2. Query Yahoo Finance Search API for international & PSE shares
+    try {
+      const yfSearchUrl = `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(rawQuery)}&quotesCount=8&newsCount=0&enableFuzzyQuery=true`;
+      const yfRes = await fetch(yfSearchUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+          'Accept': 'application/json',
+        }
+      });
+
+      if (yfRes.ok) {
+        const yfData = await yfRes.json();
+        const quotes = Array.isArray(yfData?.quotes) ? yfData.quotes : [];
+
+        for (const q of quotes) {
+          if (!q || !q.symbol) continue;
+          const sym = String(q.symbol).toUpperCase();
+          const cleanKey = sym.replace(/\.PS$/, '').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+          
+          if (!resultsMap.has(cleanKey)) {
+            const isPSE = sym.endsWith('.PS');
+            const isCrypto = q.quoteType === 'CRYPTOCURRENCY' || sym.includes('-USD');
+            const name = q.shortname || q.longname || sym;
+            const exchange = isPSE ? 'Philippine Stock Exchange (PSE)' : q.exchDisp || q.exchange || 'Stock Exchange';
+            const platform = isPSE ? 'DragonFi / PSE' : isCrypto ? 'GCrypto / Binance' : 'Interactive Brokers / Gotrade';
+            const assetType = isCrypto ? 'crypto' : (q.quoteType === 'EQUITY' || isPSE) ? 'equity' : (q.quoteType === 'ETF' ? 'equity' : 'commodity');
+
+            resultsMap.set(cleanKey, {
+              key: cleanKey,
+              symbol: sym,
+              name: `${name} (${sym})`,
+              platform,
+              class: 'risk',
+              assetType,
+              exchange,
+              source: 'yahoo',
+            });
+          }
+        }
+      }
+    } catch (e) {
+      // Yahoo Search fallback ignored gracefully
+    }
+
+    // 3. Query Binance API if query could be crypto (3-6 chars)
+    if (rawQuery.length >= 2 && rawQuery.length <= 8) {
+      try {
+        const binancePair = `${rawQuery.toUpperCase()}USDT`;
+        const binanceRes = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${binancePair}`).catch(() => null);
+        if (binanceRes && binanceRes.ok) {
+          const binanceData = await binanceRes.json();
+          if (binanceData?.lastPrice) {
+            const symClean = rawQuery.toLowerCase();
+            const lastPriceUsd = parseFloat(binanceData.lastPrice);
+            const phpPrice = Number((lastPriceUsd * liveUsdPhp).toFixed(2));
+            const change24h = parseFloat(binanceData.priceChangePercent || '0');
+
+            resultsMap.set(symClean, {
+              key: symClean,
+              symbol: `${rawQuery.toUpperCase()}-USD`,
+              name: `${rawQuery.toUpperCase()} / USDT (${symClean.toUpperCase()})`,
+              platform: 'GCrypto / Binance',
+              class: 'risk',
+              assetType: 'crypto',
+              exchange: 'Binance Live Spot',
+              currentPriceUSD: lastPriceUsd,
+              currentPricePHP: phpPrice,
+              change24h,
+              source: 'binance',
+            });
+          }
+        }
+      } catch (e) {}
+    }
+
+    const finalResults = Array.from(resultsMap.values()).slice(0, 20);
+
+    return res.json({
+      success: true,
+      query: rawQuery,
+      count: finalResults.length,
+      results: finalResults,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      error: err?.message || 'Search execution failure',
+      results: MASTER_ASSET_DICTIONARY.slice(0, 10),
+    });
+  }
+});
+
   // Cache for Yahoo session cookie & crumb
   let yahooCookie: string | null = null;
   let yahooCrumb: string | null = null;

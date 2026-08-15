@@ -1,10 +1,76 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AssetPosition, TradeEntry, MarketAlert } from '../types';
-import { Sliders, Plus, Play, RefreshCw, Sparkles, AlertTriangle, ShieldCheck, TrendingDown, TrendingUp, Info, Bell, Trash2, Calendar, Percent, BarChart2, ArrowRightLeft, Coins, Banknote, Wallet } from 'lucide-react';
+import { Sliders, Plus, Play, RefreshCw, Sparkles, AlertTriangle, ShieldCheck, TrendingDown, TrendingUp, Info, Bell, Trash2, Calendar, Percent, BarChart2, ArrowRightLeft, Coins, Banknote, Wallet, Search, Check, ExternalLink, Zap, Building2, Globe, ChevronDown, CheckCircle2, DollarSign } from 'lucide-react';
 import SmartCalculatorInput from './SmartCalculatorInput';
 import { formatTimeAgo, getAssetValuation } from '../lib/formatters';
 import { parseFormattedNumber } from '../utils/mathParser';
 import { TradingViewAssetModal } from './TradingViewAssetModal';
+
+export interface MarketSearchSuggestion {
+  key: string;
+  symbol: string;
+  name: string;
+  platform: string;
+  class: 'safe' | 'risk' | 'physical' | 'liability';
+  assetType: 'cash' | 'deposit' | 'hys' | 'crypto' | 'commodity' | 'equity' | 'property' | 'liability';
+  exchange?: string;
+  currentPriceUSD?: number;
+  currentPricePHP?: number;
+  change24h?: number;
+  source: 'binance' | 'yahoo' | 'pse' | 'uitf';
+  categoryLabel?: string;
+}
+
+// Curated Master Asset Catalog for instant zero-latency dropdown suggestions
+export const MASTER_MARKET_ASSETS: MarketSearchSuggestion[] = [
+  // Crypto & Metals (Binance / Paxos)
+  { key: 'btc', symbol: 'BTC-USD', name: 'Bitcoin (BTC)', platform: 'GCrypto / Binance', class: 'risk', assetType: 'crypto', exchange: 'Binance / Crypto Spot', currentPriceUSD: 63500, currentPricePHP: 3869000, source: 'binance', categoryLabel: 'Crypto & Digital' },
+  { key: 'paxg', symbol: 'PAXG-USD', name: 'PAX Gold (PAXG)', platform: 'GCrypto / Paxos', class: 'risk', assetType: 'crypto', exchange: 'Paxos / Binance Spot', currentPriceUSD: 4045, currentPricePHP: 246500, source: 'binance', categoryLabel: 'Crypto & Digital' },
+  { key: 'eth', symbol: 'ETH-USD', name: 'Ethereum (ETH)', platform: 'GCrypto / Binance', class: 'risk', assetType: 'crypto', exchange: 'Binance / Crypto Spot', currentPriceUSD: 3450, currentPricePHP: 210200, source: 'binance', categoryLabel: 'Crypto & Digital' },
+  { key: 'sol', symbol: 'SOL-USD', name: 'Solana (SOL)', platform: 'GCrypto / Binance', class: 'risk', assetType: 'crypto', exchange: 'Binance / Crypto Spot', currentPriceUSD: 185, currentPricePHP: 11270, source: 'binance', categoryLabel: 'Crypto & Digital' },
+  { key: 'bnb', symbol: 'BNB-USD', name: 'BNB (Binance Coin)', platform: 'Binance', class: 'risk', assetType: 'crypto', exchange: 'Binance Spot', currentPriceUSD: 580, currentPricePHP: 35340, source: 'binance', categoryLabel: 'Crypto & Digital' },
+  { key: 'xrp', symbol: 'XRP-USD', name: 'Ripple (XRP)', platform: 'GCrypto / Binance', class: 'risk', assetType: 'crypto', exchange: 'Binance Spot', currentPriceUSD: 0.62, currentPricePHP: 37.75, source: 'binance', categoryLabel: 'Crypto & Digital' },
+  { key: 'ada', symbol: 'ADA-USD', name: 'Cardano (ADA)', platform: 'GCrypto / Binance', class: 'risk', assetType: 'crypto', exchange: 'Binance Spot', currentPriceUSD: 0.45, currentPricePHP: 27.40, source: 'binance', categoryLabel: 'Crypto & Digital' },
+  { key: 'doge', symbol: 'DOGE-USD', name: 'Dogecoin (DOGE)', platform: 'GCrypto / Binance', class: 'risk', assetType: 'crypto', exchange: 'Binance Spot', currentPriceUSD: 0.14, currentPricePHP: 8.50, source: 'binance', categoryLabel: 'Crypto & Digital' },
+  { key: 'avax', symbol: 'AVAX-USD', name: 'Avalanche (AVAX)', platform: 'Binance', class: 'risk', assetType: 'crypto', exchange: 'Binance Spot', currentPriceUSD: 28.50, currentPricePHP: 1736, source: 'binance', categoryLabel: 'Crypto & Digital' },
+  { key: 'sui', symbol: 'SUI-USD', name: 'Sui Network (SUI)', platform: 'Binance', class: 'risk', assetType: 'crypto', exchange: 'Binance Spot', currentPriceUSD: 2.15, currentPricePHP: 131.00, source: 'binance', categoryLabel: 'Crypto & Digital' },
+  
+  // Philippine Equities (PSE)
+  { key: 'scc', symbol: 'SCC.PS', name: 'Semirara Mining & Power (SCC)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange', currentPricePHP: 20.80, source: 'pse', categoryLabel: 'Philippine Stocks (PSE)' },
+  { key: 'spc', symbol: 'SPC.PS', name: 'SPC Power Corporation (SPC)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange', currentPricePHP: 10.28, source: 'pse', categoryLabel: 'Philippine Stocks (PSE)' },
+  { key: 'smph', symbol: 'SMPH.PS', name: 'SM Prime Holdings (SMPH)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange', currentPricePHP: 26.50, source: 'pse', categoryLabel: 'Philippine Stocks (PSE)' },
+  { key: 'ali', symbol: 'ALI.PS', name: 'Ayala Land Inc. (ALI)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange', currentPricePHP: 29.80, source: 'pse', categoryLabel: 'Philippine Stocks (PSE)' },
+  { key: 'bdo', symbol: 'BDO.PS', name: 'BDO Unibank (BDO)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange', currentPricePHP: 145.00, source: 'pse', categoryLabel: 'Philippine Stocks (PSE)' },
+  { key: 'bpi', symbol: 'BPI.PS', name: 'Bank of the Philippine Islands (BPI)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange', currentPricePHP: 118.00, source: 'pse', categoryLabel: 'Philippine Stocks (PSE)' },
+  { key: 'tel', symbol: 'TEL.PS', name: 'PLDT Inc. (TEL)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange', currentPricePHP: 1420.00, source: 'pse', categoryLabel: 'Philippine Stocks (PSE)' },
+  { key: 'glo', symbol: 'GLO.PS', name: 'Globe Telecom (GLO)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange', currentPricePHP: 2150.00, source: 'pse', categoryLabel: 'Philippine Stocks (PSE)' },
+  { key: 'jfc', symbol: 'JFC.PS', name: 'Jollibee Foods Corp (JFC)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange', currentPricePHP: 242.00, source: 'pse', categoryLabel: 'Philippine Stocks (PSE)' },
+  { key: 'ict', symbol: 'ICT.PS', name: 'International Container Terminal (ICT)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange', currentPricePHP: 395.00, source: 'pse', categoryLabel: 'Philippine Stocks (PSE)' },
+  { key: 'monde', symbol: 'MONDE.PS', name: 'Monde Nissin Corp (MONDE)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange', currentPricePHP: 9.20, source: 'pse', categoryLabel: 'Philippine Stocks (PSE)' },
+  { key: 'acen', symbol: 'ACEN.PS', name: 'ACEN Corporation (ACEN)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange', currentPricePHP: 3.90, source: 'pse', categoryLabel: 'Philippine Stocks (PSE)' },
+  { key: 'cnvrg', symbol: 'CNVRG.PS', name: 'Converge ICT Solutions (CNVRG)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange', currentPricePHP: 14.50, source: 'pse', categoryLabel: 'Philippine Stocks (PSE)' },
+
+  // Philippine REITs & Trust Funds
+  { key: 'rcr', symbol: 'RCR.PS', name: 'RL Commercial REIT (RCR)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine REIT / PSE', currentPricePHP: 7.16, source: 'pse', categoryLabel: 'REITs & Trust Funds' },
+  { key: 'areit', symbol: 'AREIT.PS', name: 'AREIT Inc. (AREIT)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine REIT / PSE', currentPricePHP: 34.50, source: 'pse', categoryLabel: 'REITs & Trust Funds' },
+  { key: 'creit', symbol: 'CREIT.PS', name: 'Citicore Energy REIT (CREIT)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine REIT / PSE', currentPricePHP: 2.85, source: 'pse', categoryLabel: 'REITs & Trust Funds' },
+  { key: 'mreit', symbol: 'MREIT.PS', name: 'MREIT Inc. (MREIT)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine REIT / PSE', currentPricePHP: 12.80, source: 'pse', categoryLabel: 'REITs & Trust Funds' },
+  { key: 'ddmpr', symbol: 'DDMPR.PS', name: 'DDMP REIT Inc. (DDMPR)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine REIT / PSE', currentPricePHP: 1.15, source: 'pse', categoryLabel: 'REITs & Trust Funds' },
+  { key: 'filrt', symbol: 'FILRT.PS', name: 'Filinvest REIT (FILRT)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine REIT / PSE', currentPricePHP: 2.80, source: 'pse', categoryLabel: 'REITs & Trust Funds' },
+  { key: 'preit', symbol: 'PREIT.PS', name: 'Premiere Island Power REIT (PREIT)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine REIT / PSE', currentPricePHP: 1.55, source: 'pse', categoryLabel: 'REITs & Trust Funds' },
+  { key: 'manulife', symbol: 'MANULIFE-FOF', name: 'Manulife Asia Pacific REIT Fund of Funds', platform: 'Manulife Trust', class: 'risk', assetType: 'equity', exchange: 'Philippine Trust Fund / UITF', currentPricePHP: 50.47, source: 'uitf', categoryLabel: 'REITs & Trust Funds' },
+
+  // US Equities & Global ETFs (Yahoo Finance)
+  { key: 'spy', symbol: 'SPY', name: 'SPDR S&P 500 ETF Trust (SPY)', platform: 'Interactive Brokers / Gotrade', class: 'risk', assetType: 'equity', exchange: 'NYSE Arca', currentPriceUSD: 540.00, currentPricePHP: 32900, source: 'yahoo', categoryLabel: 'US & Global ETFs' },
+  { key: 'qqq', symbol: 'QQQ', name: 'Invesco QQQ Trust (QQQ)', platform: 'Interactive Brokers / Gotrade', class: 'risk', assetType: 'equity', exchange: 'NASDAQ', currentPriceUSD: 480.00, currentPricePHP: 29250, source: 'yahoo', categoryLabel: 'US & Global ETFs' },
+  { key: 'vti', symbol: 'VTI', name: 'Vanguard Total Stock Market (VTI)', platform: 'Interactive Brokers / Gotrade', class: 'risk', assetType: 'equity', exchange: 'NYSE Arca', currentPriceUSD: 275.00, currentPricePHP: 16750, source: 'yahoo', categoryLabel: 'US & Global ETFs' },
+  { key: 'nvda', symbol: 'NVDA', name: 'NVIDIA Corporation (NVDA)', platform: 'Interactive Brokers / Gotrade', class: 'risk', assetType: 'equity', exchange: 'NASDAQ', currentPriceUSD: 125.00, currentPricePHP: 7615, source: 'yahoo', categoryLabel: 'US & Global ETFs' },
+  { key: 'aapl', symbol: 'AAPL', name: 'Apple Inc. (AAPL)', platform: 'Interactive Brokers / Gotrade', class: 'risk', assetType: 'equity', exchange: 'NASDAQ', currentPriceUSD: 228.00, currentPricePHP: 13890, source: 'yahoo', categoryLabel: 'US & Global ETFs' },
+  { key: 'msft', symbol: 'MSFT', name: 'Microsoft Corporation (MSFT)', platform: 'Interactive Brokers / Gotrade', class: 'risk', assetType: 'equity', exchange: 'NASDAQ', currentPriceUSD: 445.00, currentPricePHP: 27110, source: 'yahoo', categoryLabel: 'US & Global ETFs' },
+  { key: 'tsla', symbol: 'TSLA', name: 'Tesla Inc. (TSLA)', platform: 'Interactive Brokers / Gotrade', class: 'risk', assetType: 'equity', exchange: 'NASDAQ', currentPriceUSD: 215.00, currentPricePHP: 13100, source: 'yahoo', categoryLabel: 'US & Global ETFs' },
+  { key: 'amzn', symbol: 'AMZN', name: 'Amazon.com Inc. (AMZN)', platform: 'Interactive Brokers / Gotrade', class: 'risk', assetType: 'equity', exchange: 'NASDAQ', currentPriceUSD: 185.00, currentPricePHP: 11270, source: 'yahoo', categoryLabel: 'US & Global ETFs' },
+  { key: 'googl', symbol: 'GOOGL', name: 'Alphabet Inc. Class A (GOOGL)', platform: 'Interactive Brokers / Gotrade', class: 'risk', assetType: 'equity', exchange: 'NASDAQ', currentPriceUSD: 165.00, currentPricePHP: 10050, source: 'yahoo', categoryLabel: 'US & Global ETFs' },
+];
 
 interface AssetSleeveTabProps {
   assets: AssetPosition[];
@@ -639,6 +705,139 @@ export default function AssetSleeveTab({
   const [newAssetYieldPercent, setNewAssetYieldPercent] = useState('');
   const [newAssetYieldFrequency, setNewAssetYieldFrequency] = useState<'annual' | 'monthly' | 'semi-annual' | 'quarterly'>('annual');
   const [newAssetWithholdingTax, setNewAssetWithholdingTax] = useState('20');
+
+  // Live Market Search & Autocomplete state
+  const [marketSearchQuery, setMarketSearchQuery] = useState('');
+  const [marketSuggestions, setMarketSuggestions] = useState<MarketSearchSuggestion[]>(MASTER_MARKET_ASSETS);
+  const [isSearchingMarket, setIsSearchingMarket] = useState(false);
+  const [activeSuggestionField, setActiveSuggestionField] = useState<'search' | 'key' | 'name' | null>(null);
+  const [selectedPresetFilter, setSelectedPresetFilter] = useState<'all' | 'crypto' | 'pse' | 'reit' | 'us'>('all');
+  const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Search executor that queries /api/market/search and merges with curated catalog
+  const executeMarketSearch = async (queryText: string, category: 'all' | 'crypto' | 'pse' | 'reit' | 'us' = selectedPresetFilter) => {
+    const q = queryText.trim().toLowerCase();
+
+    // 1. Filter local master list first for instantaneous feedback
+    const localFiltered = MASTER_MARKET_ASSETS.filter((item) => {
+      // Category filter check
+      if (category === 'crypto' && item.source !== 'binance') return false;
+      if (category === 'pse' && item.source !== 'pse') return false;
+      if (category === 'reit' && item.source !== 'uitf' && !item.key.includes('rcr') && !item.key.includes('reit')) return false;
+      if (category === 'us' && item.source !== 'yahoo') return false;
+
+      if (!q) return true;
+      return (
+        item.key.toLowerCase().includes(q) ||
+        item.symbol.toLowerCase().includes(q) ||
+        item.name.toLowerCase().includes(q) ||
+        item.platform.toLowerCase().includes(q) ||
+        (item.exchange && item.exchange.toLowerCase().includes(q))
+      );
+    });
+
+    setMarketSuggestions(localFiltered);
+
+    // If query is very short, rely on the curated catalog
+    if (!q || q.length < 2) {
+      setIsSearchingMarket(false);
+      return;
+    }
+
+    // 2. Fetch live suggestions from server (/api/market/search)
+    setIsSearchingMarket(true);
+    try {
+      const res = await fetch(`/api/market/search?q=${encodeURIComponent(q)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.results) && data.results.length > 0) {
+          const seen = new Set<string>();
+          const merged: MarketSearchSuggestion[] = [];
+          
+          for (const item of [...data.results, ...localFiltered]) {
+            const id = (item.symbol || item.key || item.name).toLowerCase();
+            if (!seen.has(id)) {
+              seen.add(id);
+              merged.push(item);
+            }
+          }
+          setMarketSuggestions(merged.slice(0, 30));
+        }
+      }
+    } catch (err) {
+      // 3. Fallback client-side Binance check for crypto symbols
+      if (q.length >= 2 && q.length <= 8) {
+        try {
+          const binancePair = `${q.toUpperCase()}USDT`;
+          const binanceRes = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${binancePair}`).catch(() => null);
+          if (binanceRes && binanceRes.ok) {
+            const bData = await binanceRes.json();
+            if (bData?.lastPrice) {
+              const lastP = parseFloat(bData.lastPrice);
+              const liveFx = usdPhpRate || 60.5;
+              const phpP = Number((lastP * liveFx).toFixed(2));
+              const newCrypto: MarketSearchSuggestion = {
+                key: q.toLowerCase(),
+                symbol: `${q.toUpperCase()}-USD`,
+                name: `${q.toUpperCase()} (${q.toUpperCase()})`,
+                platform: 'GCrypto / Binance',
+                class: 'risk',
+                assetType: 'crypto',
+                exchange: 'Binance Live Spot',
+                currentPriceUSD: lastP,
+                currentPricePHP: phpP,
+                change24h: parseFloat(bData.priceChangePercent || '0'),
+                source: 'binance',
+                categoryLabel: 'Crypto & Digital',
+              };
+              setMarketSuggestions((prev) => [newCrypto, ...prev]);
+            }
+          }
+        } catch (e) {}
+      }
+    } finally {
+      setIsSearchingMarket(false);
+    }
+  };
+
+  const handleQueryInputChange = (val: string, field: 'search' | 'key' | 'name') => {
+    setActiveSuggestionField(field);
+    if (field === 'search') {
+      setMarketSearchQuery(val);
+    } else if (field === 'key') {
+      setNewAssetKey(val);
+    } else if (field === 'name') {
+      setNewAssetName(val);
+    }
+
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+
+    searchDebounceRef.current = setTimeout(() => {
+      executeMarketSearch(val);
+    }, 250);
+  };
+
+  const handleSelectMarketSuggestion = (suggestion: MarketSearchSuggestion) => {
+    setNewAssetKey(suggestion.key.toLowerCase().replace(/\s+/g, '_'));
+    setNewAssetName(suggestion.name);
+    setNewAssetPlatform(suggestion.platform);
+    setNewAssetClass(suggestion.class);
+    setNewAssetType(suggestion.assetType);
+    
+    if (suggestion.currentPricePHP && suggestion.currentPricePHP > 0) {
+      const priceVal = suggestion.currentPricePHP;
+      setNewAssetPrice(priceVal.toString());
+      
+      const parsedUnits = parseFormattedNumber(newAssetUnits);
+      if (parsedUnits > 0) {
+        setNewAssetCost((parsedUnits * priceVal).toFixed(2));
+      }
+    }
+    
+    setActiveSuggestionField(null);
+  };
 
   const safeAssets = assets.filter((a) => a.class === 'safe');
   const riskAssets = assets.filter((a) => a.class === 'risk');
@@ -1521,35 +1720,266 @@ export default function AssetSleeveTab({
 
       {/* Add New Asset Modal Dialog */}
       {showAssetForm && (
-        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl p-6 sm:p-8 max-w-md w-full shadow-lg relative overflow-y-auto max-h-[90vh]">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center space-x-2.5 mb-4">
-              <span>Register New Asset / Risk Position</span>
-            </h3>
-
-            <form onSubmit={handleAddAssetSubmit} className="space-y-4">
+        <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl p-5 sm:p-7 max-w-lg w-full shadow-2xl relative overflow-y-auto max-h-[92vh]">
+            <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-slate-100 dark:border-white/5">
               <div>
-                <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5">Asset Key ID (e.g. apple, eth, pse_sm)</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. apple_shares"
-                  value={newAssetKey}
-                  onChange={(e) => setNewAssetKey(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-none placeholder:text-slate-400"
-                />
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                  <div className="p-1.5 bg-blue-500/10 text-blue-500 rounded-lg">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <span>Register New Asset / Position</span>
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Type or search below for live auto-suggestions from Yahoo Finance, Binance & PSE.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAssetForm(false);
+                  setActiveSuggestionField(null);
+                }}
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 text-xs font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Top Live Search & Preset Discovery Bar */}
+            <div className="mb-5 bg-gradient-to-br from-blue-50/60 to-indigo-50/40 dark:from-blue-950/30 dark:to-indigo-950/20 border border-blue-100 dark:border-blue-500/20 rounded-xl p-3.5 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Live Market Search & Presets</span>
+                </span>
+                {isSearchingMarket && (
+                  <span className="text-[10px] text-blue-500 flex items-center gap-1">
+                    <RefreshCw className="w-3 h-3 animate-spin" />
+                    <span>Searching markets...</span>
+                  </span>
+                )}
               </div>
 
-              <div>
-                <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5">Display Name</label>
+              {/* Search input */}
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <Search className="w-3.5 h-3.5" />
+                </div>
                 <input
                   type="text"
-                  required
-                  placeholder="e.g. Apple Inc. Shares (PSE)"
-                  value={newAssetName}
-                  onChange={(e) => setNewAssetName(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-none placeholder:text-slate-400"
+                  placeholder="Search Yahoo Finance / Binance / PSE (e.g. BTC, SCC, Manulife FoF, NVDA, RCR)..."
+                  value={marketSearchQuery}
+                  onChange={(e) => handleQueryInputChange(e.target.value, 'search')}
+                  onFocus={() => {
+                    setActiveSuggestionField('search');
+                    executeMarketSearch(marketSearchQuery, selectedPresetFilter);
+                  }}
+                  className="w-full bg-white dark:bg-slate-950 border border-blue-200 dark:border-blue-500/30 text-slate-900 dark:text-slate-100 rounded-lg pl-9 pr-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400 font-medium"
                 />
+
+                {/* Dropdown under main search bar */}
+                {activeSuggestionField === 'search' && marketSuggestions.length > 0 && (
+                  <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-50 max-h-56 overflow-y-auto divide-y divide-slate-100 dark:divide-white/5">
+                    <div className="p-2 bg-slate-50 dark:bg-slate-800/60 text-[10px] font-semibold text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                      <span>Matching Live Market Assets ({marketSuggestions.length})</span>
+                      <button 
+                        type="button" 
+                        onClick={() => setActiveSuggestionField(null)} 
+                        className="text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                      >
+                        Close
+                      </button>
+                    </div>
+                    {marketSuggestions.map((sug, idx) => (
+                      <button
+                        key={`${sug.symbol}-${sug.key}-${idx}`}
+                        type="button"
+                        onClick={() => handleSelectMarketSuggestion(sug)}
+                        className="w-full text-left p-2.5 hover:bg-blue-50/80 dark:hover:bg-blue-900/20 transition-colors flex items-center justify-between gap-2 group"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                              {sug.name}
+                            </span>
+                            <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold uppercase bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300">
+                              {sug.key}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400">
+                            <span className="truncate">{sug.platform}</span>
+                            <span>•</span>
+                            <span className={`px-1 rounded text-[9px] font-medium ${
+                              sug.source === 'binance' 
+                                ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10' 
+                                : sug.source === 'pse' 
+                                ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10'
+                                : sug.source === 'uitf'
+                                ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10'
+                                : 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10'
+                            }`}>
+                              {sug.source === 'binance' ? '⚡ Binance' : sug.source === 'pse' ? '🏢 PSE' : sug.source === 'uitf' ? '📊 Manulife Trust' : '📈 Yahoo Finance'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {sug.currentPricePHP && sug.currentPricePHP > 0 && (
+                          <div className="text-right shrink-0">
+                            <div className="text-xs font-bold font-mono text-slate-900 dark:text-emerald-400">
+                              ₱{sug.currentPricePHP.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </div>
+                            {sug.currentPriceUSD && (
+                              <div className="text-[10px] font-mono text-slate-400">
+                                ${sug.currentPriceUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Category Quick Filter Pills */}
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {[
+                  { id: 'all', label: 'All Presets' },
+                  { id: 'crypto', label: '⚡ Binance Crypto' },
+                  { id: 'pse', label: '🏢 PSE Stocks' },
+                  { id: 'reit', label: '📊 REITs & Manulife FoF' },
+                  { id: 'us', label: '📈 US Stocks' },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => {
+                      const newFilter = tab.id as any;
+                      setSelectedPresetFilter(newFilter);
+                      executeMarketSearch(marketSearchQuery, newFilter);
+                    }}
+                    className={`text-[10px] px-2.5 py-1 rounded-full font-medium transition-all ${
+                      selectedPresetFilter === tab.id
+                        ? 'bg-blue-600 text-white shadow-sm font-semibold'
+                        : 'bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-white/5'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <form onSubmit={handleAddAssetSubmit} className="space-y-4">
+              {/* Asset Key ID Field with Attached Dropdown */}
+              <div className="relative">
+                <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                  <span>Asset Key ID (e.g. btc, scc, manulife, rcr)</span>
+                  <span className="text-[9px] text-blue-500 font-normal">Live dropdown connected</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. scc, btc, manulife, rcr, nvda..."
+                    value={newAssetKey}
+                    onChange={(e) => handleQueryInputChange(e.target.value, 'key')}
+                    onFocus={() => {
+                      setActiveSuggestionField('key');
+                      executeMarketSearch(newAssetKey);
+                    }}
+                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-200 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
+                  />
+                  {activeSuggestionField === 'key' && (
+                    <button
+                      type="button"
+                      onClick={() => setActiveSuggestionField(null)}
+                      className="absolute right-2 top-2 text-[10px] text-slate-400 hover:text-slate-600"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                {/* Dropdown for Key ID */}
+                {activeSuggestionField === 'key' && marketSuggestions.length > 0 && (
+                  <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl z-50 max-h-48 overflow-y-auto divide-y divide-slate-100 dark:divide-white/5">
+                    {marketSuggestions.map((sug, idx) => (
+                      <button
+                        key={`key-sug-${sug.key}-${idx}`}
+                        type="button"
+                        onClick={() => handleSelectMarketSuggestion(sug)}
+                        className="w-full text-left px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-xs flex items-center justify-between transition-colors"
+                      >
+                        <div>
+                          <span className="font-bold font-mono text-blue-600 dark:text-blue-400 mr-2">{sug.key}</span>
+                          <span className="text-slate-700 dark:text-slate-300 text-[11px]">{sug.name}</span>
+                        </div>
+                        {sug.currentPricePHP && (
+                          <span className="font-mono font-semibold text-[10px] text-emerald-600 dark:text-emerald-400">
+                            ₱{sug.currentPricePHP.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Display Name Field with Attached Dropdown */}
+              <div className="relative">
+                <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                  <span>Display Name</span>
+                  <span className="text-[9px] text-blue-500 font-normal">Auto-completes from Yahoo/Binance/PSE</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Bitcoin (BTC), Semirara Mining (SCC), Manulife Asia Pacific REIT..."
+                    value={newAssetName}
+                    onChange={(e) => handleQueryInputChange(e.target.value, 'name')}
+                    onFocus={() => {
+                      setActiveSuggestionField('name');
+                      executeMarketSearch(newAssetName);
+                    }}
+                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400 font-medium"
+                  />
+                  {activeSuggestionField === 'name' && (
+                    <button
+                      type="button"
+                      onClick={() => setActiveSuggestionField(null)}
+                      className="absolute right-2 top-2 text-[10px] text-slate-400 hover:text-slate-600"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                {/* Dropdown for Display Name */}
+                {activeSuggestionField === 'name' && marketSuggestions.length > 0 && (
+                  <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl z-50 max-h-48 overflow-y-auto divide-y divide-slate-100 dark:divide-white/5">
+                    {marketSuggestions.map((sug, idx) => (
+                      <button
+                        key={`name-sug-${sug.key}-${idx}`}
+                        type="button"
+                        onClick={() => handleSelectMarketSuggestion(sug)}
+                        className="w-full text-left px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-xs flex items-center justify-between transition-colors"
+                      >
+                        <div className="min-w-0 pr-2">
+                          <div className="font-semibold text-slate-900 dark:text-white truncate">{sug.name}</div>
+                          <div className="text-[10px] text-slate-400 font-mono">{sug.platform}</div>
+                        </div>
+                        {sug.currentPricePHP && (
+                          <span className="font-mono font-semibold text-[10px] text-emerald-600 dark:text-emerald-400 shrink-0">
+                            ₱{sug.currentPricePHP.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -1557,7 +1987,7 @@ export default function AssetSleeveTab({
                 <input
                   type="text"
                   required
-                  placeholder="e.g. DragonFi Brokerage"
+                  placeholder="e.g. DragonFi Brokerage, Binance, Manulife Trust, Interactive Brokers"
                   value={newAssetPlatform}
                   onChange={(e) => setNewAssetPlatform(e.target.value)}
                   className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-none placeholder:text-slate-400"
@@ -1604,7 +2034,14 @@ export default function AssetSleeveTab({
                     <SmartCalculatorInput
                       label={newAssetClass === 'physical' ? "Units / Quantity" : "Units Count"}
                       value={newAssetUnits}
-                      onChange={setNewAssetUnits}
+                      onChange={(val) => {
+                        setNewAssetUnits(val);
+                        const parsedU = parseFormattedNumber(val);
+                        const parsedP = parseFormattedNumber(newAssetPrice);
+                        if (parsedU > 0 && parsedP > 0) {
+                          setNewAssetCost((parsedU * parsedP).toFixed(2));
+                        }
+                      }}
                       currencySymbol=""
                     />
                   </div>
@@ -1612,7 +2049,7 @@ export default function AssetSleeveTab({
 
                 <div>
                   <SmartCalculatorInput
-                    label={newAssetClass === 'liability' ? "Principal Loan Balance (PHP)" : newAssetClass === 'physical' ? "Principal Asset Cost Basis (PHP)" : "Cost Basis"}
+                    label={newAssetClass === 'liability' ? "Principal Loan Balance (PHP)" : newAssetClass === 'physical' ? "Principal Asset Cost Basis (PHP)" : "Cost Basis (PHP)"}
                     value={newAssetCost}
                     onChange={setNewAssetCost}
                   />
@@ -1623,7 +2060,14 @@ export default function AssetSleeveTab({
                     <SmartCalculatorInput
                       label="Price Per Unit (PHP)"
                       value={newAssetPrice}
-                      onChange={setNewAssetPrice}
+                      onChange={(val) => {
+                        setNewAssetPrice(val);
+                        const parsedP = parseFormattedNumber(val);
+                        const parsedU = parseFormattedNumber(newAssetUnits);
+                        if (parsedP > 0 && parsedU > 0) {
+                          setNewAssetCost((parsedP * parsedU).toFixed(2));
+                        }
+                      }}
                     />
                   </div>
                 )}
@@ -1720,14 +2164,17 @@ export default function AssetSleeveTab({
               <div className="flex justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-white/5">
                 <button
                   type="button"
-                  onClick={() => setShowAssetForm(false)}
+                  onClick={() => {
+                    setShowAssetForm(false);
+                    setActiveSuggestionField(null);
+                  }}
                   className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-bold uppercase"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold uppercase"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold uppercase shadow-sm"
                 >
                   Create Asset
                 </button>
