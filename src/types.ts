@@ -50,6 +50,19 @@ export interface FamilyGoal {
   targetPHP: number;
   currentPHP: number;
   deadline: string;
+  category?: string;
+  notes?: string;
+  monthlyContributionPHP?: number;
+}
+
+export interface IncomeBudgetPlan {
+  monthlyNetIncome: number; // starts with 0
+  paydayDays: number[]; // e.g. [15, 30]
+  expenseCapAllocation: number;
+  personalGoalsAllocation: number;
+  assetInvestmentAllocation: number;
+  targetAssetKey?: string;
+  autoDeployPayday?: boolean;
 }
 
 export interface MarketAlert {

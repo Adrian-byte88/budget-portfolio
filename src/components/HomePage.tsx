@@ -279,7 +279,7 @@ export default function HomePage({
           {/* Monthly Budget Burn Card */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Expense Ledger Tracker</span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Cash Flow & Expense Ledger</span>
               <div className="p-2 bg-blue-50 dark:bg-blue-950/50 rounded-xl text-blue-600 dark:text-blue-400">
                 <CreditCard className="w-5 h-5" />
               </div>
@@ -319,7 +319,7 @@ export default function HomePage({
                 <span>3 Active Platform Modules</span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">
-                Expense Ledger • Social Family Sync • Transaction Audit Log
+                Cash Flow Ledger • Social Family Sync • Transaction Audit Log
               </p>
             </div>
           </div>
@@ -483,8 +483,8 @@ export default function HomePage({
             {[
               {
                 id: 'ledger',
-                title: 'Expense Ledger',
-                desc: 'Category budgets & payday auto-sync',
+                title: 'Cash Flow & Expense Ledger',
+                desc: 'Category budgets, payday auto-sync & personal goals',
                 icon: CreditCard,
                 color: 'text-purple-500 bg-purple-50 dark:bg-purple-950/50',
                 allowed: true,

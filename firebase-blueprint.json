@@ -2,16 +2,21 @@
   "entities": {
     "FinancialData": {
       "title": "Financial Data",
-      "description": "User's financial data including assets, expenses, goals, budgets.",
+      "description": "User's complete financial portfolio and cash flow data including assets, expenses, goals, budgets, income budget plans, and transaction history.",
       "type": "object",
       "properties": {
-        "assets": { "type": "array", "description": "List of assets" },
-        "expenses": { "type": "array", "description": "List of expenses" },
-        "goals": { "type": "array", "description": "List of goals" },
-        "budgets": { "type": "array", "description": "List of budgets" },
-        "targetAllocation": { "type": "number", "description": "Target allocation" }
+        "assets": { "type": "array", "description": "List of asset holdings" },
+        "expenses": { "type": "array", "description": "List of expense outflow records" },
+        "goals": { "type": "array", "description": "List of personal milestone targets" },
+        "budgets": { "type": "array", "description": "List of category spending limits" },
+        "incomeBudgetPlan": { "type": "object", "description": "Monthly Net Income allocation matrix & payday schedules" },
+        "desiredMonthlyBudget": { "type": "number", "description": "Overall desired monthly expense cap" },
+        "targetAllocation": { "type": "number", "description": "Target safe asset allocation ratio" },
+        "transactions": { "type": "array", "description": "Historical audit transaction logs" },
+        "scheduledPaydays": { "type": "array", "description": "Scheduled bi-monthly payday deposits" },
+        "executedPaydays": { "type": "object", "description": "Record of executed payday distributions" }
       },
-      "required": ["assets", "expenses", "goals", "budgets", "targetAllocation"]
+      "required": ["assets", "expenses", "goals", "budgets"]
     }
   },
   "firestore": {

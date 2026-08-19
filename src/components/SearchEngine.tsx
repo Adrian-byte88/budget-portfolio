@@ -28,7 +28,7 @@ const STATIC_INDEX: SearchItem[] = [
   { type: 'Tab', name: 'Summary Dashboard', id: 'dashboard', targetTab: 'dashboard', subtitle: 'Main Overview & KPIs', keywords: 'home dashboard kpis metrics summary net worth' },
   { type: 'Tab', name: 'My Financial Portfolio', id: 'portfolio', targetTab: 'portfolio', subtitle: 'Allocation & Yield Projections', keywords: 'portfolio yield asset allocation breakdown returns' },
   { type: 'Tab', name: 'Risk & Safe Assets', id: 'assets', targetTab: 'assets', subtitle: 'Asset Sleeve Holdings & Trades', keywords: 'safe risk maya bank hys tbills crypto stocks market alerts trades sleeve' },
-  { type: 'Tab', name: 'Expense Ledger', id: 'ledger', targetTab: 'ledger', subtitle: 'Outflow Logs & Category Limits', keywords: 'expenses spending budget bank sync transactions outflows' },
+  { type: 'Tab', name: 'Cash Flow & Expense Ledger', id: 'ledger', targetTab: 'ledger', subtitle: 'Outflow Logs, Category Limits & Personal Goals', keywords: 'expenses spending budget bank sync transactions outflows cashflow goals personal savings targets' },
   { type: 'Tab', name: 'Social Family Sync', id: 'social', targetTab: 'social', subtitle: 'Collaborative Family Goals', keywords: 'family goals savings contributions tuition vacation household' },
   { type: 'Tab', name: 'Cycle Audit', id: 'audit', targetTab: 'audit', subtitle: 'Macroeconomic Cycle Analysis', keywords: 'audit market phase rebalance macro risk cycle recommendation' },
   { type: 'Tab', name: 'Transaction History', id: 'transactions', targetTab: 'transactions', subtitle: 'Audit Trail & Ledger History', keywords: 'history logs audit trail trades system ledger' },
@@ -51,7 +51,9 @@ const STATIC_INDEX: SearchItem[] = [
   { type: 'Section', name: 'Physical Assets & Illiquid Real Estate', id: 'physical-assets-section', targetTab: 'assets', subtitle: 'Assets Section', keywords: 'condominium lot real estate property gold vehicle physical illiquid' },
   { type: 'Section', name: 'Personal Price Alerts & 1-Click Guardrails', id: 'personal-price-alerts', targetTab: 'assets', subtitle: 'Header Bell Menu', keywords: 'price alarms alert thresholds notifications upper bound lower bound trigger presets guardrails bell' },
 
-  // SECTIONS - EXPENSE LEDGER
+  // SECTIONS - CASH FLOW & EXPENSE LEDGER
+  { type: 'Section', name: 'Monthly Net Income & 15th/30th Payday Hub', id: 'net-income-section', targetTab: 'ledger', subtitle: 'Ledger Section', keywords: 'monthly net income payday 15th 30th semi-monthly schedule salary earnings cash flow allocation budget matrix' },
+  { type: 'Section', name: 'Personal Goals & Savings Targets Tracker', id: 'personal-goals-section', targetTab: 'ledger', subtitle: 'Ledger Section', keywords: 'personal goals savings targets vacation emergency fund milestone contribute funding surplus' },
   { type: 'Section', name: 'Expense Ledger Outflow Table', id: 'expense-table-section', targetTab: 'ledger', subtitle: 'Ledger Section', keywords: 'expense list transactions outflow table delete adjust log' },
   { type: 'Section', name: 'Log New Expense Outflow Form', id: 'add-expense-section', targetTab: 'ledger', subtitle: 'Ledger Section', keywords: 'add expense new transaction outflow form grocery dining shopping' },
   { type: 'Section', name: 'Bank Synchronization & CSV Import', id: 'bank-sync-section', targetTab: 'ledger', subtitle: 'Ledger Section', keywords: 'bank sync bpi bdo unionbank gcash maya import csv link bank' },

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { AssetPosition, TradeEntry, MarketAlert } from '../types';
+import { AssetPosition, TradeEntry, MarketAlert, IncomeBudgetPlan } from '../types';
 import { Sliders, Plus, Play, RefreshCw, Sparkles, AlertTriangle, ShieldCheck, TrendingDown, TrendingUp, Info, Bell, Trash2, Calendar, Percent, BarChart2, ArrowRightLeft, Coins, Banknote, Wallet, Search, Check, ExternalLink, Zap, Building2, Globe, ChevronDown, CheckCircle2, DollarSign } from 'lucide-react';
 import SmartCalculatorInput from './SmartCalculatorInput';
 import { formatTimeAgo, getAssetValuation } from '../lib/formatters';
@@ -34,6 +34,9 @@ export const MASTER_MARKET_ASSETS: MarketSearchSuggestion[] = [
   { key: 'doge', symbol: 'DOGE-USD', name: 'Dogecoin (DOGE)', platform: 'GCrypto / Binance', class: 'risk', assetType: 'crypto', exchange: 'Binance Spot', currentPriceUSD: 0.14, currentPricePHP: 8.50, source: 'binance', categoryLabel: 'Crypto & Digital' },
   { key: 'avax', symbol: 'AVAX-USD', name: 'Avalanche (AVAX)', platform: 'Binance', class: 'risk', assetType: 'crypto', exchange: 'Binance Spot', currentPriceUSD: 28.50, currentPricePHP: 1736, source: 'binance', categoryLabel: 'Crypto & Digital' },
   { key: 'sui', symbol: 'SUI-USD', name: 'Sui Network (SUI)', platform: 'Binance', class: 'risk', assetType: 'crypto', exchange: 'Binance Spot', currentPriceUSD: 2.15, currentPricePHP: 131.00, source: 'binance', categoryLabel: 'Crypto & Digital' },
+  { key: 'link', symbol: 'LINK-USD', name: 'Chainlink (LINK)', platform: 'GCrypto / Binance', class: 'risk', assetType: 'crypto', exchange: 'Binance Spot', currentPriceUSD: 14.20, currentPricePHP: 865.00, source: 'binance', categoryLabel: 'Crypto & Digital' },
+  { key: 'dot', symbol: 'DOT-USD', name: 'Polkadot (DOT)', platform: 'GCrypto / Binance', class: 'risk', assetType: 'crypto', exchange: 'Binance Spot', currentPriceUSD: 6.80, currentPricePHP: 414.00, source: 'binance', categoryLabel: 'Crypto & Digital' },
+  { key: 'near', symbol: 'NEAR-USD', name: 'NEAR Protocol (NEAR)', platform: 'Binance', class: 'risk', assetType: 'crypto', exchange: 'Binance Spot', currentPriceUSD: 5.10, currentPricePHP: 310.50, source: 'binance', categoryLabel: 'Crypto & Digital' },
   
   // Philippine Equities (PSE)
   { key: 'scc', symbol: 'SCC.PS', name: 'Semirara Mining & Power (SCC)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange', currentPricePHP: 20.80, source: 'pse', categoryLabel: 'Philippine Stocks (PSE)' },
@@ -49,6 +52,8 @@ export const MASTER_MARKET_ASSETS: MarketSearchSuggestion[] = [
   { key: 'monde', symbol: 'MONDE.PS', name: 'Monde Nissin Corp (MONDE)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange', currentPricePHP: 9.20, source: 'pse', categoryLabel: 'Philippine Stocks (PSE)' },
   { key: 'acen', symbol: 'ACEN.PS', name: 'ACEN Corporation (ACEN)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange', currentPricePHP: 3.90, source: 'pse', categoryLabel: 'Philippine Stocks (PSE)' },
   { key: 'cnvrg', symbol: 'CNVRG.PS', name: 'Converge ICT Solutions (CNVRG)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange', currentPricePHP: 14.50, source: 'pse', categoryLabel: 'Philippine Stocks (PSE)' },
+  { key: 'mer', symbol: 'MER.PS', name: 'Manila Electric Company (MER)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange', currentPricePHP: 412.00, source: 'pse', categoryLabel: 'Philippine Stocks (PSE)' },
+  { key: 'sm', symbol: 'SM.PS', name: 'SM Investments Corporation (SM)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange', currentPricePHP: 885.00, source: 'pse', categoryLabel: 'Philippine Stocks (PSE)' },
 
   // Philippine REITs & Trust Funds
   { key: 'rcr', symbol: 'RCR.PS', name: 'RL Commercial REIT (RCR)', platform: 'DragonFi / PSE', class: 'risk', assetType: 'equity', exchange: 'Philippine REIT / PSE', currentPricePHP: 7.16, source: 'pse', categoryLabel: 'REITs & Trust Funds' },
@@ -64,12 +69,16 @@ export const MASTER_MARKET_ASSETS: MarketSearchSuggestion[] = [
   { key: 'spy', symbol: 'SPY', name: 'SPDR S&P 500 ETF Trust (SPY)', platform: 'Interactive Brokers / Gotrade', class: 'risk', assetType: 'equity', exchange: 'NYSE Arca', currentPriceUSD: 540.00, currentPricePHP: 32900, source: 'yahoo', categoryLabel: 'US & Global ETFs' },
   { key: 'qqq', symbol: 'QQQ', name: 'Invesco QQQ Trust (QQQ)', platform: 'Interactive Brokers / Gotrade', class: 'risk', assetType: 'equity', exchange: 'NASDAQ', currentPriceUSD: 480.00, currentPricePHP: 29250, source: 'yahoo', categoryLabel: 'US & Global ETFs' },
   { key: 'vti', symbol: 'VTI', name: 'Vanguard Total Stock Market (VTI)', platform: 'Interactive Brokers / Gotrade', class: 'risk', assetType: 'equity', exchange: 'NYSE Arca', currentPriceUSD: 275.00, currentPricePHP: 16750, source: 'yahoo', categoryLabel: 'US & Global ETFs' },
+  { key: 'voo', symbol: 'VOO', name: 'Vanguard S&P 500 ETF (VOO)', platform: 'Interactive Brokers / Gotrade', class: 'risk', assetType: 'equity', exchange: 'NYSE Arca', currentPriceUSD: 495.00, currentPricePHP: 30150, source: 'yahoo', categoryLabel: 'US & Global ETFs' },
   { key: 'nvda', symbol: 'NVDA', name: 'NVIDIA Corporation (NVDA)', platform: 'Interactive Brokers / Gotrade', class: 'risk', assetType: 'equity', exchange: 'NASDAQ', currentPriceUSD: 125.00, currentPricePHP: 7615, source: 'yahoo', categoryLabel: 'US & Global ETFs' },
   { key: 'aapl', symbol: 'AAPL', name: 'Apple Inc. (AAPL)', platform: 'Interactive Brokers / Gotrade', class: 'risk', assetType: 'equity', exchange: 'NASDAQ', currentPriceUSD: 228.00, currentPricePHP: 13890, source: 'yahoo', categoryLabel: 'US & Global ETFs' },
   { key: 'msft', symbol: 'MSFT', name: 'Microsoft Corporation (MSFT)', platform: 'Interactive Brokers / Gotrade', class: 'risk', assetType: 'equity', exchange: 'NASDAQ', currentPriceUSD: 445.00, currentPricePHP: 27110, source: 'yahoo', categoryLabel: 'US & Global ETFs' },
   { key: 'tsla', symbol: 'TSLA', name: 'Tesla Inc. (TSLA)', platform: 'Interactive Brokers / Gotrade', class: 'risk', assetType: 'equity', exchange: 'NASDAQ', currentPriceUSD: 215.00, currentPricePHP: 13100, source: 'yahoo', categoryLabel: 'US & Global ETFs' },
   { key: 'amzn', symbol: 'AMZN', name: 'Amazon.com Inc. (AMZN)', platform: 'Interactive Brokers / Gotrade', class: 'risk', assetType: 'equity', exchange: 'NASDAQ', currentPriceUSD: 185.00, currentPricePHP: 11270, source: 'yahoo', categoryLabel: 'US & Global ETFs' },
   { key: 'googl', symbol: 'GOOGL', name: 'Alphabet Inc. Class A (GOOGL)', platform: 'Interactive Brokers / Gotrade', class: 'risk', assetType: 'equity', exchange: 'NASDAQ', currentPriceUSD: 165.00, currentPricePHP: 10050, source: 'yahoo', categoryLabel: 'US & Global ETFs' },
+  { key: 'meta', symbol: 'META', name: 'Meta Platforms Inc. (META)', platform: 'Interactive Brokers / Gotrade', class: 'risk', assetType: 'equity', exchange: 'NASDAQ', currentPriceUSD: 510.00, currentPricePHP: 31050, source: 'yahoo', categoryLabel: 'US & Global ETFs' },
+  { key: 'amd', symbol: 'AMD', name: 'Advanced Micro Devices (AMD)', platform: 'Interactive Brokers / Gotrade', class: 'risk', assetType: 'equity', exchange: 'NASDAQ', currentPriceUSD: 155.00, currentPricePHP: 9440, source: 'yahoo', categoryLabel: 'US & Global ETFs' },
+  { key: 'pltr', symbol: 'PLTR', name: 'Palantir Technologies (PLTR)', platform: 'Interactive Brokers / Gotrade', class: 'risk', assetType: 'equity', exchange: 'NYSE', currentPriceUSD: 31.50, currentPricePHP: 1920, source: 'yahoo', categoryLabel: 'US & Global ETFs' },
 ];
 
 interface AssetSleeveTabProps {
@@ -100,6 +109,11 @@ interface AssetSleeveTabProps {
   onAddAlert?: (alert: Omit<MarketAlert, 'id' | 'timestamp'>) => void;
   onDeleteAlert?: (id: string) => void;
   highlightId?: { type: string; id: string; tab?: string } | null;
+  incomeBudgetPlan?: IncomeBudgetPlan;
+  onUpdateIncomePlan?: (plan: IncomeBudgetPlan) => void;
+  isAdmin?: boolean;
+  subscriptionTier?: 'free' | 'pro' | 'enterprise';
+  onNavigateTab?: (tab: string) => void;
 }
 
 export default function AssetSleeveTab({
@@ -117,6 +131,11 @@ export default function AssetSleeveTab({
   onAddAlert,
   onDeleteAlert,
   highlightId,
+  incomeBudgetPlan,
+  onUpdateIncomePlan,
+  isAdmin = false,
+  subscriptionTier = 'pro',
+  onNavigateTab,
 }: AssetSleeveTabProps) {
   const [activeSubTab, setActiveSubTab] = useState<'safe' | 'risk' | 'physical' | 'liability'>('safe');
   const [selectedTradingViewAsset, setSelectedTradingViewAsset] = useState<AssetPosition | null>(null);
@@ -315,6 +334,46 @@ export default function AssetSleeveTab({
       return [];
     }
   });
+
+  // Income Allocation Matrix auto-sync calculations for Safe & Risk Sleeves
+  const expectedMonthlyAssetAlloc = incomeBudgetPlan?.assetInvestmentAllocation ?? 0;
+  const expectedPaydayAssetAlloc = Math.round(expectedMonthlyAssetAlloc / 2);
+  const isProOrAdmin = Boolean(isAdmin || subscriptionTier === 'pro' || subscriptionTier === 'enterprise');
+
+  // Synchronize scheduled auto-deposit with Income Allocation Matrix
+  const syncScheduleWithMatrix = (targetScheduleId?: string) => {
+    if (expectedPaydayAssetAlloc <= 0) return;
+    setScheduledPaydays((prev) => {
+      let updated: any[];
+      if (targetScheduleId) {
+        updated = prev.map((p) => (p.id === targetScheduleId ? { ...p, amountPHP: expectedPaydayAssetAlloc } : p));
+      } else {
+        const pdInfo = getNextPaydayInfo();
+        const existingIdx = prev.findIndex(
+          (p) => p.status === 'pending' && (p.isRecurring || p.paydayType === 'semimonthly' || p.frequency === 'semimonthly')
+        );
+        if (existingIdx >= 0) {
+          updated = prev.map((p, idx) => (idx === existingIdx ? { ...p, amountPHP: expectedPaydayAssetAlloc } : p));
+        } else {
+          const newSchedule = {
+            id: 'payday_matrix_' + Date.now(),
+            targetKey: incomeBudgetPlan?.targetAssetKey || 'available_cash',
+            amountPHP: expectedPaydayAssetAlloc,
+            paydayDate: pdInfo.targetPaydayDateStr,
+            paydayType: 'semimonthly',
+            frequency: 'semimonthly',
+            isRecurring: true,
+            status: 'pending',
+            notes: `Income Allocation Matrix Auto-Deposit (15th & 30th) • ₱${expectedPaydayAssetAlloc.toLocaleString()}`,
+            createdAt: new Date().toISOString(),
+          };
+          updated = [newSchedule, ...prev];
+        }
+      }
+      localStorage.setItem('wealthvault_scheduled_paydays', JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   const getNextPaydayInfo = () => {
     const today = new Date();
@@ -712,7 +771,20 @@ export default function AssetSleeveTab({
   const [isSearchingMarket, setIsSearchingMarket] = useState(false);
   const [activeSuggestionField, setActiveSuggestionField] = useState<'search' | 'key' | 'name' | null>(null);
   const [selectedPresetFilter, setSelectedPresetFilter] = useState<'all' | 'crypto' | 'pse' | 'reit' | 'us'>('all');
+  const [selectedMarketAsset, setSelectedMarketAsset] = useState<MarketSearchSuggestion | null>(null);
   const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setActiveSuggestionField(null);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
 
   // Search executor that queries /api/market/search and merges with curated catalog
   const executeMarketSearch = async (queryText: string, category: 'all' | 'crypto' | 'pse' | 'reit' | 'us' = selectedPresetFilter) => {
@@ -816,7 +888,7 @@ export default function AssetSleeveTab({
 
     searchDebounceRef.current = setTimeout(() => {
       executeMarketSearch(val);
-    }, 250);
+    }, 200);
   };
 
   const handleSelectMarketSuggestion = (suggestion: MarketSearchSuggestion) => {
@@ -825,6 +897,7 @@ export default function AssetSleeveTab({
     setNewAssetPlatform(suggestion.platform);
     setNewAssetClass(suggestion.class);
     setNewAssetType(suggestion.assetType);
+    setSelectedMarketAsset(suggestion);
     
     if (suggestion.currentPricePHP && suggestion.currentPricePHP > 0) {
       const priceVal = suggestion.currentPricePHP;
@@ -837,6 +910,34 @@ export default function AssetSleeveTab({
     }
     
     setActiveSuggestionField(null);
+  };
+
+  const openAddAssetModal = (preferredClass?: 'safe' | 'risk' | 'physical' | 'liability') => {
+    const targetClass = preferredClass || activeSubTab;
+    setNewAssetClass(targetClass);
+    if (targetClass === 'risk') {
+      setNewAssetType('crypto');
+      setSelectedPresetFilter('all');
+      setNewAssetPlatform('GCrypto / Binance');
+    } else if (targetClass === 'safe') {
+      setNewAssetType('deposit');
+      setNewAssetPlatform('Maya / Bank');
+    } else if (targetClass === 'physical') {
+      setNewAssetType('property');
+      setNewAssetPlatform('Personal / Deed of Sale');
+    } else if (targetClass === 'liability') {
+      setNewAssetType('liability');
+      setNewAssetPlatform('Bank / Lending Corp');
+    }
+    setNewAssetKey('');
+    setNewAssetName('');
+    setNewAssetUnits('1');
+    setNewAssetCost('0');
+    setNewAssetPrice('1');
+    setSelectedMarketAsset(null);
+    setMarketSearchQuery('');
+    executeMarketSearch('', 'all');
+    setShowAssetForm(true);
   };
 
   const safeAssets = assets.filter((a) => a.class === 'safe');
@@ -1041,29 +1142,70 @@ export default function AssetSleeveTab({
                         </span>
                       </div>
 
-                      {pendingItems.map((item) => (
-                        <div key={item.id} className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-500/15 dark:bg-amber-400/10 border border-amber-300/80 dark:border-amber-500/30 rounded-lg text-amber-950 dark:text-amber-100 font-mono text-xs font-semibold">
-                          <Calendar className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                          <span>
-                            {item.isRecurring || item.paydayType === 'semimonthly' ? '🔁 Auto-Deposit (15th & 30th) • Next:' : 'Payday Deposit Scheduled:'} ({item.paydayDate}):
-                          </span>
-                          <span className="font-black text-amber-700 dark:text-amber-300">
-                            +₱{item.amountPHP.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </span>
+                      {pendingItems.map((item) => {
+                        const isMismatch = isProOrAdmin && expectedMonthlyAssetAlloc > 0 && Math.abs(item.amountPHP - expectedPaydayAssetAlloc) > 0.01 && (item.isRecurring || item.paydayType === 'semimonthly' || item.frequency === 'semimonthly');
+                        return (
+                          <div key={item.id} className="flex flex-col gap-1 w-full sm:w-auto">
+                            <div className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-mono text-xs font-semibold ${
+                              isMismatch 
+                                ? 'bg-rose-500/15 dark:bg-rose-900/30 border border-rose-400 dark:border-rose-700 text-rose-950 dark:text-rose-100'
+                                : 'bg-amber-500/15 dark:bg-amber-400/10 border border-amber-300/80 dark:border-amber-500/30 text-amber-950 dark:text-amber-100'
+                            }`}>
+                              <Calendar className={`w-3.5 h-3.5 shrink-0 ${isMismatch ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400'}`} />
+                              <span>
+                                {item.isRecurring || item.paydayType === 'semimonthly' ? '🔁 Auto-Deposit (15th & 30th) • Next:' : 'Payday Deposit Scheduled:'} ({item.paydayDate}):
+                              </span>
+                              <span className={`font-black ${isMismatch ? 'text-rose-700 dark:text-rose-300' : 'text-amber-700 dark:text-amber-300'}`}>
+                                +₱{item.amountPHP.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </span>
+                              {isMismatch && (
+                                <button
+                                  type="button"
+                                  onClick={() => syncScheduleWithMatrix(item.id)}
+                                  className="ml-1 px-2 py-0.5 bg-rose-600 hover:bg-rose-700 text-white rounded text-[10px] font-bold cursor-pointer transition-all flex items-center gap-1"
+                                  title="Synchronize amount with Cash Flow Matrix"
+                                >
+                                  <RefreshCw className="w-2.5 h-2.5" />
+                                  <span>Sync ₱{expectedPaydayAssetAlloc.toLocaleString()}</span>
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newList = scheduledPaydays.filter(p => p.id !== item.id);
+                                  setScheduledPaydays(newList);
+                                  localStorage.setItem('wealthvault_scheduled_paydays', JSON.stringify(newList));
+                                }}
+                                className="ml-1 text-slate-400 hover:text-rose-500 cursor-pointer p-0.5"
+                                title="Cancel scheduled payday auto-deposit"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                            {isMismatch && (
+                              <div className="text-[11px] text-rose-600 dark:text-rose-400 font-sans font-bold flex items-center gap-1">
+                                <AlertTriangle className="w-3 h-3 shrink-0" />
+                                <span>Error: Amount does not coincide with Income Allocation Matrix (₱{expectedPaydayAssetAlloc.toLocaleString()} per 15th/30th payday • ₱{expectedMonthlyAssetAlloc.toLocaleString()} monthly).</span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      {/* Prompt to schedule auto-deposit if matrix has allocation but none scheduled */}
+                      {isProOrAdmin && expectedMonthlyAssetAlloc > 0 && !pendingItems.some(p => p.isRecurring || p.paydayType === 'semimonthly' || p.frequency === 'semimonthly') && (
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-500/15 dark:bg-indigo-400/10 border border-indigo-300 dark:border-indigo-500/30 rounded-lg text-indigo-950 dark:text-indigo-200 text-xs">
+                          <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                          <span>Matrix Auto-Allocation: <b>₱{expectedPaydayAssetAlloc.toLocaleString()}</b> / 15th & 30th</span>
                           <button
                             type="button"
-                            onClick={() => {
-                              const newList = scheduledPaydays.filter(p => p.id !== item.id);
-                              setScheduledPaydays(newList);
-                              localStorage.setItem('wealthvault_scheduled_paydays', JSON.stringify(newList));
-                            }}
-                            className="ml-1 text-slate-400 hover:text-rose-500 cursor-pointer p-0.5"
-                            title="Cancel scheduled payday auto-deposit"
+                            onClick={() => syncScheduleWithMatrix()}
+                            className="px-2 py-0.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[10px] font-bold cursor-pointer transition-all"
                           >
-                            <Trash2 className="w-3 h-3" />
+                            + Schedule Auto-Deposit
                           </button>
                         </div>
-                      ))}
+                      )}
                     </div>
                   );
                 })()}
@@ -1083,6 +1225,7 @@ export default function AssetSleeveTab({
                   const pdInfo = getNextPaydayInfo();
                   setPaydayDate(pdInfo.targetPaydayDateStr);
                   setPaydayType('semimonthly');
+                  setPaydayAmount(expectedPaydayAssetAlloc > 0 ? expectedPaydayAssetAlloc.toString() : '10000');
                   setPaydayNotes('Semi-Monthly Salary Deposit (Every 15th & End of Month)');
                   setShowPaydayModal(true);
                 }}
@@ -1129,6 +1272,15 @@ export default function AssetSleeveTab({
                 </p>
               </div>
             </div>
+            {/* Matrix allocation indicator for Risk Sleeve Growth */}
+            {isProOrAdmin && expectedMonthlyAssetAlloc > 0 && (
+              <div className="shrink-0 flex items-center gap-2">
+                <div className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-500/30 rounded-xl text-[11px] font-mono font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                  <span>Matrix Allocation: ₱{expectedPaydayAssetAlloc.toLocaleString()} / Payday</span>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -1423,6 +1575,35 @@ export default function AssetSleeveTab({
                   </tr>
                 );
               })}
+              {((activeSubTab === 'safe' ? safeAssets : activeSubTab === 'risk' ? riskAssets : activeSubTab === 'physical' ? physicalAssets : liabilityAssets)).length === 0 && (
+                <tr>
+                  <td colSpan={activeSubTab === 'safe' || activeSubTab === 'liability' ? 7 : 8} className="p-10 text-center">
+                    <div className="flex flex-col items-center justify-center space-y-3 max-w-md mx-auto">
+                      <div className="p-3.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-2xl border border-indigo-100 dark:border-indigo-500/20">
+                        <Sparkles className="w-6 h-6" />
+                      </div>
+                      <div className="font-bold text-sm text-slate-800 dark:text-slate-200">
+                        No {activeSubTab === 'risk' ? 'Risk Sleeve Growth Assets' : activeSubTab === 'safe' ? 'Safe Shield Assets' : activeSubTab === 'physical' ? 'Physical Assets' : 'Liabilities'} Tracked Yet
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                        {activeSubTab === 'risk' 
+                          ? 'Add your crypto, PSE stock, REIT, or US ETF positions with live auto-suggestions from Yahoo Finance & Binance.' 
+                          : 'Register positions to monitor live valuations, yields, and growth metrics.'}
+                      </p>
+                      {activeSubTab !== 'risk' && (
+                        <button
+                          type="button"
+                          onClick={() => openAddAssetModal(activeSubTab)}
+                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-xs cursor-pointer"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>+ Add Position</span>
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
             <tfoot className="bg-slate-50 dark:bg-slate-900/90 border-t-2 border-slate-200 dark:border-white/10 font-bold">
               <tr>
@@ -1720,18 +1901,18 @@ export default function AssetSleeveTab({
 
       {/* Add New Asset Modal Dialog */}
       {showAssetForm && (
-        <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl p-5 sm:p-7 max-w-lg w-full shadow-2xl relative overflow-y-auto max-h-[92vh]">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+          <div ref={dropdownRef} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl p-5 sm:p-7 max-w-xl w-full shadow-2xl relative overflow-y-auto max-h-[94vh]">
             <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-slate-100 dark:border-white/5">
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center space-x-2">
-                  <div className="p-1.5 bg-blue-500/10 text-blue-500 rounded-lg">
+                  <div className={`p-1.5 rounded-lg ${newAssetClass === 'risk' ? 'bg-indigo-500/10 text-indigo-500' : 'bg-blue-500/10 text-blue-500'}`}>
                     <Sparkles className="w-4 h-4" />
                   </div>
-                  <span>Register New Asset / Position</span>
+                  <span>{newAssetClass === 'risk' ? '🚀 Add Risk Sleeve Growth Asset' : 'Register New Asset / Position'}</span>
                 </h3>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  Type or search below for live auto-suggestions from Yahoo Finance, Binance & PSE.
+                  Live connected to <b>Yahoo Finance</b>, <b>Binance Live Spot</b> & <b>Philippine Stock Exchange (PSE)</b>.
                 </p>
               </div>
               <button
@@ -1746,110 +1927,64 @@ export default function AssetSleeveTab({
               </button>
             </div>
 
-            {/* Top Live Search & Preset Discovery Bar */}
-            <div className="mb-5 bg-gradient-to-br from-blue-50/60 to-indigo-50/40 dark:from-blue-950/30 dark:to-indigo-950/20 border border-blue-100 dark:border-blue-500/20 rounded-xl p-3.5 space-y-2.5">
+            {/* Quick-Pick Popular Growth Assets (Yahoo Finance & Binance) */}
+            <div className="mb-4 bg-gradient-to-br from-indigo-50/70 via-blue-50/50 to-slate-50 dark:from-indigo-950/40 dark:via-blue-950/20 dark:to-slate-900/60 border border-indigo-100 dark:border-indigo-500/20 rounded-xl p-3 space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
                   <Zap className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Live Market Search & Presets</span>
+                  <span>Popular 1-Click Growth Assets</span>
                 </span>
                 {isSearchingMarket && (
                   <span className="text-[10px] text-blue-500 flex items-center gap-1">
                     <RefreshCw className="w-3 h-3 animate-spin" />
-                    <span>Searching markets...</span>
+                    <span>Searching feeds...</span>
                   </span>
                 )}
               </div>
 
-              {/* Search input */}
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                  <Search className="w-3.5 h-3.5" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Search Yahoo Finance / Binance / PSE (e.g. BTC, SCC, Manulife FoF, NVDA, RCR)..."
-                  value={marketSearchQuery}
-                  onChange={(e) => handleQueryInputChange(e.target.value, 'search')}
-                  onFocus={() => {
-                    setActiveSuggestionField('search');
-                    executeMarketSearch(marketSearchQuery, selectedPresetFilter);
-                  }}
-                  className="w-full bg-white dark:bg-slate-950 border border-blue-200 dark:border-blue-500/30 text-slate-900 dark:text-slate-100 rounded-lg pl-9 pr-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400 font-medium"
-                />
-
-                {/* Dropdown under main search bar */}
-                {activeSuggestionField === 'search' && marketSuggestions.length > 0 && (
-                  <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-50 max-h-56 overflow-y-auto divide-y divide-slate-100 dark:divide-white/5">
-                    <div className="p-2 bg-slate-50 dark:bg-slate-800/60 text-[10px] font-semibold text-slate-500 dark:text-slate-400 flex items-center justify-between">
-                      <span>Matching Live Market Assets ({marketSuggestions.length})</span>
-                      <button 
-                        type="button" 
-                        onClick={() => setActiveSuggestionField(null)} 
-                        className="text-slate-400 hover:text-slate-600 dark:hover:text-white"
-                      >
-                        Close
-                      </button>
-                    </div>
-                    {marketSuggestions.map((sug, idx) => (
-                      <button
-                        key={`${sug.symbol}-${sug.key}-${idx}`}
-                        type="button"
-                        onClick={() => handleSelectMarketSuggestion(sug)}
-                        className="w-full text-left p-2.5 hover:bg-blue-50/80 dark:hover:bg-blue-900/20 transition-colors flex items-center justify-between gap-2 group"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                              {sug.name}
-                            </span>
-                            <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold uppercase bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300">
-                              {sug.key}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400">
-                            <span className="truncate">{sug.platform}</span>
-                            <span>•</span>
-                            <span className={`px-1 rounded text-[9px] font-medium ${
-                              sug.source === 'binance' 
-                                ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10' 
-                                : sug.source === 'pse' 
-                                ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10'
-                                : sug.source === 'uitf'
-                                ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10'
-                                : 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10'
-                            }`}>
-                              {sug.source === 'binance' ? '⚡ Binance' : sug.source === 'pse' ? '🏢 PSE' : sug.source === 'uitf' ? '📊 Manulife Trust' : '📈 Yahoo Finance'}
-                            </span>
-                          </div>
-                        </div>
-
-                        {sug.currentPricePHP && sug.currentPricePHP > 0 && (
-                          <div className="text-right shrink-0">
-                            <div className="text-xs font-bold font-mono text-slate-900 dark:text-emerald-400">
-                              ₱{sug.currentPricePHP.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </div>
-                            {sug.currentPriceUSD && (
-                              <div className="text-[10px] font-mono text-slate-400">
-                                ${sug.currentPriceUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
+              {/* Quick Pick Chips */}
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { key: 'btc', label: '⚡ BTC', name: 'Bitcoin (BTC)', desc: 'Binance' },
+                  { key: 'paxg', label: '🪙 PAXG', name: 'PAX Gold', desc: 'Gold Spot' },
+                  { key: 'eth', label: '💎 ETH', name: 'Ethereum', desc: 'Binance' },
+                  { key: 'sol', label: '⚡ SOL', name: 'Solana', desc: 'Binance' },
+                  { key: 'scc', label: '🏢 SCC', name: 'Semirara', desc: 'PSE' },
+                  { key: 'spc', label: '🏢 SPC', name: 'SPC Power', desc: 'PSE' },
+                  { key: 'rcr', label: '🏢 RCR', name: 'RL Commercial REIT', desc: 'PSE REIT' },
+                  { key: 'manulife', label: '📊 Manulife FoF', name: 'Manulife REIT FoF', desc: 'UITF' },
+                  { key: 'nvda', label: '📈 NVDA', name: 'NVIDIA Corp', desc: 'NASDAQ' },
+                  { key: 'spy', label: '📈 SPY', name: 'S&P 500 ETF', desc: 'NYSE' },
+                ].map((item) => {
+                  const match = MASTER_MARKET_ASSETS.find((m) => m.key === item.key);
+                  return (
+                    <button
+                      key={item.key}
+                      type="button"
+                      onClick={() => {
+                        if (match) handleSelectMarketSuggestion(match);
+                      }}
+                      className="text-[10px] px-2.5 py-1 rounded-lg font-medium bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400 border border-slate-200 dark:border-white/10 transition-all flex items-center gap-1 shadow-2xs"
+                    >
+                      <span className="font-bold">{item.label}</span>
+                      {match?.currentPricePHP && (
+                        <span className="text-[9px] font-mono text-emerald-600 dark:text-emerald-400">
+                          ₱{match.currentPricePHP >= 1000 ? `${(match.currentPricePHP / 1000).toFixed(1)}k` : match.currentPricePHP.toFixed(2)}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
 
-              {/* Category Quick Filter Pills */}
-              <div className="flex flex-wrap gap-1.5 pt-1">
+              {/* Category Filter Tabs */}
+              <div className="flex flex-wrap gap-1 pt-1 border-t border-indigo-100/60 dark:border-indigo-500/10">
                 {[
-                  { id: 'all', label: 'All Presets' },
+                  { id: 'all', label: 'All Catalog' },
                   { id: 'crypto', label: '⚡ Binance Crypto' },
                   { id: 'pse', label: '🏢 PSE Stocks' },
-                  { id: 'reit', label: '📊 REITs & Manulife FoF' },
-                  { id: 'us', label: '📈 US Stocks' },
+                  { id: 'reit', label: '📊 REITs & Trust' },
+                  { id: 'us', label: '📈 US Stocks & ETFs' },
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -1859,10 +1994,10 @@ export default function AssetSleeveTab({
                       setSelectedPresetFilter(newFilter);
                       executeMarketSearch(marketSearchQuery, newFilter);
                     }}
-                    className={`text-[10px] px-2.5 py-1 rounded-full font-medium transition-all ${
+                    className={`text-[9px] px-2 py-0.5 rounded-md font-semibold transition-all ${
                       selectedPresetFilter === tab.id
-                        ? 'bg-blue-600 text-white shadow-sm font-semibold'
-                        : 'bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-white/5'
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'bg-white/80 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     {tab.label}
@@ -1871,55 +2006,127 @@ export default function AssetSleeveTab({
               </div>
             </div>
 
+            {/* Live Connection Confirmation Card */}
+            {selectedMarketAsset && (
+              <div className="mb-4 p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-500/30 rounded-xl flex items-center justify-between gap-3 animate-in fade-in">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-xs font-extrabold text-emerald-900 dark:text-emerald-300">
+                      ✓ Connected: {selectedMarketAsset.name}
+                    </span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold uppercase bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300">
+                      {selectedMarketAsset.symbol || selectedMarketAsset.key}
+                    </span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-emerald-200 dark:border-emerald-500/20">
+                      {selectedMarketAsset.source === 'binance' ? '⚡ Binance Spot' : selectedMarketAsset.source === 'pse' ? '🏢 PSE' : selectedMarketAsset.source === 'uitf' ? '📊 Manulife' : '📈 Yahoo Finance'}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-emerald-700 dark:text-emerald-400 mt-0.5 flex items-center gap-2">
+                    {selectedMarketAsset.currentPricePHP && (
+                      <span className="font-mono font-bold">
+                        Live Price: ₱{selectedMarketAsset.currentPricePHP.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    )}
+                    {selectedMarketAsset.currentPriceUSD && (
+                      <span className="font-mono text-slate-500 dark:text-slate-400">
+                        (${selectedMarketAsset.currentPriceUSD.toLocaleString()})
+                      </span>
+                    )}
+                    <span>• {selectedMarketAsset.platform}</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedMarketAsset(null)}
+                  className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-white px-1.5 py-0.5 rounded hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+                  title="Clear selection"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
             <form onSubmit={handleAddAssetSubmit} className="space-y-4">
               {/* Asset Key ID Field with Attached Dropdown */}
               <div className="relative">
                 <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5 flex items-center justify-between">
-                  <span>Asset Key ID (e.g. btc, scc, manulife, rcr)</span>
-                  <span className="text-[9px] text-blue-500 font-normal">Live dropdown connected</span>
+                  <span>Asset Key ID (e.g. btc, scc, manulife, rcr, nvda)</span>
+                  <span className="text-[9px] text-indigo-600 dark:text-indigo-400 font-semibold">⚡ Live Dropdown Suggestions Active</span>
                 </label>
                 <div className="relative">
                   <input
                     type="text"
                     required
-                    placeholder="e.g. scc, btc, manulife, rcr, nvda..."
+                    placeholder="Type symbol or key: e.g. btc, sol, scc, nvda, manulife, rcr..."
                     value={newAssetKey}
                     onChange={(e) => handleQueryInputChange(e.target.value, 'key')}
                     onFocus={() => {
                       setActiveSuggestionField('key');
                       executeMarketSearch(newAssetKey);
                     }}
-                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-200 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
+                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-200 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-400"
                   />
                   {activeSuggestionField === 'key' && (
                     <button
                       type="button"
                       onClick={() => setActiveSuggestionField(null)}
-                      className="absolute right-2 top-2 text-[10px] text-slate-400 hover:text-slate-600"
+                      className="absolute right-2 top-2 text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                     >
                       ✕
                     </button>
                   )}
                 </div>
 
-                {/* Dropdown for Key ID */}
+                {/* Dropdown Menu for Asset Key */}
                 {activeSuggestionField === 'key' && marketSuggestions.length > 0 && (
-                  <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl z-50 max-h-48 overflow-y-auto divide-y divide-slate-100 dark:divide-white/5">
+                  <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl z-50 max-h-56 overflow-y-auto divide-y divide-slate-100 dark:divide-white/5">
+                    <div className="p-2 bg-slate-50 dark:bg-slate-800/80 text-[10px] font-bold text-slate-500 dark:text-slate-400 flex items-center justify-between sticky top-0 backdrop-blur-xs">
+                      <span>Yahoo Finance / Binance Suggestions ({marketSuggestions.length})</span>
+                      <span className="text-[9px] text-indigo-500">Click any asset to auto-fill</span>
+                    </div>
                     {marketSuggestions.map((sug, idx) => (
                       <button
                         key={`key-sug-${sug.key}-${idx}`}
                         type="button"
                         onClick={() => handleSelectMarketSuggestion(sug)}
-                        className="w-full text-left px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-xs flex items-center justify-between transition-colors"
+                        className="w-full text-left px-3 py-2.5 hover:bg-indigo-50/80 dark:hover:bg-indigo-950/40 text-xs flex items-center justify-between gap-2 transition-colors group cursor-pointer"
                       >
-                        <div>
-                          <span className="font-bold font-mono text-blue-600 dark:text-blue-400 mr-2">{sug.key}</span>
-                          <span className="text-slate-700 dark:text-slate-300 text-[11px]">{sug.name}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-mono font-extrabold text-indigo-600 dark:text-indigo-400 uppercase group-hover:text-indigo-700 dark:group-hover:text-indigo-300">
+                              {sug.key}
+                            </span>
+                            <span className="text-[10px] text-slate-700 dark:text-slate-200 font-semibold truncate">
+                              {sug.name}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400 font-mono">
+                            <span className="truncate">{sug.platform}</span>
+                            <span>•</span>
+                            <span className={`px-1 py-0.2 rounded text-[9px] font-semibold ${
+                              sug.source === 'binance' 
+                                ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10' 
+                                : sug.source === 'pse' 
+                                ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10'
+                                : sug.source === 'uitf'
+                                ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10'
+                                : 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10'
+                            }`}>
+                              {sug.source === 'binance' ? '⚡ Binance' : sug.source === 'pse' ? '🏢 PSE' : sug.source === 'uitf' ? '📊 Trust' : '📈 Yahoo'}
+                            </span>
+                          </div>
                         </div>
-                        {sug.currentPricePHP && (
-                          <span className="font-mono font-semibold text-[10px] text-emerald-600 dark:text-emerald-400">
-                            ₱{sug.currentPricePHP.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </span>
+                        {sug.currentPricePHP && sug.currentPricePHP > 0 && (
+                          <div className="text-right shrink-0">
+                            <div className="font-mono font-bold text-xs text-slate-900 dark:text-emerald-400">
+                              ₱{sug.currentPricePHP.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </div>
+                            {sug.currentPriceUSD && (
+                              <div className="text-[9px] font-mono text-slate-400">
+                                ${sug.currentPriceUSD.toLocaleString()}
+                              </div>
+                            )}
+                          </div>
                         )}
                       </button>
                     ))}
@@ -1931,50 +2138,77 @@ export default function AssetSleeveTab({
               <div className="relative">
                 <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5 flex items-center justify-between">
                   <span>Display Name</span>
-                  <span className="text-[9px] text-blue-500 font-normal">Auto-completes from Yahoo/Binance/PSE</span>
+                  <span className="text-[9px] text-indigo-600 dark:text-indigo-400 font-semibold">⚡ Auto-completes Name & Live Price</span>
                 </label>
                 <div className="relative">
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Bitcoin (BTC), Semirara Mining (SCC), Manulife Asia Pacific REIT..."
+                    placeholder="Type name: e.g. Bitcoin (BTC), Semirara Mining, NVIDIA, Manulife..."
                     value={newAssetName}
                     onChange={(e) => handleQueryInputChange(e.target.value, 'name')}
                     onFocus={() => {
                       setActiveSuggestionField('name');
                       executeMarketSearch(newAssetName);
                     }}
-                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400 font-medium"
+                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-400 font-medium"
                   />
                   {activeSuggestionField === 'name' && (
                     <button
                       type="button"
                       onClick={() => setActiveSuggestionField(null)}
-                      className="absolute right-2 top-2 text-[10px] text-slate-400 hover:text-slate-600"
+                      className="absolute right-2 top-2 text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                     >
                       ✕
                     </button>
                   )}
                 </div>
 
-                {/* Dropdown for Display Name */}
+                {/* Dropdown Menu for Display Name */}
                 {activeSuggestionField === 'name' && marketSuggestions.length > 0 && (
-                  <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl z-50 max-h-48 overflow-y-auto divide-y divide-slate-100 dark:divide-white/5">
+                  <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl z-50 max-h-56 overflow-y-auto divide-y divide-slate-100 dark:divide-white/5">
+                    <div className="p-2 bg-slate-50 dark:bg-slate-800/80 text-[10px] font-bold text-slate-500 dark:text-slate-400 flex items-center justify-between sticky top-0 backdrop-blur-xs">
+                      <span>Matching Asset Names ({marketSuggestions.length})</span>
+                      <span className="text-[9px] text-indigo-500">Click to select asset</span>
+                    </div>
                     {marketSuggestions.map((sug, idx) => (
                       <button
                         key={`name-sug-${sug.key}-${idx}`}
                         type="button"
                         onClick={() => handleSelectMarketSuggestion(sug)}
-                        className="w-full text-left px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-xs flex items-center justify-between transition-colors"
+                        className="w-full text-left px-3 py-2.5 hover:bg-indigo-50/80 dark:hover:bg-indigo-950/40 text-xs flex items-center justify-between gap-2 transition-colors group cursor-pointer"
                       >
-                        <div className="min-w-0 pr-2">
-                          <div className="font-semibold text-slate-900 dark:text-white truncate">{sug.name}</div>
-                          <div className="text-[10px] text-slate-400 font-mono">{sug.platform}</div>
+                        <div className="min-w-0 flex-1">
+                          <div className="font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 truncate">
+                            {sug.name}
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400">
+                            <span className="font-mono">{sug.platform}</span>
+                            <span>•</span>
+                            <span className={`px-1 rounded text-[9px] font-semibold ${
+                              sug.source === 'binance' 
+                                ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10' 
+                                : sug.source === 'pse' 
+                                ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10'
+                                : sug.source === 'uitf'
+                                ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10'
+                                : 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10'
+                            }`}>
+                              {sug.source === 'binance' ? '⚡ Binance Spot' : sug.source === 'pse' ? '🏢 PSE' : sug.source === 'uitf' ? '📊 Manulife Trust' : '📈 Yahoo Finance'}
+                            </span>
+                          </div>
                         </div>
-                        {sug.currentPricePHP && (
-                          <span className="font-mono font-semibold text-[10px] text-emerald-600 dark:text-emerald-400 shrink-0">
-                            ₱{sug.currentPricePHP.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </span>
+                        {sug.currentPricePHP && sug.currentPricePHP > 0 && (
+                          <div className="text-right shrink-0">
+                            <div className="font-mono font-bold text-xs text-slate-900 dark:text-emerald-400">
+                              ₱{sug.currentPricePHP.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </div>
+                            {sug.currentPriceUSD && (
+                              <div className="text-[9px] font-mono text-slate-400">
+                                ${sug.currentPriceUSD.toLocaleString()}
+                              </div>
+                            )}
+                          </div>
                         )}
                       </button>
                     ))}
@@ -2614,9 +2848,55 @@ export default function AssetSleeveTab({
                   value={paydayAmount}
                   onChange={setPaydayAmount}
                 />
+
+                {/* Matrix Sync Status & Mismatch Error in Modal */}
+                {(() => {
+                  const enteredAmt = parseFormattedNumber(paydayAmount);
+                  if (expectedMonthlyAssetAlloc > 0 && !isNaN(enteredAmt) && enteredAmt > 0) {
+                    const isMismatch = Math.abs(enteredAmt - expectedPaydayAssetAlloc) > 0.01;
+                    if (isMismatch) {
+                      return (
+                        <div className="mt-2 p-2.5 bg-rose-500/10 dark:bg-rose-950/40 border border-rose-400 dark:border-rose-700/60 rounded-lg text-xs text-rose-800 dark:text-rose-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                          <div className="flex items-start gap-1.5">
+                            <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-bold text-rose-700 dark:text-rose-300">Matrix Mismatch:</span> Amount (₱{enteredAmt.toLocaleString()}) does not coincide with the Income Allocation Matrix (₱{expectedPaydayAssetAlloc.toLocaleString()} per 15th/30th payday).
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setPaydayAmount(expectedPaydayAssetAlloc.toString())}
+                            className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded text-[10px] font-black uppercase tracking-wider shrink-0 cursor-pointer shadow-2xs"
+                          >
+                            Match Matrix (₱{expectedPaydayAssetAlloc.toLocaleString()})
+                          </button>
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div className="mt-2 p-2 bg-emerald-500/10 dark:bg-emerald-950/40 border border-emerald-400/60 dark:border-emerald-700/60 rounded-lg text-xs text-emerald-800 dark:text-emerald-200 flex items-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          <span><b>Synchronized:</b> Coincides with Cash Flow Income Matrix (₱{expectedPaydayAssetAlloc.toLocaleString()} / payday).</span>
+                        </div>
+                      );
+                    }
+                  }
+                  return null;
+                })()}
+
                 {/* Quick Fill Buttons */}
                 <div className="flex flex-wrap items-center gap-2 mt-2">
                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Quick Fill:</span>
+                  {expectedPaydayAssetAlloc > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setPaydayAmount(expectedPaydayAssetAlloc.toString())}
+                      className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-[10px] font-black rounded border border-indigo-300 dark:border-indigo-500/30 cursor-pointer transition-colors flex items-center gap-1"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      <span>₱{expectedPaydayAssetAlloc.toLocaleString()} (Ledger Matrix)</span>
+                    </button>
+                  )}
                   {[10000, 15000, 20000, 25000, 30000, 50000].map((amt) => (
                     <button
                       key={amt}

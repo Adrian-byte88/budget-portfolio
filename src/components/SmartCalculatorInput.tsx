@@ -10,6 +10,7 @@ interface SmartCalculatorInputProps {
   className?: string;
   label?: string;
   currencySymbol?: string;
+  disabled?: boolean;
 }
 
 export default function SmartCalculatorInput({
@@ -20,6 +21,7 @@ export default function SmartCalculatorInput({
   className = '',
   label,
   currencySymbol = '₱',
+  disabled = false,
 }: SmartCalculatorInputProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [calcExpr, setCalcExpr] = useState(value);
@@ -133,17 +135,20 @@ export default function SmartCalculatorInput({
           value={isOpen ? calcExpr : value}
           onChange={handleInputChange}
           placeholder={placeholder}
-          className={`${currencySymbol ? 'pl-7' : 'px-3'} pr-10 py-2 w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-200 rounded-lg text-xs font-mono focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all ${className}`}
+          disabled={disabled}
+          className={`${currencySymbol ? 'pl-7' : 'px-3'} pr-10 py-2 w-full ${disabled ? 'bg-slate-100 dark:bg-slate-900/60 text-slate-400 cursor-not-allowed opacity-75' : 'bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-200'} border border-slate-200 dark:border-white/10 rounded-lg text-xs font-mono focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all ${className}`}
         />
         <button
           type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          className={`absolute right-2.5 p-1.5 rounded-md transition-colors cursor-pointer ${
+          disabled={disabled}
+          onClick={() => !disabled && setIsOpen(!isOpen)}
+          className={`absolute right-2.5 p-1.5 rounded-md transition-colors ${
+            disabled ? 'opacity-40 cursor-not-allowed text-slate-400' :
             isOpen
-              ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400'
-              : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900'
+              ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 cursor-pointer'
+              : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 cursor-pointer'
           }`}
-          title="Open Calculator & Modifiers"
+          title={disabled ? 'Disabled' : 'Open Calculator & Modifiers'}
         >
           <Calculator className="w-3.5 h-3.5" />
         </button>

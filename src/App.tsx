@@ -11,6 +11,7 @@ import {
   FamilyGoal,
   MarketAlert,
   UserSession,
+  IncomeBudgetPlan,
 } from './types';
 import Navbar from './components/Navbar';
 import SummaryDashboard from './components/SummaryDashboard';
@@ -218,6 +219,26 @@ export default function App() {
   const [alerts, setAlerts] = useState<MarketAlert[]>(DEFAULT_ALERTS);
   const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({ 'USD': 61.24 });
   const [targetAllocation, setTargetAllocation] = useState<number>(85);
+
+  const DEFAULT_INCOME_PLAN: IncomeBudgetPlan = {
+    monthlyNetIncome: 0, // starts with zero money
+    paydayDays: [15, 30],
+    expenseCapAllocation: 0,
+    personalGoalsAllocation: 0,
+    assetInvestmentAllocation: 0,
+    targetAssetKey: 'maya',
+    autoDeployPayday: true,
+  };
+
+  const [incomeBudgetPlan, setIncomeBudgetPlan] = useState<IncomeBudgetPlan>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('wealth_vault_income_plan_guest');
+      if (saved) {
+        try { return JSON.parse(saved); } catch {}
+      }
+    }
+    return DEFAULT_INCOME_PLAN;
+  });
 
   // Client-side direct live FX fetch on mount to guarantee real-time market rate
   useEffect(() => {
@@ -537,6 +558,11 @@ export default function App() {
         setDeploymentItems(userDeploymentItems);
         setBudgetCap(userBudgetCap);
 
+        if (data.incomeBudgetPlan) {
+          setIncomeBudgetPlan(data.incomeBudgetPlan);
+          localStorage.setItem(`wealth_vault_income_plan_${email}`, JSON.stringify(data.incomeBudgetPlan));
+        }
+
         if (data.targetAllocation !== undefined) setTargetAllocation(data.targetAllocation);
         if (data.subscriptionTier !== undefined && !isAdmin) {
           setSubscriptionTier(data.subscriptionTier);
@@ -629,11 +655,16 @@ export default function App() {
         const localBudgetCap = localStorage.getItem(`wealth_vault_budget_cap_${email}`);
         let initBudgetCap = localBudgetCap || (isAdmin ? 'Budget Cap: ₱20,000 Total (100% Allocation to Safe Shield, unchanged mandate)' : '');
 
+        const localIncomePlan = localStorage.getItem(`wealth_vault_income_plan_${email}`);
+        let initIncomePlan: IncomeBudgetPlan = DEFAULT_INCOME_PLAN;
+        if (localIncomePlan) { try { initIncomePlan = JSON.parse(localIncomePlan); } catch {} }
+
         setAssets(initAssets);
         setExpenses(initExpenses);
         setTransactions(initTxs);
         setGoals(initGoals);
         setBudgets(initBudgets);
+        setIncomeBudgetPlan(initIncomePlan);
         setCycleItems(initCycle);
         setDevaluationItems(initDeval);
         setDevaluationTactics(initDevalTactics);
@@ -648,6 +679,7 @@ export default function App() {
           transactions: initTxs,
           goals: initGoals,
           budgets: initBudgets,
+          incomeBudgetPlan: initIncomePlan,
           cycleItems: initCycle,
           devaluationItems: initDeval,
           devaluationTactics: initDevalTactics,
@@ -749,6 +781,7 @@ export default function App() {
       localStorage.setItem(`wealth_vault_transactions_${email}`, JSON.stringify(transactions));
       localStorage.setItem(`wealth_vault_goals_${email}`, JSON.stringify(goals));
       localStorage.setItem(`wealth_vault_budgets_${email}`, JSON.stringify(budgets));
+      localStorage.setItem(`wealth_vault_income_plan_${email}`, JSON.stringify(incomeBudgetPlan));
       localStorage.setItem(`wealth_vault_cycle_${email}`, JSON.stringify(cycleItems));
       localStorage.setItem(`wealth_vault_devaluation_${email}`, JSON.stringify(devaluationItems));
       localStorage.setItem(`wealth_vault_devaluation_tactics_${email}`, devaluationTactics);
@@ -762,6 +795,7 @@ export default function App() {
         transactions,
         goals,
         budgets,
+        incomeBudgetPlan,
         cycleItems,
         devaluationItems,
         devaluationTactics,
@@ -786,7 +820,7 @@ export default function App() {
 
       return () => clearTimeout(handler);
     }
-  }, [assets, expenses, transactions, goals, budgets, cycleItems, devaluationItems, devaluationTactics, auditChanges, deploymentItems, budgetCap, targetAllocation, alerts, email]);
+  }, [assets, expenses, transactions, goals, budgets, incomeBudgetPlan, cycleItems, devaluationItems, devaluationTactics, auditChanges, deploymentItems, budgetCap, targetAllocation, alerts, email]);
 
   // Automated budget sync with expense ledger
   useEffect(() => {
@@ -1309,7 +1343,13 @@ export default function App() {
     const id = `exp-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
     const newEntry: ExpenseEntry = { ...expense, id };
 
-    setExpenses((prev) => [newEntry, ...prev]);
+    setExpenses((prev) => {
+      const nextExpenses = [newEntry, ...prev];
+      if (email) {
+        setDoc(doc(db, "users", email, "financialData", "data"), { expenses: nextExpenses }, { merge: true }).catch(console.error);
+      }
+      return nextExpenses;
+    });
 
     handleAddTransaction({
       date: expense.date || new Date().toISOString().split('T')[0],
@@ -1560,44 +1600,62 @@ export default function App() {
   };
 
   const handleAdjustExpense = (id: string, newAmount: number) => {
-    setExpenses((prev) =>
-      prev.map((e) => {
+    setExpenses((prev) => {
+      const nextExpenses = prev.map((e) => {
         if (e.id === id) {
           const newAmountPHP = newAmount * (exchangeRates[e.currency] || 1);
           return { ...e, amount: newAmount, amountPHP: newAmountPHP };
         }
         return e;
-      })
-    );
+      });
+      if (email) {
+        setDoc(doc(db, "users", email, "financialData", "data"), { expenses: nextExpenses }, { merge: true }).catch(console.error);
+      }
+      return nextExpenses;
+    });
     triggerToast('Expense Adjusted', `Updated expense amount to ₱${newAmount.toLocaleString()}`, 'success');
   };
 
   const handleDeleteExpense = (id: string) => {
-    setExpenses((prev) => prev.filter((e) => e.id !== id));
+    setExpenses((prev) => {
+      const nextExpenses = prev.filter((e) => e.id !== id);
+      if (email) {
+        setDoc(doc(db, "users", email, "financialData", "data"), { expenses: nextExpenses }, { merge: true }).catch(console.error);
+      }
+      return nextExpenses;
+    });
     triggerToast('Expense Deleted', 'Successfully removed expense entry.', 'success');
   };
 
   const handleResyncBudgets = () => {
-    setBudgets((prevBudgets) =>
-      prevBudgets.map((b) => {
+    setBudgets((prevBudgets) => {
+      const nextBudgets = prevBudgets.map((b) => {
         const totalSpent = expenses
           .filter((e) => e.category === b.category)
           .reduce((sum, e) => sum + e.amountPHP, 0);
         return { ...b, spentPHP: totalSpent };
-      })
-    );
+      });
+      if (email) {
+        setDoc(doc(db, "users", email, "financialData", "data"), { budgets: nextBudgets }, { merge: true }).catch(console.error);
+      }
+      return nextBudgets;
+    });
     triggerToast('Ledger Synced', 'Budget spending totals recalculated from expenses.', 'success');
   };
 
   const handleAdjustBudgetLimit = (category: string, newLimit: number) => {
-    setBudgets((prev) =>
-      prev.map((b) => {
+    setBudgets((prev) => {
+      const nextBudgets = prev.map((b) => {
         if (b.category === category) {
           return { ...b, limitPHP: newLimit };
         }
         return b;
-      })
-    );
+      });
+      if (email) {
+        setDoc(doc(db, "users", email, "financialData", "data"), { budgets: nextBudgets }, { merge: true }).catch(console.error);
+      }
+      return nextBudgets;
+    });
     triggerToast('Budget Adjusted', `Updated ${category} limit to ₱${newLimit.toLocaleString()}`, 'success');
   };
 
@@ -1659,6 +1717,40 @@ export default function App() {
     });
 
     triggerToast('Inflow Consolidated', `Allocated ₱${amount.toLocaleString()} towards shared family goal`, 'success');
+  };
+
+  // Update Income Budget Plan (Monthly Net Income & Bi-Monthly Payday Allocations)
+  const handleUpdateIncomePlan = (newPlan: IncomeBudgetPlan) => {
+    setIncomeBudgetPlan(newPlan);
+    if (email) {
+      localStorage.setItem(`wealth_vault_income_plan_${email}`, JSON.stringify(newPlan));
+      setDoc(doc(db, "users", email, "financialData", "data"), { incomeBudgetPlan: newPlan }, { merge: true }).catch(console.error);
+    } else {
+      localStorage.setItem('wealth_vault_income_plan_guest', JSON.stringify(newPlan));
+    }
+  };
+
+  // Deploy income allocation directly to target asset in Risk & Safe assets
+  const handleDeployIncomeToAsset = (assetKey: string, amountPHP: number, notes?: string) => {
+    const targetAsset = assets.find((a) => a.key === assetKey);
+    if (!targetAsset || amountPHP <= 0) return;
+
+    const price = targetAsset.currentPricePHP > 0 ? targetAsset.currentPricePHP : 1;
+    const isCashOrDeposit = targetAsset.assetType === 'cash' || targetAsset.assetType === 'deposit' || targetAsset.assetType === 'hys' || targetAsset.class === 'safe';
+    const addedUnits = isCashOrDeposit ? amountPHP : (amountPHP / price);
+
+    handleAddTrade({
+      assetKey: targetAsset.key,
+      assetName: targetAsset.name,
+      action: 'BUY',
+      units: addedUnits,
+      pricePHP: price,
+      amountPHP: amountPHP,
+      date: new Date().toISOString().split('T')[0],
+      notes: notes || `Monthly Net Income Auto-Deployment (₱${amountPHP.toLocaleString()})`
+    });
+
+    triggerToast('Income Deployed to Asset', `Successfully deployed ₱${amountPHP.toLocaleString()} into ${targetAsset.name}`, 'success');
   };
 
   // Grounded pricing update via server-side Gemini Search Grounding API
@@ -1935,7 +2027,7 @@ export default function App() {
                 pricing: 'Pricing Plan',
                 portfolio: 'My Financial Portfolio',
                 assets: 'Risk & Safe Assets',
-                ledger: 'Expense Ledger',
+                ledger: 'Cash Flow & Expense Ledger',
                 social: 'Social Family Sync',
                 audit: 'Cycle Audit',
                 transactions: 'History'
@@ -2074,6 +2166,12 @@ export default function App() {
               alerts={alerts}
               onAddAlert={handleAddAlert}
               onDeleteAlert={handleDeleteAlert}
+              incomeBudgetPlan={incomeBudgetPlan}
+              onUpdateIncomePlan={handleUpdateIncomePlan}
+              isAdmin={isAdmin}
+              subscriptionTier={subscriptionTier}
+              onNavigateTab={(tab) => setActiveTab(tab as any)}
+              highlightId={highlightId}
             />
           )
         )}
@@ -2082,6 +2180,17 @@ export default function App() {
           <LedgerTab
             expenses={expenses}
             budgets={budgets}
+            goals={goals}
+            assets={assets}
+            isAdmin={isAdmin}
+            subscriptionTier={subscriptionTier}
+            incomeBudgetPlan={incomeBudgetPlan}
+            onUpdateIncomePlan={handleUpdateIncomePlan}
+            onDeployIncomeToAsset={handleDeployIncomeToAsset}
+            onAddGoal={handleAddGoal}
+            onEditGoal={handleEditGoal}
+            onDeleteGoal={handleDeleteGoal}
+            onUpdateGoalContribution={handleUpdateGoalContribution}
             onAddExpense={handleAddExpense}
             onAdjustExpense={handleAdjustExpense}
             onDeleteExpense={handleDeleteExpense}
