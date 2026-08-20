@@ -41,8 +41,27 @@ import ProPaywallOverlay from './components/ProPaywallOverlay';
 import AdminPortal from './components/admin/AdminPortal';
 import { getAssetValuation } from './lib/formatters';
 import { AIPopupModal } from './components/AIPopupModal';
-import { ShieldCheck, Wifi, RefreshCw, MessageSquare, X, Mic, Send, Sparkles, Bot, User as UserIcon, Check, Lock, Crown } from 'lucide-react';
+import { ShieldCheck, Wifi, RefreshCw, MessageSquare, X, Mic, Send, Sparkles, Bot, User as UserIcon, Check, Lock, Crown, Undo2, Redo2, RotateCcw, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
+
+export interface UndoAction {
+  id: string;
+  title: string;
+  description: string;
+  timestamp: number;
+  undo: () => void;
+  redo?: () => void;
+}
+
+export interface AppToast {
+  id: string;
+  title: string;
+  desc: string;
+  type: 'success' | 'warning' | 'error';
+  undoAction?: () => void;
+  undoId?: string;
+  durationMs?: number;
+}
 
 const DEFAULT_BUDGETS: BudgetLimit[] = [
   { category: 'Lifestyle', limitPHP: 4050, spentPHP: 0 },
@@ -286,21 +305,62 @@ export default function App() {
   };
 
   const handleDeleteTransaction = (id: string) => {
-    setTransactions((prev) => {
-      const nextTxs = prev.filter((t) => t.id !== id);
-      if (email) {
-        setDoc(doc(db, "users", email, "financialData", "data"), { transactions: nextTxs }, { merge: true }).catch(console.error);
-      }
-      return nextTxs;
-    });
+    const targetTx = transactions.find((t) => t.id === id);
+    const targetIndex = transactions.findIndex((t) => t.id === id);
+
+    const applyDelete = (txId: string) => {
+      setTransactions((prev) => {
+        const nextTxs = prev.filter((t) => t.id !== txId);
+        if (email) {
+          setDoc(doc(db, "users", email, "financialData", "data"), { transactions: nextTxs }, { merge: true }).catch(console.error);
+        }
+        return nextTxs;
+      });
+    };
+
+    const applyRestore = (tx: HistoricalTx, idx: number) => {
+      setTransactions((prev) => {
+        const copy = [...prev];
+        const safeIdx = Math.min(Math.max(0, idx), copy.length);
+        copy.splice(safeIdx, 0, tx);
+        if (email) {
+          setDoc(doc(db, "users", email, "financialData", "data"), { transactions: copy }, { merge: true }).catch(console.error);
+        }
+        return copy;
+      });
+    };
+
+    applyDelete(id);
+
+    if (targetTx) {
+      registerUndoableAction({
+        title: 'Transaction Deleted',
+        description: `Deleted transaction for "${targetTx.asset}". Click Undo to restore.`,
+        undo: () => applyRestore(targetTx, targetIndex),
+        redo: () => applyDelete(id),
+      });
+    }
   };
 
   const handleResetTransactions = () => {
+    const prevTxs = [...transactions];
     const resetTxs = isAdmin ? INITIAL_HISTORICAL_TXS : [];
-    setTransactions(resetTxs);
-    if (email) {
-      setDoc(doc(db, "users", email, "financialData", "data"), { transactions: resetTxs }, { merge: true }).catch(console.error);
-    }
+
+    const applyReset = (txs: HistoricalTx[]) => {
+      setTransactions(txs);
+      if (email) {
+        setDoc(doc(db, "users", email, "financialData", "data"), { transactions: txs }, { merge: true }).catch(console.error);
+      }
+    };
+
+    applyReset(resetTxs);
+
+    registerUndoableAction({
+      title: 'Transactions Reset',
+      description: 'Reset transaction ledger history. Click Undo to restore all transactions.',
+      undo: () => applyReset(prevTxs),
+      redo: () => applyReset(resetTxs),
+    });
   };
 
   const isInitialized = React.useRef(false);
@@ -315,7 +375,9 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [settingsDefaultTab, setSettingsDefaultTab] = useState<'profile' | 'preferences' | 'export'>('profile');
   const [highlightId, setHighlightId] = useState<{type: string, id: string, tab?: string} | null>(null);
-  const [toast, setToast] = useState<{ title: string; desc: string; type: 'success' | 'warning' | 'error' } | null>(null);
+  const [toast, setToast] = useState<AppToast | null>(null);
+  const [undoStack, setUndoStack] = useState<UndoAction[]>([]);
+  const [redoStack, setRedoStack] = useState<UndoAction[]>([]);
 
   // Policy Modal state & acceptance check
   const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
@@ -339,11 +401,7 @@ export default function App() {
       }, { merge: true }).catch(console.error);
     }
 
-    setToast({
-      title: 'Policy Accepted',
-      desc: 'Thank you for agreeing to Budget Portfolio Terms, Privacy Policy & Disclaimers.',
-      type: 'success'
-    });
+    triggerToast('Policy Accepted', 'Thank you for agreeing to Budget Portfolio Terms, Privacy Policy & Disclaimers.', 'success');
   };
   const [popupModal, setPopupModal] = useState<{
     isOpen: boolean;
@@ -703,8 +761,97 @@ export default function App() {
     return () => unsubscribe();
   }, [email, isAdmin]);
 
-  const triggerToast = (title: string, desc: string, type: 'success' | 'warning' | 'error' = 'success') => {
-    setToast({ title, desc, type });
+  const performUndo = (targetId?: string) => {
+    setUndoStack((prevStack) => {
+      if (prevStack.length === 0) return prevStack;
+      const actionToUndo = targetId ? prevStack.find((a) => a.id === targetId) : prevStack[0];
+      if (!actionToUndo) return prevStack;
+
+      try {
+        actionToUndo.undo();
+        if (actionToUndo.redo) {
+          setRedoStack((prevRedo) => [actionToUndo, ...prevRedo.slice(0, 39)]);
+        }
+        setToast({
+          id: `toast-undone-${Date.now()}`,
+          title: 'Action Undone',
+          desc: `Reverted: "${actionToUndo.title || actionToUndo.description}"`,
+          type: 'success',
+          durationMs: 4000,
+        });
+      } catch (err) {
+        console.error('Failed to execute undo:', err);
+      }
+
+      return prevStack.filter((a) => a.id !== actionToUndo.id);
+    });
+  };
+
+  const performRedo = () => {
+    setRedoStack((prevRedo) => {
+      if (prevRedo.length === 0) return prevRedo;
+      const [actionToRedo, ...remainingRedo] = prevRedo;
+      if (!actionToRedo || !actionToRedo.redo) return prevRedo;
+
+      try {
+        actionToRedo.redo();
+        setUndoStack((prevUndo) => [actionToRedo, ...prevUndo.slice(0, 39)]);
+        setToast({
+          id: `toast-redone-${Date.now()}`,
+          title: 'Action Redone',
+          desc: `Reapplied: "${actionToRedo.title || actionToRedo.description}"`,
+          type: 'success',
+          undoAction: () => performUndo(actionToRedo.id),
+          undoId: actionToRedo.id,
+          durationMs: 5000,
+        });
+      } catch (err) {
+        console.error('Failed to execute redo:', err);
+      }
+
+      return remainingRedo;
+    });
+  };
+
+  const registerUndoableAction = (action: Omit<UndoAction, 'id' | 'timestamp'> & { id?: string }) => {
+    const fullAction: UndoAction = {
+      id: action.id || `undo-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+      timestamp: Date.now(),
+      title: action.title,
+      description: action.description,
+      undo: action.undo,
+      redo: action.redo,
+    };
+
+    setUndoStack((prev) => [fullAction, ...prev.slice(0, 39)]);
+    setRedoStack([]); // reset redo stack when a new action is performed
+
+    setToast({
+      id: `toast-${Date.now()}`,
+      title: fullAction.title,
+      desc: fullAction.description,
+      type: 'success',
+      undoAction: () => performUndo(fullAction.id),
+      undoId: fullAction.id,
+      durationMs: 7000,
+    });
+  };
+
+  const triggerToast = (
+    title: string, 
+    desc: string, 
+    type: 'success' | 'warning' | 'error' = 'success',
+    opts?: { undoAction?: () => void; undoId?: string; durationMs?: number }
+  ) => {
+    setToast({
+      id: `toast-${Date.now()}`,
+      title,
+      desc,
+      type,
+      undoAction: opts?.undoAction,
+      undoId: opts?.undoId,
+      durationMs: opts?.durationMs || (opts?.undoAction ? 7000 : 4000)
+    });
   };
   
   // Set up theme on load
@@ -717,12 +864,46 @@ export default function App() {
     }
   }, [darkMode]);
 
+  // Global Keyboard Shortcuts (Ctrl+Z / Cmd+Z for Undo, Ctrl+Y / Cmd+Shift+Z for Redo)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement as HTMLElement | null;
+      const isTyping = activeEl && (
+        activeEl.tagName === 'INPUT' || 
+        activeEl.tagName === 'TEXTAREA' || 
+        activeEl.isContentEditable
+      );
+
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+        if (e.shiftKey) {
+          // Redo shortcut (Ctrl+Shift+Z or Cmd+Shift+Z)
+          e.preventDefault();
+          performRedo();
+        } else if (!isTyping) {
+          // Undo shortcut (Ctrl+Z or Cmd+Z)
+          e.preventDefault();
+          performUndo();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || e.key === 'Y')) {
+        // Redo shortcut (Ctrl+Y or Cmd+Y)
+        if (!isTyping) {
+          e.preventDefault();
+          performRedo();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Toast auto-dismissal
   useEffect(() => {
     if (toast) {
+      const duration = toast.durationMs || (toast.undoAction ? 7000 : 4000);
       const timer = setTimeout(() => {
         setToast(null);
-      }, 4000);
+      }, duration);
       return () => clearTimeout(timer);
     }
   }, [toast]);
@@ -1290,6 +1471,37 @@ export default function App() {
       } else if (type === 'UPDATE_TARGET_ALLOCATION') {
         setTargetAllocation(Number(payload.value));
         triggerToast('Allocation Updated', `Set Safe Shield target to ${payload.value}%.`, 'success');
+      } else if (type === 'UPDATE_INCOME_PLAN') {
+        const nextPlan = {
+          ...incomeBudgetPlan,
+          ...(payload.monthlyNetIncome !== undefined ? { monthlyNetIncome: payload.monthlyNetIncome } : {}),
+          ...(payload.expenseCapAllocation !== undefined ? { expenseCapAllocation: payload.expenseCapAllocation } : {}),
+          ...(payload.personalGoalsAllocation !== undefined ? { personalGoalsAllocation: payload.personalGoalsAllocation } : {}),
+          ...(payload.assetInvestmentAllocation !== undefined ? { assetInvestmentAllocation: payload.assetInvestmentAllocation } : {}),
+          ...(payload.selectedDeployAssetKey ? { selectedDeployAssetKey: payload.selectedDeployAssetKey } : {}),
+        };
+        handleUpdateIncomePlan(nextPlan);
+        triggerToast('Income Matrix Updated', '✅ Income Allocation Matrix plan updated and synced.', 'success');
+      } else if (type === 'DEPOSIT_PAYDAY_GOAL') {
+        const depositAmount = Number(payload.amount) || 0;
+        if (goals.length > 0) {
+          const targetGoal = goals[0];
+          handleUpdateGoalContribution(targetGoal.id, depositAmount);
+          triggerToast('Payday Inflow Funded Goal', `Deposited ₱${depositAmount.toLocaleString()} to goal "${targetGoal.title}".`, 'success');
+        } else {
+          handleAddGoal({
+            title: payload.goalTitle || 'Personal Milestone Fund',
+            targetPHP: depositAmount * 5,
+            currentPHP: depositAmount,
+            deadline: new Date(Date.now() + 180 * 86400000).toISOString().split('T')[0],
+            category: 'Personal'
+          });
+          triggerToast('New Goal Created & Funded', `Created goal and credited ₱${depositAmount.toLocaleString()}.`, 'success');
+        }
+      } else if (type === 'DEPLOY_PAYDAY_ASSET') {
+        const deployAmount = Number(payload.amount) || 0;
+        const targetAssetKey = payload.assetKey || incomeBudgetPlan.selectedDeployAssetKey || 'hys';
+        handleDeployIncomeToAsset(targetAssetKey, deployAmount);
       }
 
       setMessages((prev) =>
@@ -1343,13 +1555,27 @@ export default function App() {
     const id = `exp-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
     const newEntry: ExpenseEntry = { ...expense, id };
 
-    setExpenses((prev) => {
-      const nextExpenses = [newEntry, ...prev];
-      if (email) {
-        setDoc(doc(db, "users", email, "financialData", "data"), { expenses: nextExpenses }, { merge: true }).catch(console.error);
-      }
-      return nextExpenses;
-    });
+    const applyAdd = (entry: ExpenseEntry) => {
+      setExpenses((prev) => {
+        const nextExpenses = [entry, ...prev];
+        if (email) {
+          setDoc(doc(db, "users", email, "financialData", "data"), { expenses: nextExpenses }, { merge: true }).catch(console.error);
+        }
+        return nextExpenses;
+      });
+    };
+
+    const applyRemove = (entryId: string) => {
+      setExpenses((prev) => {
+        const nextExpenses = prev.filter((e) => e.id !== entryId);
+        if (email) {
+          setDoc(doc(db, "users", email, "financialData", "data"), { expenses: nextExpenses }, { merge: true }).catch(console.error);
+        }
+        return nextExpenses;
+      });
+    };
+
+    applyAdd(newEntry);
 
     handleAddTransaction({
       date: expense.date || new Date().toISOString().split('T')[0],
@@ -1359,7 +1585,12 @@ export default function App() {
       details: expense.description || `${expense.category} outflow entry`
     });
 
-    triggerToast('Outflow Entry committed', `Logged ₱${expense.amountPHP.toLocaleString()} under ${expense.category}`, 'success');
+    registerUndoableAction({
+      title: 'Outflow Logged',
+      description: `Logged ₱${expense.amountPHP.toLocaleString()} for "${expense.description}". Click Undo if entered by mistake.`,
+      undo: () => applyRemove(newEntry.id),
+      redo: () => applyAdd(newEntry),
+    });
   };
 
   // 3. Bank Sync files simulation loader and automated balance imports
@@ -1390,29 +1621,57 @@ export default function App() {
     const id = `tx-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
     const newTrade: TradeEntry = { ...trade, id };
 
-    setTrades((prev) => [newTrade, ...prev]);
+    const targetAssetBefore = assets.find((a) => a.key === trade.assetKey);
+    const oldAssetUnits = targetAssetBefore ? targetAssetBefore.units : 0;
+    const oldAssetCost = targetAssetBefore ? targetAssetBefore.costBasisPHP : 0;
 
-    // Adjust specific units/cost Basis ratios on the target asset position
-    setAssets((prevAssets) => {
-      const nextAssets = prevAssets.map((asset) => {
-        if (asset.key === trade.assetKey) {
-          const isBuy = trade.action === 'BUY';
-          const newUnits = isBuy ? asset.units + trade.units : Math.max(asset.units - trade.units, 0);
-          const newCost = isBuy ? asset.costBasisPHP + trade.amountPHP : Math.max(asset.costBasisPHP - trade.amountPHP, 0);
+    const applyTradeAdd = (tr: TradeEntry) => {
+      setTrades((prev) => [tr, ...prev]);
 
-          return {
-            ...asset,
-            units: newUnits,
-            costBasisPHP: newCost,
-          };
+      setAssets((prevAssets) => {
+        const nextAssets = prevAssets.map((asset) => {
+          if (asset.key === tr.assetKey) {
+            const isBuy = tr.action === 'BUY';
+            const newUnits = isBuy ? asset.units + tr.units : Math.max(asset.units - tr.units, 0);
+            const newCost = isBuy ? asset.costBasisPHP + tr.amountPHP : Math.max(asset.costBasisPHP - tr.amountPHP, 0);
+
+            return {
+              ...asset,
+              units: newUnits,
+              costBasisPHP: newCost,
+            };
+          }
+          return asset;
+        });
+        if (email) {
+          setDoc(doc(db, "users", email, "financialData", "data"), { assets: nextAssets }, { merge: true }).catch(console.error);
         }
-        return asset;
+        return nextAssets;
       });
-      if (email) {
-        setDoc(doc(db, "users", email, "financialData", "data"), { assets: nextAssets }, { merge: true }).catch(console.error);
-      }
-      return nextAssets;
-    });
+    };
+
+    const applyTradeRevert = (trId: string, assetKey: string, prevUnits: number, prevCost: number) => {
+      setTrades((prev) => prev.filter((t) => t.id !== trId));
+
+      setAssets((prevAssets) => {
+        const nextAssets = prevAssets.map((asset) => {
+          if (asset.key === assetKey) {
+            return {
+              ...asset,
+              units: prevUnits,
+              costBasisPHP: prevCost,
+            };
+          }
+          return asset;
+        });
+        if (email) {
+          setDoc(doc(db, "users", email, "financialData", "data"), { assets: nextAssets }, { merge: true }).catch(console.error);
+        }
+        return nextAssets;
+      });
+    };
+
+    applyTradeAdd(newTrade);
 
     const isBuy = trade.action === 'BUY';
     handleAddTransaction({
@@ -1423,7 +1682,12 @@ export default function App() {
       details: trade.notes || `${trade.action} trade execution (${trade.units} units @ ₱${trade.pricePHP.toLocaleString()})`
     });
 
-    triggerToast('Trade Commited', `Successfully recorded offline ${trade.action} of ${trade.units} units.`, 'success');
+    registerUndoableAction({
+      title: 'Trade Executed',
+      description: `Recorded ${trade.action} of ${trade.units} ${trade.assetName} (₱${trade.amountPHP.toLocaleString()}). Click Undo to revert trade.`,
+      undo: () => applyTradeRevert(newTrade.id, trade.assetKey, oldAssetUnits, oldAssetCost),
+      redo: () => applyTradeAdd(newTrade),
+    });
   };
 
   // Custom asset holdings override
@@ -1437,36 +1701,54 @@ export default function App() {
       yieldPercent?: number; 
       yieldFrequency?: 'annual' | 'monthly' | 'semi-annual' | 'quarterly'; 
       withholdingTaxPercent?: number;
-      assetClass?: 'safe' | 'risk' | 'physical' | 'liability';
-      assetType?: 'cash' | 'deposit' | 'crypto' | 'commodity' | 'equity' | 'property' | 'liability';
+      assetClass?: AssetPosition['class'];
+      assetType?: AssetPosition['assetType'];
     }
   ) => {
     const existingAsset = assets.find((a) => a.key === key);
-    const oldUnits = existingAsset ? existingAsset.units : 0;
-    const oldCost = existingAsset ? existingAsset.costBasisPHP : 0;
+    if (!existingAsset) return;
+
+    const oldUnits = existingAsset.units;
+    const oldCost = existingAsset.costBasisPHP;
+    const oldAssetClass = existingAsset.class;
+    const oldAssetType = existingAsset.assetType;
+    const oldStartDate = existingAsset.startDate;
+    const oldMaturityDate = existingAsset.maturityDate;
+    const oldYield = existingAsset.yieldPercent;
+    const oldYieldFreq = existingAsset.yieldFrequency;
+    const oldWithholding = existingAsset.withholdingTaxPercent;
+
     const diffUnits = units - oldUnits;
     const diffCost = cost - oldCost;
 
-    setAssets((prev) => {
-      const nextAssets = prev.map((a) => (a.key === key ? { 
-        ...a, 
-        units, 
-        costBasisPHP: cost,
-        ...(details?.assetClass !== undefined && { class: details.assetClass }),
-        ...(details?.assetType !== undefined && { assetType: details.assetType }),
-        ...(details?.startDate !== undefined && { startDate: details.startDate }),
-        ...(details?.maturityDate !== undefined && { maturityDate: details.maturityDate }),
-        ...(details?.yieldPercent !== undefined && { yieldPercent: details.yieldPercent }),
-        ...(details?.yieldFrequency !== undefined && { yieldFrequency: details.yieldFrequency }),
-        ...(details?.withholdingTaxPercent !== undefined && { withholdingTaxPercent: details.withholdingTaxPercent })
-      } : a));
-      if (email) {
-        setDoc(doc(db, "users", email, "financialData", "data"), { assets: nextAssets }, { merge: true }).catch(console.error);
-      }
-      return nextAssets;
-    });
+    const applyHoldings = (
+      u: number, 
+      c: number, 
+      d?: typeof details
+    ) => {
+      setAssets((prev) => {
+        const nextAssets = prev.map((a) => (a.key === key ? { 
+          ...a, 
+          units: u, 
+          costBasisPHP: c,
+          ...(d?.assetClass !== undefined && { class: d.assetClass }),
+          ...(d?.assetType !== undefined && { assetType: d.assetType }),
+          ...(d?.startDate !== undefined && { startDate: d.startDate }),
+          ...(d?.maturityDate !== undefined && { maturityDate: d.maturityDate }),
+          ...(d?.yieldPercent !== undefined && { yieldPercent: d.yieldPercent }),
+          ...(d?.yieldFrequency !== undefined && { yieldFrequency: d.yieldFrequency }),
+          ...(d?.withholdingTaxPercent !== undefined && { withholdingTaxPercent: d.withholdingTaxPercent })
+        } : a));
+        if (email) {
+          setDoc(doc(db, "users", email, "financialData", "data"), { assets: nextAssets }, { merge: true }).catch(console.error);
+        }
+        return nextAssets;
+      });
+    };
 
-    if (existingAsset && (diffUnits !== 0 || diffCost !== 0)) {
+    applyHoldings(units, cost, details);
+
+    if (diffUnits !== 0 || diffCost !== 0) {
       const price = existingAsset.currentPricePHP || 1;
       const absDiffUnits = Math.abs(diffUnits);
       const isIncrease = diffUnits !== 0 ? diffUnits > 0 : diffCost > 0;
@@ -1495,34 +1777,61 @@ export default function App() {
         details: `Holdings calibration: ${detailParts.join(', ')}`
       });
     }
+
+    registerUndoableAction({
+      title: 'Holdings Calibrated',
+      description: `Updated "${existingAsset.name}" (Cost ₱${oldCost.toLocaleString()} → ₱${cost.toLocaleString()}). Click Undo if wrong amount entered.`,
+      undo: () => applyHoldings(oldUnits, oldCost, {
+        assetClass: oldAssetClass,
+        assetType: oldAssetType,
+        startDate: oldStartDate,
+        maturityDate: oldMaturityDate,
+        yieldPercent: oldYield,
+        yieldFrequency: oldYieldFreq,
+        withholdingTaxPercent: oldWithholding,
+      }),
+      redo: () => applyHoldings(units, cost, details),
+    });
   };
 
   // Custom asset pricing override
   const handleUpdateAssetPrice = (key: string, newPrice: number) => {
     const existingAsset = assets.find((a) => a.key === key);
-    if (existingAsset && existingAsset.currentPricePHP !== newPrice) {
-      const oldPrice = existingAsset.currentPricePHP || 0;
-      const priceDiff = newPrice - oldPrice;
-      const valDiff = priceDiff * existingAsset.units;
-      const pctChange = oldPrice > 0 ? ((newPrice - oldPrice) / oldPrice) * 100 : 0;
+    if (!existingAsset) return;
 
-      const formattedAmount = `${valDiff >= 0 ? '+' : '-'}₱${Math.abs(valDiff).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const oldPrice = existingAsset.currentPricePHP || 0;
+    if (oldPrice === newPrice) return;
 
-      handleAddTransaction({
-        date: new Date().toISOString().split('T')[0],
-        asset: existingAsset.name,
-        type: 'Valuation',
-        amount: formattedAmount,
-        details: `Price revaluation: ₱${oldPrice.toLocaleString()} → ₱${newPrice.toLocaleString()} (${priceDiff >= 0 ? '+' : ''}${pctChange.toFixed(2)}%)`
+    const priceDiff = newPrice - oldPrice;
+    const valDiff = priceDiff * existingAsset.units;
+    const pctChange = oldPrice > 0 ? ((newPrice - oldPrice) / oldPrice) * 100 : 0;
+    const formattedAmount = `${valDiff >= 0 ? '+' : '-'}₱${Math.abs(valDiff).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+    const applyPrice = (p: number) => {
+      setAssets((prev) => {
+        const nextAssets = prev.map((a) => (a.key === key ? { ...a, currentPricePHP: p } : a));
+        if (email) {
+          setDoc(doc(db, "users", email, "financialData", "data"), { assets: nextAssets }, { merge: true }).catch(console.error);
+        }
+        return nextAssets;
       });
-    }
+    };
 
-    setAssets((prev) => {
-      const nextAssets = prev.map((a) => (a.key === key ? { ...a, currentPricePHP: newPrice } : a));
-      if (email) {
-        setDoc(doc(db, "users", email, "financialData", "data"), { assets: nextAssets }, { merge: true }).catch(console.error);
-      }
-      return nextAssets;
+    applyPrice(newPrice);
+
+    handleAddTransaction({
+      date: new Date().toISOString().split('T')[0],
+      asset: existingAsset.name,
+      type: 'Valuation',
+      amount: formattedAmount,
+      details: `Price revaluation: ₱${oldPrice.toLocaleString()} → ₱${newPrice.toLocaleString()} (${priceDiff >= 0 ? '+' : ''}${pctChange.toFixed(2)}%)`
+    });
+
+    registerUndoableAction({
+      title: 'Price Adjusted',
+      description: `Revalued "${existingAsset.name}" from ₱${oldPrice.toLocaleString()} to ₱${newPrice.toLocaleString()}. Click Undo to restore previous price.`,
+      undo: () => applyPrice(oldPrice),
+      redo: () => applyPrice(newPrice),
     });
   };
 
@@ -1530,14 +1839,31 @@ export default function App() {
   const handleDeleteAsset = (key: string) => {
     const target = assets.find((a) => a.key === key);
     if (!target) return;
+    const targetIndex = assets.findIndex((a) => a.key === key);
 
-    setAssets((prev) => {
-      const nextAssets = prev.filter((a) => a.key !== key);
-      if (email) {
-        setDoc(doc(db, "users", email, "financialData", "data"), { assets: nextAssets }, { merge: true }).catch(console.error);
-      }
-      return nextAssets;
-    });
+    const applyDelete = (targetKey: string) => {
+      setAssets((prev) => {
+        const nextAssets = prev.filter((a) => a.key !== targetKey);
+        if (email) {
+          setDoc(doc(db, "users", email, "financialData", "data"), { assets: nextAssets }, { merge: true }).catch(console.error);
+        }
+        return nextAssets;
+      });
+    };
+
+    const applyRestore = (assetToRestore: AssetPosition, index: number) => {
+      setAssets((prev) => {
+        const copy = [...prev];
+        const safeIndex = Math.min(Math.max(0, index), copy.length);
+        copy.splice(safeIndex, 0, assetToRestore);
+        if (email) {
+          setDoc(doc(db, "users", email, "financialData", "data"), { assets: copy }, { merge: true }).catch(console.error);
+        }
+        return copy;
+      });
+    };
+
+    applyDelete(key);
 
     const totalVal = target.units * (target.currentPricePHP || 1);
     const isCashOrDeposit = target.key === 'hys' || target.assetType === 'cash' || target.assetType === 'deposit' || target.class === 'safe';
@@ -1550,7 +1876,12 @@ export default function App() {
       details: `Asset position removed from active portfolio (${target.units.toLocaleString()} units)`
     });
 
-    triggerToast('Asset Position Removed', `Removed "${target.name}" from active portfolio.`, 'warning');
+    registerUndoableAction({
+      title: 'Position Removed',
+      description: `Removed position "${target.name}". Click Undo to restore holding and historical data.`,
+      undo: () => applyRestore(target, targetIndex),
+      redo: () => applyDelete(key),
+    });
   };
 
   // Add new asset position
@@ -1559,13 +1890,28 @@ export default function App() {
     if (assets.some((a) => a.key === targetAsset.key)) {
       targetAsset.key = `${targetAsset.key}_${Date.now()}`;
     }
-    setAssets((prev) => {
-      const nextAssets = [...prev, targetAsset];
-      if (email) {
-        setDoc(doc(db, "users", email, "financialData", "data"), { assets: nextAssets }, { merge: true }).catch(console.error);
-      }
-      return nextAssets;
-    });
+
+    const applyAdd = (a: AssetPosition) => {
+      setAssets((prev) => {
+        const nextAssets = [...prev, a];
+        if (email) {
+          setDoc(doc(db, "users", email, "financialData", "data"), { assets: nextAssets }, { merge: true }).catch(console.error);
+        }
+        return nextAssets;
+      });
+    };
+
+    const applyDelete = (key: string) => {
+      setAssets((prev) => {
+        const nextAssets = prev.filter((a) => a.key !== key);
+        if (email) {
+          setDoc(doc(db, "users", email, "financialData", "data"), { assets: nextAssets }, { merge: true }).catch(console.error);
+        }
+        return nextAssets;
+      });
+    };
+
+    applyAdd(targetAsset);
 
     const totalVal = targetAsset.costBasisPHP || (targetAsset.units * (targetAsset.currentPricePHP || 1));
     const isCashOrDeposit = targetAsset.key === 'hys' || targetAsset.assetType === 'cash' || targetAsset.assetType === 'deposit';
@@ -1577,7 +1923,12 @@ export default function App() {
       details: `New asset position registered (${targetAsset.platform})`
     });
 
-    triggerToast('Asset Position Added', `Successfully registered "${targetAsset.name}" to asset tables.`, 'success');
+    registerUndoableAction({
+      title: 'Position Registered',
+      description: `Added "${targetAsset.name}". Click Undo to cancel registration.`,
+      undo: () => applyDelete(targetAsset.key),
+      redo: () => applyAdd(targetAsset),
+    });
   };
 
   // Add custom alert trigger
@@ -1595,36 +1946,88 @@ export default function App() {
 
   // Delete custom alert trigger
   const handleDeleteAlert = (id: string) => {
+    const targetAlert = alerts.find((a) => a.id === id);
     setAlerts((prev) => prev.filter((a) => a.id !== id));
-    triggerToast('Alert Rule Removed', 'Custom trigger rule removed from surveillance registries.', 'warning');
+    
+    if (targetAlert) {
+      registerUndoableAction({
+        title: 'Alert Rule Removed',
+        description: `Removed alert trigger for "${targetAlert.asset}". Click Undo to restore.`,
+        undo: () => setAlerts((prev) => [targetAlert, ...prev]),
+        redo: () => setAlerts((prev) => prev.filter((a) => a.id !== id)),
+      });
+    }
   };
 
   const handleAdjustExpense = (id: string, newAmount: number) => {
-    setExpenses((prev) => {
-      const nextExpenses = prev.map((e) => {
-        if (e.id === id) {
-          const newAmountPHP = newAmount * (exchangeRates[e.currency] || 1);
-          return { ...e, amount: newAmount, amountPHP: newAmountPHP };
+    const target = expenses.find((e) => e.id === id);
+    if (!target) return;
+
+    const oldAmount = target.amount;
+    const oldAmountPHP = target.amountPHP;
+    const curr = target.currency || 'PHP';
+    const newAmountPHP = newAmount * (exchangeRates[curr] || 1);
+
+    const applyAmount = (amt: number, amtPHP: number) => {
+      setExpenses((prev) => {
+        const nextExpenses = prev.map((e) => {
+          if (e.id === id) {
+            return { ...e, amount: amt, amountPHP: amtPHP };
+          }
+          return e;
+        });
+        if (email) {
+          setDoc(doc(db, "users", email, "financialData", "data"), { expenses: nextExpenses }, { merge: true }).catch(console.error);
         }
-        return e;
+        return nextExpenses;
       });
-      if (email) {
-        setDoc(doc(db, "users", email, "financialData", "data"), { expenses: nextExpenses }, { merge: true }).catch(console.error);
-      }
-      return nextExpenses;
+    };
+
+    applyAmount(newAmount, newAmountPHP);
+
+    registerUndoableAction({
+      title: 'Expense Adjusted',
+      description: `Changed "${target.description}" from ₱${oldAmountPHP.toLocaleString()} to ₱${newAmountPHP.toLocaleString()}. Click Undo if wrong amount entered.`,
+      undo: () => applyAmount(oldAmount, oldAmountPHP),
+      redo: () => applyAmount(newAmount, newAmountPHP),
     });
-    triggerToast('Expense Adjusted', `Updated expense amount to ₱${newAmount.toLocaleString()}`, 'success');
   };
 
   const handleDeleteExpense = (id: string) => {
-    setExpenses((prev) => {
-      const nextExpenses = prev.filter((e) => e.id !== id);
-      if (email) {
-        setDoc(doc(db, "users", email, "financialData", "data"), { expenses: nextExpenses }, { merge: true }).catch(console.error);
-      }
-      return nextExpenses;
+    const target = expenses.find((e) => e.id === id);
+    if (!target) return;
+    const targetIndex = expenses.findIndex((e) => e.id === id);
+
+    const applyDelete = (targetId: string) => {
+      setExpenses((prev) => {
+        const nextExpenses = prev.filter((e) => e.id !== targetId);
+        if (email) {
+          setDoc(doc(db, "users", email, "financialData", "data"), { expenses: nextExpenses }, { merge: true }).catch(console.error);
+        }
+        return nextExpenses;
+      });
+    };
+
+    const applyRestore = (entry: ExpenseEntry, index: number) => {
+      setExpenses((prev) => {
+        const copy = [...prev];
+        const safeIndex = Math.min(Math.max(0, index), copy.length);
+        copy.splice(safeIndex, 0, entry);
+        if (email) {
+          setDoc(doc(db, "users", email, "financialData", "data"), { expenses: copy }, { merge: true }).catch(console.error);
+        }
+        return copy;
+      });
+    };
+
+    applyDelete(id);
+
+    registerUndoableAction({
+      title: 'Expense Outflow Deleted',
+      description: `Deleted "${target.description}" (₱${target.amountPHP.toLocaleString()}). Click Undo to restore record.`,
+      undo: () => applyRestore(target, targetIndex),
+      redo: () => applyDelete(id),
     });
-    triggerToast('Expense Deleted', 'Successfully removed expense entry.', 'success');
   };
 
   const handleResyncBudgets = () => {
@@ -1644,90 +2047,186 @@ export default function App() {
   };
 
   const handleAdjustBudgetLimit = (category: string, newLimit: number) => {
-    setBudgets((prev) => {
-      const nextBudgets = prev.map((b) => {
-        if (b.category === category) {
-          return { ...b, limitPHP: newLimit };
+    const existing = budgets.find((b) => b.category === category);
+    const oldLimit = existing ? existing.limitPHP : 0;
+
+    const applyLimit = (lim: number) => {
+      setBudgets((prev) => {
+        const nextBudgets = prev.map((b) => {
+          if (b.category === category) {
+            return { ...b, limitPHP: lim };
+          }
+          return b;
+        });
+        if (email) {
+          setDoc(doc(db, "users", email, "financialData", "data"), { budgets: nextBudgets }, { merge: true }).catch(console.error);
         }
-        return b;
+        return nextBudgets;
       });
-      if (email) {
-        setDoc(doc(db, "users", email, "financialData", "data"), { budgets: nextBudgets }, { merge: true }).catch(console.error);
-      }
-      return nextBudgets;
+    };
+
+    applyLimit(newLimit);
+
+    registerUndoableAction({
+      title: 'Budget Limit Adjusted',
+      description: `Changed ${category} limit to ₱${newLimit.toLocaleString()}. Click Undo to restore previous limit.`,
+      undo: () => applyLimit(oldLimit),
+      redo: () => applyLimit(newLimit),
     });
-    triggerToast('Budget Adjusted', `Updated ${category} limit to ₱${newLimit.toLocaleString()}`, 'success');
   };
 
   // Add Collaborative goals
   const handleAddGoal = (goal: Omit<FamilyGoal, 'id'>) => {
     const newGoal: FamilyGoal = { ...goal, id: `goal-${Date.now()}-${Math.floor(Math.random() * 1000000)}` };
-    setGoals((prev) => {
-      const nextGoals = [...prev, newGoal];
-      if (email) {
-        setDoc(doc(db, "users", email, "financialData", "data"), { assets, expenses, goals: nextGoals, budgets, targetAllocation, alerts }, { merge: true }).catch(console.error);
-      }
-      return nextGoals;
+
+    const applyAdd = (g: FamilyGoal) => {
+      setGoals((prev) => {
+        const nextGoals = [...prev, g];
+        if (email) {
+          setDoc(doc(db, "users", email, "financialData", "data"), { assets, expenses, goals: nextGoals, budgets, targetAllocation, alerts }, { merge: true }).catch(console.error);
+        }
+        return nextGoals;
+      });
+    };
+
+    const applyDelete = (goalId: string) => {
+      setGoals((prev) => {
+        const nextGoals = prev.filter((g) => g.id !== goalId);
+        if (email) {
+          setDoc(doc(db, "users", email, "financialData", "data"), { assets, expenses, goals: nextGoals, budgets, targetAllocation, alerts }, { merge: true }).catch(console.error);
+        }
+        return nextGoals;
+      });
+    };
+
+    applyAdd(newGoal);
+
+    registerUndoableAction({
+      title: 'Goal Established',
+      description: `Created goal "${goal.title}" (Target: ₱${goal.targetPHP.toLocaleString()}). Click Undo to revert.`,
+      undo: () => applyDelete(newGoal.id),
+      redo: () => applyAdd(newGoal),
     });
-    triggerToast('Family Goal Established', `Successfully published target: "${goal.title}"`, 'success');
   };
 
   // Edit Collaborative goal
   const handleEditGoal = (updatedGoal: FamilyGoal) => {
-    setGoals((prev) => {
-      const nextGoals = prev.map((g) => (g.id === updatedGoal.id ? updatedGoal : g));
-      if (email) {
-        setDoc(doc(db, "users", email, "financialData", "data"), { assets, expenses, goals: nextGoals, budgets, targetAllocation, alerts }, { merge: true }).catch(console.error);
-      }
-      return nextGoals;
+    const oldGoal = goals.find((g) => g.id === updatedGoal.id);
+    if (!oldGoal) return;
+
+    const applyGoal = (g: FamilyGoal) => {
+      setGoals((prev) => {
+        const nextGoals = prev.map((item) => (item.id === g.id ? g : item));
+        if (email) {
+          setDoc(doc(db, "users", email, "financialData", "data"), { assets, expenses, goals: nextGoals, budgets, targetAllocation, alerts }, { merge: true }).catch(console.error);
+        }
+        return nextGoals;
+      });
+    };
+
+    applyGoal(updatedGoal);
+
+    registerUndoableAction({
+      title: 'Goal Updated',
+      description: `Updated "${updatedGoal.title}". Click Undo to restore previous goal parameters.`,
+      undo: () => applyGoal(oldGoal),
+      redo: () => applyGoal(updatedGoal),
     });
-    triggerToast('Family Goal Updated', `Successfully updated target: "${updatedGoal.title}"`, 'success');
   };
 
   // Delete Collaborative goal
   const handleDeleteGoal = (id: string) => {
     const target = goals.find((g) => g.id === id);
-    setGoals((prev) => {
-      const nextGoals = prev.filter((g) => g.id !== id);
-      if (email) {
-        setDoc(doc(db, "users", email, "financialData", "data"), { assets, expenses, goals: nextGoals, budgets, targetAllocation, alerts }, { merge: true }).catch(console.error);
-      }
-      return nextGoals;
+    if (!target) return;
+    const targetIndex = goals.findIndex((g) => g.id === id);
+
+    const applyDelete = (goalId: string) => {
+      setGoals((prev) => {
+        const nextGoals = prev.filter((g) => g.id !== goalId);
+        if (email) {
+          setDoc(doc(db, "users", email, "financialData", "data"), { assets, expenses, goals: nextGoals, budgets, targetAllocation, alerts }, { merge: true }).catch(console.error);
+        }
+        return nextGoals;
+      });
+    };
+
+    const applyRestore = (goalToRestore: FamilyGoal, index: number) => {
+      setGoals((prev) => {
+        const copy = [...prev];
+        const safeIndex = Math.min(Math.max(0, index), copy.length);
+        copy.splice(safeIndex, 0, goalToRestore);
+        if (email) {
+          setDoc(doc(db, "users", email, "financialData", "data"), { assets, expenses, goals: copy, budgets, targetAllocation, alerts }, { merge: true }).catch(console.error);
+        }
+        return copy;
+      });
+    };
+
+    applyDelete(id);
+
+    registerUndoableAction({
+      title: 'Goal Deleted',
+      description: `Deleted "${target.title}". Click Undo to restore goal and accumulated funds.`,
+      undo: () => applyRestore(target, targetIndex),
+      redo: () => applyDelete(id),
     });
-    triggerToast('Goal Deleted', `Removed target: "${target?.title || 'Family Goal'}"`, 'warning');
   };
 
   // Capitalize collaborative goal progress
   const handleUpdateGoalContribution = (id: string, amount: number) => {
     const targetGoal = goals.find((g) => g.id === id);
-    setGoals((prev) => {
-      const nextGoals = prev.map((g) => (g.id === id ? { ...g, currentPHP: g.currentPHP + amount } : g));
-      if (email) {
-        setDoc(doc(db, "users", email, "financialData", "data"), { assets, expenses, goals: nextGoals, budgets, targetAllocation, alerts }, { merge: true }).catch(console.error);
-      }
-      return nextGoals;
-    });
+    if (!targetGoal) return;
+
+    const applyContribution = (amt: number) => {
+      setGoals((prev) => {
+        const nextGoals = prev.map((g) => (g.id === id ? { ...g, currentPHP: g.currentPHP + amt } : g));
+        if (email) {
+          setDoc(doc(db, "users", email, "financialData", "data"), { assets, expenses, goals: nextGoals, budgets, targetAllocation, alerts }, { merge: true }).catch(console.error);
+        }
+        return nextGoals;
+      });
+    };
+
+    applyContribution(amount);
 
     handleAddTransaction({
       date: new Date().toISOString().split('T')[0],
-      asset: targetGoal ? `Family Goal: ${targetGoal.title}` : 'Family Goal Contribution',
+      asset: `Family Goal: ${targetGoal.title}`,
       type: 'Deposit',
       amount: `+₱${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      details: `Capital contribution allocated towards ${targetGoal ? targetGoal.title : 'shared family goal'}`
+      details: `Capital contribution allocated towards ${targetGoal.title}`
     });
 
-    triggerToast('Inflow Consolidated', `Allocated ₱${amount.toLocaleString()} towards shared family goal`, 'success');
+    registerUndoableAction({
+      title: 'Goal Funded',
+      description: `Funded ₱${amount.toLocaleString()} into "${targetGoal.title}". Click Undo if wrong deposit amount entered.`,
+      undo: () => applyContribution(-amount),
+      redo: () => applyContribution(amount),
+    });
   };
 
   // Update Income Budget Plan (Monthly Net Income & Bi-Monthly Payday Allocations)
   const handleUpdateIncomePlan = (newPlan: IncomeBudgetPlan) => {
-    setIncomeBudgetPlan(newPlan);
-    if (email) {
-      localStorage.setItem(`wealth_vault_income_plan_${email}`, JSON.stringify(newPlan));
-      setDoc(doc(db, "users", email, "financialData", "data"), { incomeBudgetPlan: newPlan }, { merge: true }).catch(console.error);
-    } else {
-      localStorage.setItem('wealth_vault_income_plan_guest', JSON.stringify(newPlan));
-    }
+    const oldPlan = { ...incomeBudgetPlan };
+
+    const applyPlan = (plan: IncomeBudgetPlan) => {
+      setIncomeBudgetPlan(plan);
+      if (email) {
+        localStorage.setItem(`wealth_vault_income_plan_${email}`, JSON.stringify(plan));
+        setDoc(doc(db, "users", email, "financialData", "data"), { incomeBudgetPlan: plan }, { merge: true }).catch(console.error);
+      } else {
+        localStorage.setItem('wealth_vault_income_plan_guest', JSON.stringify(plan));
+      }
+    };
+
+    applyPlan(newPlan);
+
+    registerUndoableAction({
+      title: 'Income Allocation Matrix Updated',
+      description: `Updated Monthly Net Income to ₱${newPlan.monthlyNetIncome.toLocaleString()}. Click Undo to restore previous matrix.`,
+      undo: () => applyPlan(oldPlan),
+      redo: () => applyPlan(newPlan),
+    });
   };
 
   // Deploy income allocation directly to target asset in Risk & Safe assets
@@ -1749,8 +2248,6 @@ export default function App() {
       date: new Date().toISOString().split('T')[0],
       notes: notes || `Monthly Net Income Auto-Deployment (₱${amountPHP.toLocaleString()})`
     });
-
-    triggerToast('Income Deployed to Asset', `Successfully deployed ₱${amountPHP.toLocaleString()} into ${targetAsset.name}`, 'success');
   };
 
   // Grounded pricing update via server-side Gemini Search Grounding API
@@ -1964,6 +2461,12 @@ export default function App() {
         isGuest={!firebaseUser}
         onOpenAdminHQ={() => setIsAdminPortalMode(true)}
         onOpenPolicyModal={() => setIsPolicyModalOpen(true)}
+        canUndo={undoStack.length > 0}
+        canRedo={redoStack.length > 0}
+        undoCount={undoStack.length}
+        lastUndoDescription={undoStack[0]?.title || undoStack[0]?.description}
+        onUndo={() => performUndo()}
+        onRedo={() => performRedo()}
       />
 
       {/* Sign In Modal Overlay for Guest Mode */}
@@ -1984,21 +2487,73 @@ export default function App() {
         </div>
       )}
 
-      {/* Toast Notification Container */}
+      {/* Interactive Undo / Notification Toast Container */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 animate-slide-up">
-          <div className={`p-4 rounded-xl shadow-lg border flex items-start space-x-3 max-w-sm backdrop-blur ${
+        <div className="fixed bottom-6 right-6 z-50 animate-slide-up max-w-md w-[calc(100vw-3rem)] sm:w-auto">
+          <div className={`relative overflow-hidden p-4 rounded-2xl shadow-2xl border flex flex-col space-y-2 backdrop-blur-xl transition-all ${
             toast.type === 'error'
-              ? 'bg-rose-900/95 border-rose-500/30 text-rose-100'
+              ? 'bg-rose-950/95 border-rose-500/40 text-rose-100 shadow-rose-950/50'
               : toast.type === 'warning'
-              ? 'bg-amber-900/95 border-amber-500/30 text-amber-100'
-              : 'bg-slate-900/95 border-slate-700/50 text-emerald-100'
+              ? 'bg-amber-950/95 border-amber-500/40 text-amber-100 shadow-amber-950/50'
+              : 'bg-slate-900/95 border-blue-500/30 text-slate-100 shadow-slate-950/50'
           }`}>
-            <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5 text-blue-400" />
-            <div>
-              <h4 className="text-xs font-bold text-white">{toast.title}</h4>
-              <p className="text-[11px] text-slate-300 mt-1 leading-snug">{toast.desc}</p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start space-x-3">
+                <div className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${
+                  toast.type === 'error'
+                    ? 'bg-rose-500/20 text-rose-400'
+                    : toast.type === 'warning'
+                    ? 'bg-amber-500/20 text-amber-400'
+                    : 'bg-blue-500/20 text-blue-400'
+                }`}>
+                  {toast.type === 'error' ? (
+                    <AlertTriangle className="w-4 h-4" />
+                  ) : toast.type === 'warning' ? (
+                    <RotateCcw className="w-4 h-4" />
+                  ) : (
+                    <CheckCircle2 className="w-4 h-4" />
+                  )}
+                </div>
+                <div className="pr-2">
+                  <h4 className="text-xs font-bold text-white tracking-tight flex items-center gap-1.5">
+                    <span>{toast.title}</span>
+                  </h4>
+                  <p className="text-[11px] text-slate-300 mt-0.5 leading-snug break-words">
+                    {toast.desc}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-1.5 shrink-0">
+                {toast.undoAction && (
+                  <button
+                    onClick={() => {
+                      toast.undoAction?.();
+                      setToast(null);
+                    }}
+                    className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold rounded-lg shadow-sm transition-all cursor-pointer flex items-center space-x-1.5 active:scale-95 shrink-0"
+                    title="Undo this action (Ctrl+Z)"
+                  >
+                    <Undo2 className="w-3.5 h-3.5" />
+                    <span>Undo</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setToast(null)}
+                  className="p-1 text-slate-400 hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-white/10"
+                  aria-label="Dismiss toast"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
+            {toast.undoAction && (
+              <div className="w-full bg-white/10 h-0.5 rounded-full overflow-hidden mt-1">
+                <div 
+                  className="bg-amber-400 h-full animate-shrink-width" 
+                  style={{ animationDuration: `${toast.durationMs || 7000}ms` }} 
+                />
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -2055,7 +2610,42 @@ export default function App() {
             })}
           </nav>
           
-          <div className="hidden sm:flex items-center space-x-3 bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-white/5 shrink-0 shadow-xs">
+          <div className="hidden sm:flex items-center space-x-2 bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-white/5 shrink-0 shadow-xs">
+            {/* Quick Undo / Redo controls in Sub-Nav */}
+            <div className="flex items-center space-x-1 border-r border-slate-200 dark:border-slate-800 pr-2 mr-1">
+              <button
+                onClick={() => performUndo()}
+                disabled={undoStack.length === 0}
+                className={`p-1.5 rounded-lg flex items-center space-x-1 text-xs font-bold transition-all cursor-pointer ${
+                  undoStack.length > 0
+                    ? 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95'
+                    : 'text-slate-300 dark:text-slate-700 cursor-not-allowed opacity-50'
+                }`}
+                title={undoStack.length > 0 ? `Undo: ${undoStack[0]?.title} (Ctrl+Z)` : 'Nothing to undo (Ctrl+Z)'}
+              >
+                <Undo2 className="w-3.5 h-3.5" />
+                <span className="text-[10px] hidden md:inline font-semibold">Undo</span>
+                {undoStack.length > 0 && (
+                  <span className="text-[9px] bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 px-1 py-0.2 rounded-full font-extrabold">
+                    {undoStack.length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => performRedo()}
+                disabled={redoStack.length === 0}
+                className={`p-1.5 rounded-lg flex items-center space-x-1 text-xs font-bold transition-all cursor-pointer ${
+                  redoStack.length > 0
+                    ? 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95'
+                    : 'text-slate-300 dark:text-slate-700 cursor-not-allowed opacity-50'
+                }`}
+                title={redoStack.length > 0 ? `Redo: ${redoStack[0]?.title} (Ctrl+Y)` : 'Nothing to redo (Ctrl+Y)'}
+              >
+                <Redo2 className="w-3.5 h-3.5" />
+                <span className="text-[10px] hidden md:inline font-semibold">Redo</span>
+              </button>
+            </div>
+
             <div className="px-3 py-1 bg-slate-50 dark:bg-slate-800/80 rounded-lg flex items-center space-x-1.5">
               <span className="text-[9px] text-slate-500 font-bold uppercase">USD/PHP Exchange</span>
               <span className="text-xs text-slate-900 dark:text-slate-200 font-bold">₱{exchangeRates.USD.toFixed(2)}</span>
@@ -2275,6 +2865,7 @@ export default function App() {
         trades={trades}
         goals={goals}
         budgets={budgets}
+        incomeBudgetPlan={incomeBudgetPlan}
         onUploadBackup={handleUploadBackupLocal}
         onExecuteSyncBackup={handleExecuteSyncBackup}
         onExecuteRestoreBackup={handleExecuteRestoreBackup}
@@ -2367,6 +2958,14 @@ export default function App() {
                           {m.action.type === 'RECORD_TRADE' && `Record trade: ${m.action.payload.action} ${m.action.payload.units} units of ${m.action.payload.assetKey?.toUpperCase()} at ₱${m.action.payload.pricePHP?.toLocaleString() || 'market price'}.`}
                           {m.action.type === 'REGISTER_ASSET' && `Register new ${(m.action.payload.class || 'SAFE').toUpperCase()} position: "${m.action.payload.name}" (${m.action.payload.platform || 'Bank'}) with Principal Basis ₱${(m.action.payload.costBasisPHP || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}${m.action.payload.yieldPercent ? ` @ ${m.action.payload.yieldPercent}% rate` : ''}${m.action.payload.maturityDate ? ` (Matures ${m.action.payload.maturityDate})` : ''}.`}
                           {m.action.type === 'UPDATE_TARGET_ALLOCATION' && `Adjust Safe Shield allocation target to ${m.action.payload.value}%.`}
+                          {m.action.type === 'UPDATE_INCOME_PLAN' && `Update Income Allocation Matrix: ${[
+                            m.action.payload.monthlyNetIncome !== undefined ? `Net Income: ₱${m.action.payload.monthlyNetIncome.toLocaleString()}` : null,
+                            m.action.payload.expenseCapAllocation !== undefined ? `Expense Cap: ₱${m.action.payload.expenseCapAllocation.toLocaleString()}` : null,
+                            m.action.payload.personalGoalsAllocation !== undefined ? `Goals: ₱${m.action.payload.personalGoalsAllocation.toLocaleString()}` : null,
+                            m.action.payload.assetInvestmentAllocation !== undefined ? `Assets: ₱${m.action.payload.assetInvestmentAllocation.toLocaleString()}` : null,
+                          ].filter(Boolean).join(', ')}.`}
+                          {m.action.type === 'DEPOSIT_PAYDAY_GOAL' && `Deposit ₱${m.action.payload.amount?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} realized payday cash inflow into Personal Milestone Goals.`}
+                          {m.action.type === 'DEPLOY_PAYDAY_ASSET' && `Deploy ₱${m.action.payload.amount?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} realized payday cash inflow into ${m.action.payload.assetKey ? m.action.payload.assetKey.toUpperCase() : 'HYS'} in Risk & Safe Asset Sleeve.`}
                         </p>
                         <button
                           disabled={m.applied}

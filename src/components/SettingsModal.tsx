@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { collection, onSnapshot, doc, setDoc } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { AssetPosition, ExpenseEntry, TradeEntry, FamilyGoal, BudgetLimit } from '../types';
+import { AssetPosition, ExpenseEntry, TradeEntry, FamilyGoal, BudgetLimit, IncomeBudgetPlan } from '../types';
 import ExportEngine from './ExportEngine';
 import AdminUserManagement from './admin/AdminUserManagement';
 
@@ -43,6 +43,7 @@ interface SettingsModalProps {
   trades: TradeEntry[];
   goals: FamilyGoal[];
   budgets: BudgetLimit[];
+  incomeBudgetPlan?: IncomeBudgetPlan;
   onUploadBackup: (importedState: any) => void;
   onExecuteSyncBackup: () => Promise<void>;
   onExecuteRestoreBackup: () => Promise<void>;
@@ -76,6 +77,7 @@ export default function SettingsModal({
   trades,
   goals,
   budgets,
+  incomeBudgetPlan,
   onUploadBackup,
   onExecuteSyncBackup,
   onExecuteRestoreBackup,
@@ -608,6 +610,7 @@ export default function SettingsModal({
                 trades={trades}
                 goals={goals}
                 budgets={budgets}
+                incomeBudgetPlan={incomeBudgetPlan}
                 onUploadBackup={onUploadBackup}
                 onExecuteSyncBackup={onExecuteSyncBackup}
                 onExecuteRestoreBackup={onExecuteRestoreBackup}

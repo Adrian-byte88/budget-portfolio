@@ -62,6 +62,7 @@ export interface IncomeBudgetPlan {
   personalGoalsAllocation: number;
   assetInvestmentAllocation: number;
   targetAssetKey?: string;
+  selectedDeployAssetKey?: string;
   autoDeployPayday?: boolean;
 }
 

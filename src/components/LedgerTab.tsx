@@ -657,7 +657,195 @@ export default function LedgerTab({
   return (
     <div className="space-y-8 animate-fade-in">
       {/* ------------------------------------------------------------- */}
-      {/* 1. MONTHLY NET INCOME & BI-MONTHLY PAYDAY (15th & 30th) HUB */}
+      {/* 1. LOGGED OUTFLOW REGISTER & QUICK EXPENSE LOGGING HUB */}
+      {/* ------------------------------------------------------------- */}
+      <div id="expense-table-section" data-highlight-id="expense-table-section" className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left 2 Cols: Expense Outflows Register Table */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-widest text-xs mb-1">
+                <Receipt className="w-4 h-4 text-indigo-500" />
+                <span>Daily Outflow Tracking & Quick Log</span>
+              </div>
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                <span>Logged Outflow Register ({expensesForSelectedMonth.length} Records)</span>
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Detailed ledger records for <strong>{selectedMonthKey}</strong>. Multi-currency items converted to PHP.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2.5">
+              {/* Period / Month Selector */}
+              <div className="flex items-center space-x-2 bg-slate-50 dark:bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/10">
+                <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Period:</span>
+                <select
+                  value={selectedMonthKey}
+                  onChange={(e) => setSelectedMonthKey(e.target.value)}
+                  className="bg-transparent text-xs font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer"
+                >
+                  {availableMonths.map((mKey) => {
+                    const [y, m] = mKey.split('-');
+                    const dateObj = new Date(Number(y), Number(m) - 1, 1);
+                    const mLabel = dateObj.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+                    const isCurrent = mKey === currentRealMonthKey;
+                    return (
+                      <option key={mKey} value={mKey} className="bg-slate-900 text-white">
+                        {mLabel} {isCurrent ? '(Active Month)' : ''}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
+              <button
+                onClick={() => setShowExpenseForm(true)}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center space-x-1.5 shadow-xs transition-all cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Log Expense</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-xl overflow-hidden shadow-xs">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 dark:bg-slate-950/60 text-slate-400 font-extrabold uppercase tracking-wider border-b border-slate-100 dark:border-white/5 text-[10px]">
+                  <tr>
+                    <th className="py-3 px-4">Date</th>
+                    <th className="py-3 px-4">Description</th>
+                    <th className="py-3 px-4">Category</th>
+                    <th className="py-3 px-4 text-right">Amount</th>
+                    <th className="py-3 px-4 text-right">PHP Value</th>
+                    <th className="py-3 px-4 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-white/5 font-medium">
+                  {expensesForSelectedMonth.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-slate-400 text-xs">
+                        No expenses logged for {selectedMonthKey}. Click "+ Log Expense" to register an outflow.
+                      </td>
+                    </tr>
+                  ) : (
+                    expensesForSelectedMonth.map((e) => (
+                      <tr key={e.id} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
+                        <td className="py-3 px-4 font-mono text-slate-500 dark:text-slate-400">{e.date}</td>
+                        <td className="py-3 px-4 text-slate-900 dark:text-white font-bold">{e.description}</td>
+                        <td className="py-3 px-4">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                            {e.category}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-right font-mono text-slate-700 dark:text-slate-300">
+                          {e.currency} {e.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="py-3 px-4 text-right font-mono font-bold text-slate-900 dark:text-white">
+                          ₱{e.amountPHP.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <button
+                            onClick={() => onDeleteExpense(e.id)}
+                            className="p-1 text-slate-400 hover:text-rose-600 rounded hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* Right 1 Col: Travel Currency Converter & Inflow Guide */}
+        <div className="space-y-6">
+          {/* Currency Calculator */}
+          <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-xl p-5 shadow-xs space-y-4">
+            <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white border-b border-slate-100 dark:border-white/5 pb-2.5">
+              <ArrowRightLeft className="w-4 h-4 text-indigo-500" />
+              <span>Multi-Currency Travel Converter</span>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <SmartCalculatorInput
+                  label="Convert Amount"
+                  value={calcFromAmt}
+                  onChange={setCalcFromAmt}
+                  currencySymbol=""
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">From</label>
+                  <select
+                    value={calcFromCurr}
+                    onChange={(e) => setCalcFromCurr(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none"
+                  >
+                    <option value="USD">USD ($)</option>
+                    <option value="PHP">PHP (₱)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="JPY">JPY (¥)</option>
+                    <option value="SGD">SGD (S$)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">To</label>
+                  <select
+                    value={calcToCurr}
+                    onChange={(e) => setCalcToCurr(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none"
+                  >
+                    <option value="PHP">PHP (₱)</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="JPY">JPY (¥)</option>
+                    <option value="SGD">SGD (S$)</option>
+                  </select>
+                </div>
+              </div>
+
+              <button
+                onClick={handleCalculateConversion}
+                className="w-full py-2 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 rounded-lg text-xs font-bold uppercase tracking-wider cursor-pointer transition-all"
+              >
+                Calculate Exchange
+              </button>
+
+              <div className="p-3 bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-white/5 rounded-lg flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase text-slate-400">Equivalent:</span>
+                <span className="text-sm font-black font-mono text-indigo-600 dark:text-indigo-400">
+                  {calcToCurr} {calcResult}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Payday Scheduling Quick Guide */}
+          <div className="p-4 bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-900/50 rounded-xl space-y-2 text-xs">
+            <div className="font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
+              <CheckSquare className="w-4 h-4 text-indigo-500" />
+              <span>Income Inflow Principles</span>
+            </div>
+            <p className="text-[11px] leading-relaxed text-slate-600 dark:text-indigo-200/80">
+              1. <strong>15th Day Payday</strong>: 50% of monthly net income arrives for first-half expenses & goal funding.<br/>
+              2. <strong>30th Day Payday</strong>: 50% of monthly net income arrives for second-half expenses & asset DCA.<br/>
+              3. <strong>Balanced Allocation</strong>: Income = Outflow Cap + Goals + Asset Investments.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ------------------------------------------------------------- */}
+      {/* 2. MONTHLY NET INCOME & BI-MONTHLY PAYDAY (15th & 30th) HUB */}
       {/* ------------------------------------------------------------- */}
       <div
         id="net-income-section"
@@ -933,10 +1121,15 @@ export default function LedgerTab({
         <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-white/5 rounded-xl p-5 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 dark:border-white/5 pb-3">
             <div>
-              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                <Scale className="w-4 h-4 text-indigo-500" />
-                <span>Income Allocation Matrix</span>
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+                  <Scale className="w-4 h-4 text-indigo-500" />
+                  <span>Income Allocation Matrix</span>
+                </h3>
+                <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 rounded text-[9px] font-black uppercase tracking-wider">
+                  MTD Realized: ₱{realizedInflowThisMonth.toLocaleString()}
+                </span>
+              </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                 Automatically allocate your monthly net income to Expense Caps, Personal Milestones, and Asset Sleeves.
               </p>
@@ -945,12 +1138,77 @@ export default function LedgerTab({
             {!editingAllocations ? (
               <button
                 onClick={() => setEditingAllocations(true)}
-                className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline uppercase tracking-wider flex items-center gap-1 cursor-pointer"
+                className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline uppercase tracking-wider flex items-center gap-1 cursor-pointer shrink-0"
               >
                 <Pencil className="w-3 h-3" />
                 <span>Edit Allocations</span>
               </button>
             ) : null}
+          </div>
+
+          {/* Realized Cash Inflow MTD Matrix Distribution Meter */}
+          <div className="p-3.5 bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-800/30 rounded-xl space-y-2.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px]">
+              <div className="flex items-center gap-2 font-bold text-indigo-950 dark:text-indigo-200">
+                <span>Realized Cash Inflow MTD Execution:</span>
+                <span className="font-mono text-indigo-600 dark:text-indigo-400 font-black">
+                  ₱{realizedInflowThisMonth.toLocaleString()}
+                </span>
+                <span className="text-[10px] text-slate-400 font-normal">
+                  of ₱{monthlyNetIncome.toLocaleString()} Planned ({monthlyNetIncome > 0 ? ((realizedInflowThisMonth / monthlyNetIncome) * 100).toFixed(0) : 0}% in hand)
+                </span>
+              </div>
+
+              <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                {is30thRealized ? (
+                  <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>100% Inflow Realized (15th & 30th)</span>
+                  </span>
+                ) : is15thRealized ? (
+                  <span className="text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                    <Check className="w-3 h-3" />
+                    <span>50% 1st Payday Realized • 2nd Payday on 30th</span>
+                  </span>
+                ) : (
+                  <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    <span>Awaiting 1st Payday (15th Day)</span>
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Visual Realized Progress Bar */}
+            <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden flex">
+              <div
+                className="bg-indigo-600 h-full transition-all duration-500"
+                style={{ width: `${monthlyNetIncome > 0 ? Math.min(100, (realizedInflowThisMonth / monthlyNetIncome) * 100) : 0}%` }}
+                title={`Realized Cash Inflow MTD: ₱${realizedInflowThisMonth.toLocaleString()}`}
+              />
+            </div>
+
+            {/* Breakdown Chips of Realized Inflow Available to Allocate */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-[10px]">
+              <div className="flex items-center justify-between px-2.5 py-1 bg-white/80 dark:bg-slate-900/60 rounded-lg border border-slate-200/50 dark:border-white/5">
+                <span className="text-slate-500 font-medium">Expense Cap Inflow:</span>
+                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                  ₱{(is30thRealized ? expenseCapAllocation : is15thRealized ? expenseCapAllocation / 2 : 0).toLocaleString()}
+                </span>
+              </div>
+              <div className="flex items-center justify-between px-2.5 py-1 bg-white/80 dark:bg-slate-900/60 rounded-lg border border-slate-200/50 dark:border-white/5">
+                <span className="text-slate-500 font-medium">Goals Savings Inflow:</span>
+                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                  ₱{(is30thRealized ? personalGoalsAllocation : is15thRealized ? personalGoalsAllocation / 2 : 0).toLocaleString()}
+                </span>
+              </div>
+              <div className="flex items-center justify-between px-2.5 py-1 bg-white/80 dark:bg-slate-900/60 rounded-lg border border-slate-200/50 dark:border-white/5">
+                <span className="text-slate-500 font-medium">Asset Sleeve Inflow:</span>
+                <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
+                  ₱{(is30thRealized ? effectiveAssetAllocation : is15thRealized ? effectiveAssetAllocation / 2 : 0).toLocaleString()}
+                </span>
+              </div>
+            </div>
           </div>
 
           {editingAllocations ? (
@@ -1061,6 +1319,12 @@ export default function LedgerTab({
                 <div className="text-xl font-black text-slate-900 dark:text-white font-mono">
                   ₱{expenseCapAllocation.toLocaleString()}
                 </div>
+                <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-white/5 text-[10px]">
+                  <span className="text-slate-400">Realized Inflow MTD:</span>
+                  <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
+                    ₱{(is30thRealized ? expenseCapAllocation : is15thRealized ? expenseCapAllocation / 2 : 0).toLocaleString()}
+                  </span>
+                </div>
                 <p className="text-[10px] text-slate-400">
                   Funded from Net Income for monthly living expenses
                 </p>
@@ -1079,6 +1343,12 @@ export default function LedgerTab({
                 </div>
                 <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
                   ₱{personalGoalsAllocation.toLocaleString()}
+                </div>
+                <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-white/5 text-[10px]">
+                  <span className="text-slate-400">Realized Inflow MTD:</span>
+                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                    ₱{(is30thRealized ? personalGoalsAllocation : is15thRealized ? personalGoalsAllocation / 2 : 0).toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between pt-1">
                   <span className="text-[10px] text-slate-400">
@@ -1115,6 +1385,12 @@ export default function LedgerTab({
                 <div className="text-xl font-black text-blue-600 dark:text-blue-400 font-mono">
                   ₱{effectiveAssetAllocation.toLocaleString()}
                 </div>
+                <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-white/5 text-[10px]">
+                  <span className="text-slate-400">Realized Inflow MTD:</span>
+                  <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
+                    ₱{(is30thRealized ? effectiveAssetAllocation : is15thRealized ? effectiveAssetAllocation / 2 : 0).toLocaleString()}
+                  </span>
+                </div>
                 {isProOrAdmin ? (
                   <div className="flex items-center justify-between pt-1">
                     <span className="text-[10px] text-slate-400 truncate max-w-[120px]">
@@ -1141,7 +1417,7 @@ export default function LedgerTab({
       </div>
 
       {/* ------------------------------------------------------------- */}
-      {/* 2. CATEGORY LIMIT CONTROLS & DESIRED MONTHLY EXPENSE CAP */}
+      {/* 3. CATEGORY LIMIT CONTROLS & DESIRED MONTHLY EXPENSE CAP */}
       {/* ------------------------------------------------------------- */}
       <div id="category-limits-section" data-highlight-id="category-limits-section" className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-xl p-6 sm:p-8 shadow-xs space-y-6">
         {/* Section Header */}
@@ -1419,7 +1695,7 @@ export default function LedgerTab({
       </div>
 
       {/* ------------------------------------------------------------- */}
-      {/* 3. PERSONAL GOALS & SAVINGS TARGETS TRACKER SECTION */}
+      {/* 4. PERSONAL GOALS & SAVINGS TARGETS TRACKER SECTION */}
       {/* ------------------------------------------------------------- */}
       <div
         id="personal-goals-section"
@@ -1677,166 +1953,6 @@ export default function LedgerTab({
             })}
           </div>
         )}
-      </div>
-
-      {/* ------------------------------------------------------------- */}
-      {/* 4. EXPENSE OUTFLOWS TABLE & CURRENCY CONVERTER */}
-      {/* ------------------------------------------------------------- */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left 2 Cols: Expense Outflows Register Table */}
-        <div id="expense-table-section" className="lg:col-span-2 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center space-x-2">
-                <Receipt className="w-5 h-5 text-indigo-500" />
-                <span>Logged Outflow Register ({expensesForSelectedMonth.length} Records)</span>
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Detailed ledger records for {selectedMonthKey}. Multi-currency items converted to PHP.
-              </p>
-            </div>
-
-            <button
-              onClick={() => setShowExpenseForm(true)}
-              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center space-x-1.5 shadow-xs cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Log Expense</span>
-            </button>
-          </div>
-
-          <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-xl overflow-hidden shadow-xs">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 dark:bg-slate-950/60 text-slate-400 font-extrabold uppercase tracking-wider border-b border-slate-100 dark:border-white/5 text-[10px]">
-                  <tr>
-                    <th className="py-3 px-4">Date</th>
-                    <th className="py-3 px-4">Description</th>
-                    <th className="py-3 px-4">Category</th>
-                    <th className="py-3 px-4 text-right">Amount</th>
-                    <th className="py-3 px-4 text-right">PHP Value</th>
-                    <th className="py-3 px-4 text-center">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-white/5 font-medium">
-                  {expensesForSelectedMonth.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="py-8 text-center text-slate-400 text-xs">
-                        No expenses logged for {selectedMonthKey}. Click "+ Log Expense" to register an outflow.
-                      </td>
-                    </tr>
-                  ) : (
-                    expensesForSelectedMonth.map((e) => (
-                      <tr key={e.id} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
-                        <td className="py-3 px-4 font-mono text-slate-500 dark:text-slate-400">{e.date}</td>
-                        <td className="py-3 px-4 text-slate-900 dark:text-white font-bold">{e.description}</td>
-                        <td className="py-3 px-4">
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                            {e.category}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-right font-mono text-slate-700 dark:text-slate-300">
-                          {e.currency} {e.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                        </td>
-                        <td className="py-3 px-4 text-right font-mono font-bold text-slate-900 dark:text-white">
-                          ₱{e.amountPHP.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <button
-                            onClick={() => onDeleteExpense(e.id)}
-                            className="p-1 text-slate-400 hover:text-rose-600 rounded hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        {/* Right 1 Col: Travel Currency Converter & Inflow Guide */}
-        <div className="space-y-6">
-          {/* Currency Calculator */}
-          <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-xl p-5 shadow-xs space-y-4">
-            <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white border-b border-slate-100 dark:border-white/5 pb-2.5">
-              <ArrowRightLeft className="w-4 h-4 text-indigo-500" />
-              <span>Multi-Currency Travel Converter</span>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <SmartCalculatorInput
-                  label="Convert Amount"
-                  value={calcFromAmt}
-                  onChange={setCalcFromAmt}
-                  currencySymbol=""
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">From</label>
-                  <select
-                    value={calcFromCurr}
-                    onChange={(e) => setCalcFromCurr(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none"
-                  >
-                    <option value="USD">USD ($)</option>
-                    <option value="PHP">PHP (₱)</option>
-                    <option value="EUR">EUR (€)</option>
-                    <option value="JPY">JPY (¥)</option>
-                    <option value="SGD">SGD (S$)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">To</label>
-                  <select
-                    value={calcToCurr}
-                    onChange={(e) => setCalcToCurr(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none"
-                  >
-                    <option value="PHP">PHP (₱)</option>
-                    <option value="USD">USD ($)</option>
-                    <option value="EUR">EUR (€)</option>
-                    <option value="JPY">JPY (¥)</option>
-                    <option value="SGD">SGD (S$)</option>
-                  </select>
-                </div>
-              </div>
-
-              <button
-                onClick={handleCalculateConversion}
-                className="w-full py-2 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 rounded-lg text-xs font-bold uppercase tracking-wider cursor-pointer transition-all"
-              >
-                Calculate Exchange
-              </button>
-
-              <div className="p-3 bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-white/5 rounded-lg flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase text-slate-400">Equivalent:</span>
-                <span className="text-sm font-black font-mono text-indigo-600 dark:text-indigo-400">
-                  {calcToCurr} {calcResult}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Payday Scheduling Quick Guide */}
-          <div className="p-4 bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-900/50 rounded-xl space-y-2 text-xs">
-            <div className="font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
-              <CheckSquare className="w-4 h-4 text-indigo-500" />
-              <span>Income Inflow Principles</span>
-            </div>
-            <p className="text-[11px] leading-relaxed text-slate-600 dark:text-indigo-200/80">
-              1. <strong>15th Day Payday</strong>: 50% of monthly net income arrives for first-half expenses & goal funding.<br/>
-              2. <strong>30th Day Payday</strong>: 50% of monthly net income arrives for second-half expenses & asset DCA.<br/>
-              3. <strong>Balanced Allocation</strong>: Income = Outflow Cap + Goals + Asset Investments.
-            </p>
-          </div>
-        </div>
       </div>
 
       {/* ------------------------------------------------------------- */}
