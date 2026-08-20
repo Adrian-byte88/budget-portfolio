@@ -243,9 +243,9 @@ export default function LedgerTab({
     const updatedPlan: IncomeBudgetPlan = {
       monthlyNetIncome: newIncome,
       paydayDays: [15, 30],
-      expenseCapAllocation: incomeBudgetPlan?.expenseCapAllocation ?? Math.round(newIncome * 0.6),
-      personalGoalsAllocation: incomeBudgetPlan?.personalGoalsAllocation ?? Math.round(newIncome * 0.25),
-      assetInvestmentAllocation: incomeBudgetPlan?.assetInvestmentAllocation ?? Math.round(newIncome * 0.15),
+      expenseCapAllocation: incomeBudgetPlan?.expenseCapAllocation ?? Math.round(newIncome * (isProOrAdmin ? 0.6 : 0.7)),
+      personalGoalsAllocation: incomeBudgetPlan?.personalGoalsAllocation ?? Math.round(newIncome * (isProOrAdmin ? 0.25 : 0.3)),
+      assetInvestmentAllocation: isProOrAdmin ? (incomeBudgetPlan?.assetInvestmentAllocation ?? Math.round(newIncome * 0.15)) : 0,
       targetAssetKey: selectedDeployAssetKey,
       autoDeployPayday: true,
     };
@@ -257,7 +257,7 @@ export default function LedgerTab({
     if (!onUpdateIncomePlan) return;
     const expVal = parseFormattedNumber(inputExpenseCapAlloc);
     const goalVal = parseFormattedNumber(inputGoalsAlloc);
-    const assetVal = parseFormattedNumber(inputAssetAlloc);
+    const assetVal = isProOrAdmin ? parseFormattedNumber(inputAssetAlloc) : 0;
 
     const updatedPlan: IncomeBudgetPlan = {
       monthlyNetIncome,
@@ -276,8 +276,8 @@ export default function LedgerTab({
   const handleAutoCalibrateAllocations = () => {
     if (!onUpdateIncomePlan || monthlyNetIncome <= 0) return;
     // Default 50/30/20 rule or proportional split
-    const expVal = Math.round(monthlyNetIncome * 0.50);
-    const goalVal = Math.round(monthlyNetIncome * 0.30);
+    const expVal = Math.round(monthlyNetIncome * (isProOrAdmin ? 0.50 : 0.65));
+    const goalVal = isProOrAdmin ? Math.round(monthlyNetIncome * 0.30) : (monthlyNetIncome - expVal);
     const assetVal = isProOrAdmin ? (monthlyNetIncome - expVal - goalVal) : 0;
     const finalGoalVal = isProOrAdmin ? goalVal : (monthlyNetIncome - expVal);
 
@@ -837,8 +837,8 @@ export default function LedgerTab({
             </div>
             <p className="text-[11px] leading-relaxed text-slate-600 dark:text-indigo-200/80">
               1. <strong>15th Day Payday</strong>: 50% of monthly net income arrives for first-half expenses & goal funding.<br/>
-              2. <strong>30th Day Payday</strong>: 50% of monthly net income arrives for second-half expenses & asset DCA.<br/>
-              3. <strong>Balanced Allocation</strong>: Income = Outflow Cap + Goals + Asset Investments.
+              2. <strong>30th Day Payday</strong>: 50% of monthly net income arrives for second-half expenses & {isProOrAdmin ? 'asset DCA' : 'goal funding'}.<br/>
+              3. <strong>Balanced Allocation</strong>: Income = Outflow Cap + Goals{isProOrAdmin ? ' + Asset Investments' : ''}.
             </p>
           </div>
         </div>
@@ -863,7 +863,9 @@ export default function LedgerTab({
               <span>Monthly Net Income & Bi-Monthly Payday Hub</span>
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Automated income distribution scheduled every <strong>15th day</strong> and <strong>30th day</strong>. Assign every peso to Expense Caps, Goals, and Asset Deployments.
+              {isProOrAdmin
+                ? 'Automated income distribution scheduled every 15th day and 30th day. Assign every peso to Expense Caps, Goals, and Asset Deployments.'
+                : 'Automated income distribution scheduled every 15th day and 30th day. Assign every peso to Expense Caps and Personal Goals.'}
             </p>
           </div>
 
@@ -1039,7 +1041,7 @@ export default function LedgerTab({
                   </span>
                 </div>
                 <p className="text-xs mt-1 leading-relaxed text-rose-700 dark:text-rose-300">
-                  Your total assigned budget (<strong>₱{totalAllocated.toLocaleString()}</strong>) exceeds your Monthly Net Income (<strong>₱{monthlyNetIncome.toLocaleString()}</strong>). For real disciplined budgeting, reduce your Desired Expense Cap, Goal allocations, or Asset investments.
+                  Your total assigned budget (<strong>₱{totalAllocated.toLocaleString()}</strong>) exceeds your Monthly Net Income (<strong>₱{monthlyNetIncome.toLocaleString()}</strong>). For real disciplined budgeting, reduce your Desired Expense Cap{isProOrAdmin ? ', Goal allocations, or Asset investments' : ' or Goal allocations'}.
                 </p>
               </div>
             </div>
@@ -1108,7 +1110,9 @@ export default function LedgerTab({
                   </span>
                 </div>
                 <p className="text-xs mt-0.5 text-emerald-700 dark:text-emerald-300">
-                  Every single peso of your ₱{monthlyNetIncome.toLocaleString()} net income is allocated across Outflows, Personal Goals, and Asset Deployments.
+                  {isProOrAdmin
+                    ? `Every single peso of your ₱${monthlyNetIncome.toLocaleString()} net income is allocated across Outflows, Personal Goals, and Asset Deployments.`
+                    : `Every single peso of your ₱${monthlyNetIncome.toLocaleString()} net income is allocated across Outflows and Personal Goals.`}
                 </p>
               </div>
             </div>
@@ -1131,7 +1135,9 @@ export default function LedgerTab({
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                Automatically allocate your monthly net income to Expense Caps, Personal Milestones, and Asset Sleeves.
+                {isProOrAdmin
+                  ? 'Automatically allocate your monthly net income to Expense Caps, Personal Milestones, and Asset Sleeves.'
+                  : 'Automatically allocate your monthly net income to Expense Caps and Personal Milestones.'}
               </p>
             </div>
 
@@ -1189,7 +1195,7 @@ export default function LedgerTab({
             </div>
 
             {/* Breakdown Chips of Realized Inflow Available to Allocate */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-[10px]">
+            <div className={`grid grid-cols-1 ${isProOrAdmin ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-2 pt-1 text-[10px]`}>
               <div className="flex items-center justify-between px-2.5 py-1 bg-white/80 dark:bg-slate-900/60 rounded-lg border border-slate-200/50 dark:border-white/5">
                 <span className="text-slate-500 font-medium">Expense Cap Inflow:</span>
                 <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
@@ -1202,19 +1208,21 @@ export default function LedgerTab({
                   ₱{(is30thRealized ? personalGoalsAllocation : is15thRealized ? personalGoalsAllocation / 2 : 0).toLocaleString()}
                 </span>
               </div>
-              <div className="flex items-center justify-between px-2.5 py-1 bg-white/80 dark:bg-slate-900/60 rounded-lg border border-slate-200/50 dark:border-white/5">
-                <span className="text-slate-500 font-medium">Asset Sleeve Inflow:</span>
-                <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
-                  ₱{(is30thRealized ? effectiveAssetAllocation : is15thRealized ? effectiveAssetAllocation / 2 : 0).toLocaleString()}
-                </span>
-              </div>
+              {isProOrAdmin && (
+                <div className="flex items-center justify-between px-2.5 py-1 bg-white/80 dark:bg-slate-900/60 rounded-lg border border-slate-200/50 dark:border-white/5">
+                  <span className="text-slate-500 font-medium">Asset Sleeve Inflow:</span>
+                  <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
+                    ₱{(is30thRealized ? effectiveAssetAllocation : is15thRealized ? effectiveAssetAllocation / 2 : 0).toLocaleString()}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
           {editingAllocations ? (
             /* Editing Allocations Form */
             <div className="space-y-4 pt-1">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className={`grid grid-cols-1 ${isProOrAdmin ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4`}>
                 {/* 1. Expense Cap Input */}
                 <div>
                   <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
@@ -1243,29 +1251,25 @@ export default function LedgerTab({
                   <span className="text-[10px] text-slate-400 block mt-1">Emergency fund, travel, laptop, debt payoff</span>
                 </div>
 
-                {/* 3. Asset Sleeve Input (Pro & Admin) */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      3. Risk & Safe Assets Allocation (PHP)
-                    </label>
-                    {!isProOrAdmin && (
-                      <span className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 rounded text-[9px] font-black uppercase">
-                        PRO ONLY
-                      </span>
-                    )}
+                {/* 3. Asset Sleeve Input (Pro & Admin only) */}
+                {isProOrAdmin && (
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        3. Risk & Safe Assets Allocation (PHP)
+                      </label>
+                    </div>
+                    <SmartCalculatorInput
+                      label=""
+                      value={inputAssetAlloc}
+                      onChange={setInputAssetAlloc}
+                      placeholder="e.g. 5000"
+                    />
+                    <span className="text-[10px] text-slate-400 block mt-1">
+                      Auto-DCA into Maya HYS, T-Bills, BTC, Equities
+                    </span>
                   </div>
-                  <SmartCalculatorInput
-                    label=""
-                    value={inputAssetAlloc}
-                    onChange={setInputAssetAlloc}
-                    placeholder="e.g. 5000"
-                    disabled={!isProOrAdmin}
-                  />
-                  <span className="text-[10px] text-slate-400 block mt-1">
-                    {isProOrAdmin ? 'Auto-DCA into Maya HYS, T-Bills, BTC, Equities' : 'Upgrade to Pro to allocate income to Assets'}
-                  </span>
-                </div>
+                )}
               </div>
 
               {isProOrAdmin && (
@@ -1304,7 +1308,7 @@ export default function LedgerTab({
             </div>
           ) : (
             /* Allocations Read-Only Cards Row */
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className={`grid grid-cols-1 ${isProOrAdmin ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4`}>
               {/* Destination 1: Expense Cap */}
               <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl space-y-2">
                 <div className="flex items-center justify-between">
@@ -1365,33 +1369,27 @@ export default function LedgerTab({
                 </div>
               </div>
 
-              {/* Destination 3: Asset Sleeve Deployments */}
-              <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    <TrendingUp className="w-3.5 h-3.5 text-blue-500" />
-                    <span>Risk & Safe Assets Sleeve</span>
-                  </span>
-                  {isProOrAdmin ? (
+              {/* Destination 3: Asset Sleeve Deployments (Pro & Admin only) */}
+              {isProOrAdmin && (
+                <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <TrendingUp className="w-3.5 h-3.5 text-blue-500" />
+                      <span>Risk & Safe Assets Sleeve</span>
+                    </span>
                     <span className="text-[10px] font-mono font-bold text-blue-600 dark:text-blue-400">
                       {monthlyNetIncome > 0 ? `${((assetInvestmentAllocation / monthlyNetIncome) * 100).toFixed(0)}%` : '0%'}
                     </span>
-                  ) : (
-                    <span className="px-1.5 py-0.2 bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 rounded text-[9px] font-black uppercase">
-                      PRO
+                  </div>
+                  <div className="text-xl font-black text-blue-600 dark:text-blue-400 font-mono">
+                    ₱{effectiveAssetAllocation.toLocaleString()}
+                  </div>
+                  <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-white/5 text-[10px]">
+                    <span className="text-slate-400">Realized Inflow MTD:</span>
+                    <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
+                      ₱{(is30thRealized ? effectiveAssetAllocation : is15thRealized ? effectiveAssetAllocation / 2 : 0).toLocaleString()}
                     </span>
-                  )}
-                </div>
-                <div className="text-xl font-black text-blue-600 dark:text-blue-400 font-mono">
-                  ₱{effectiveAssetAllocation.toLocaleString()}
-                </div>
-                <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-white/5 text-[10px]">
-                  <span className="text-slate-400">Realized Inflow MTD:</span>
-                  <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
-                    ₱{(is30thRealized ? effectiveAssetAllocation : is15thRealized ? effectiveAssetAllocation / 2 : 0).toLocaleString()}
-                  </span>
-                </div>
-                {isProOrAdmin ? (
+                  </div>
                   <div className="flex items-center justify-between pt-1">
                     <span className="text-[10px] text-slate-400 truncate max-w-[120px]">
                       {assets.find((a) => a.key === selectedDeployAssetKey)?.name || 'Safe HYS / Maya'}
@@ -1405,12 +1403,8 @@ export default function LedgerTab({
                       </button>
                     )}
                   </div>
-                ) : (
-                  <p className="text-[10px] text-slate-400">
-                    Automated asset DCA is unlocked for Pro & Admin users
-                  </p>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           )}
         </div>
