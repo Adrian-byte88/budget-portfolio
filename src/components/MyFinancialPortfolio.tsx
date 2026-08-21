@@ -168,7 +168,7 @@ interface MyFinancialPortfolioProps {
   onTriggerPopupModal?: (type: 'quota' | 'search_grounding', title?: string, message?: string) => void;
   transactions?: HistoricalTx[];
   onAddTransaction?: (tx: Omit<HistoricalTx, 'id'>) => void;
-  onDeleteTransaction?: (id: string) => void;
+  onDeleteTransaction?: (id: string, options?: any) => void;
   onResetTransactions?: () => void;
 }
 

@@ -23,7 +23,13 @@ import LedgerTab from './components/LedgerTab';
 import SocialFamilyHub from './components/SocialFamilyHub';
 import ExportEngine from './components/ExportEngine';
 import MyFinancialPortfolio from './components/MyFinancialPortfolio';
-import TransactionHistoryTab, { HistoricalTx, INITIAL_HISTORICAL_TXS } from './components/TransactionHistoryTab';
+import TransactionHistoryTab, {
+  HistoricalTx,
+  INITIAL_HISTORICAL_TXS,
+  DeleteTxOptions,
+  findMatchingAsset
+} from './components/TransactionHistoryTab';
+import { parseFormattedNumber } from './utils/mathParser';
 import MarketCycleAuditTab, {
   CycleItem,
   DevaluationItem,
@@ -304,42 +310,140 @@ export default function App() {
     });
   };
 
-  const handleDeleteTransaction = (id: string) => {
+  const handleDeleteTransaction = (id: string, options?: DeleteTxOptions) => {
     const targetTx = transactions.find((t) => t.id === id);
-    const targetIndex = transactions.findIndex((t) => t.id === id);
+    if (!targetTx) return;
 
-    const applyDelete = (txId: string) => {
-      setTransactions((prev) => {
-        const nextTxs = prev.filter((t) => t.id !== txId);
-        if (email) {
-          setDoc(doc(db, "users", email, "financialData", "data"), { transactions: nextTxs }, { merge: true }).catch(console.error);
+    const prevTxs = [...transactions];
+    const nextTxs = transactions.filter((t) => t.id !== id);
+
+    const prevAssets = [...assets];
+    let nextAssets = [...assets];
+    const prevGoals = [...goals];
+    let nextGoals = [...goals];
+    let revertedEntityName = '';
+    let revertedAdjustmentNote = '';
+
+    if (options?.revertFinancials) {
+      const rawAmt = options.adjustmentAmount !== undefined
+        ? options.adjustmentAmount
+        : Math.abs(parseFormattedNumber(targetTx.amount));
+
+      if (rawAmt > 0) {
+        const isAddition =
+          ['Buy', 'Deposit', 'Maturity', 'Lend'].includes(targetTx.type) ||
+          targetTx.amount.startsWith('+') ||
+          (!targetTx.amount.startsWith('-') &&
+            !['Sell', 'Withdraw', 'Liquidate'].includes(targetTx.type));
+
+        // If original transaction was an addition/deposit, revert by subtracting.
+        // If original was a deduction/withdrawal, revert by adding back.
+        const delta = isAddition ? -rawAmt : rawAmt;
+        revertedAdjustmentNote = `${delta >= 0 ? '+' : ''}₱${Math.abs(delta).toLocaleString()}`;
+
+        // 1. If target is a Goal
+        if (options.targetGoalId || options.targetType === 'goal') {
+          const matchedGoal = goals.find(g => g.id === options.targetGoalId || (targetTx.asset && g.title.toLowerCase().includes(targetTx.asset.toLowerCase())));
+          if (matchedGoal) {
+            revertedEntityName = `Family Goal "${matchedGoal.title}"`;
+            nextGoals = goals.map(g => {
+              if (g.id === matchedGoal.id) {
+                return {
+                  ...g,
+                  currentPHP: Math.max(0, (g.currentPHP || 0) + delta)
+                };
+              }
+              return g;
+            });
+          }
         }
-        return nextTxs;
-      });
-    };
 
-    const applyRestore = (tx: HistoricalTx, idx: number) => {
-      setTransactions((prev) => {
-        const copy = [...prev];
-        const safeIdx = Math.min(Math.max(0, idx), copy.length);
-        copy.splice(safeIdx, 0, tx);
-        if (email) {
-          setDoc(doc(db, "users", email, "financialData", "data"), { transactions: copy }, { merge: true }).catch(console.error);
+        // 2. If target is an Asset
+        const matchedAsset = options.targetAssetKey
+          ? assets.find((a) => a.key === options.targetAssetKey)
+          : findMatchingAsset(targetTx.asset, assets);
+
+        if (matchedAsset && (options.targetType === 'asset' || (!options.targetGoalId && options.targetType !== 'goal'))) {
+          revertedEntityName = matchedAsset.name;
+          nextAssets = assets.map((a) => {
+            if (a.key === matchedAsset.key) {
+              const isUnitPriced =
+                (a.currentPricePHP || 0) > 1 &&
+                a.assetType !== 'deposit' &&
+                a.assetType !== 'cash' &&
+                a.assetType !== 'hys';
+              const newCost = Math.max(0, (a.costBasisPHP || 0) + delta);
+              const newUnits = isUnitPriced
+                ? Math.max(0, (a.units || 0) + delta / (a.currentPricePHP || 1))
+                : Math.max(0, (a.units || 0) + delta);
+
+              return {
+                ...a,
+                units: newUnits,
+                costBasisPHP: newCost,
+              };
+            }
+            return a;
+          });
         }
-        return copy;
-      });
-    };
-
-    applyDelete(id);
-
-    if (targetTx) {
-      registerUndoableAction({
-        title: 'Transaction Deleted',
-        description: `Deleted transaction for "${targetTx.asset}". Click Undo to restore.`,
-        undo: () => applyRestore(targetTx, targetIndex),
-        redo: () => applyDelete(id),
-      });
+      }
     }
+
+    // Apply deletion and asset/goal update
+    setTransactions(nextTxs);
+    if (options?.revertFinancials) {
+      if (nextAssets !== prevAssets) setAssets(nextAssets);
+      if (nextGoals !== prevGoals) setGoals(nextGoals);
+    }
+
+    if (email) {
+      const payload: any = { transactions: nextTxs };
+      if (options?.revertFinancials) {
+        if (nextAssets !== prevAssets) payload.assets = nextAssets;
+        if (nextGoals !== prevGoals) payload.goals = nextGoals;
+      }
+      setDoc(doc(db, "users", email, "financialData", "data"), payload, { merge: true }).catch(console.error);
+    }
+
+    const desc =
+      options?.revertFinancials && revertedEntityName
+        ? `Deleted transaction for "${targetTx.asset}" & reverted ${revertedAdjustmentNote} on ${revertedEntityName}. Click Undo to restore.`
+        : `Deleted transaction for "${targetTx.asset}". Click Undo to restore.`;
+
+    registerUndoableAction({
+      title: 'Transaction Deleted',
+      description: desc,
+      undo: () => {
+        setTransactions(prevTxs);
+        if (options?.revertFinancials) {
+          setAssets(prevAssets);
+          setGoals(prevGoals);
+        }
+        if (email) {
+          const undoPayload: any = { transactions: prevTxs };
+          if (options?.revertFinancials) {
+            undoPayload.assets = prevAssets;
+            undoPayload.goals = prevGoals;
+          }
+          setDoc(doc(db, "users", email, "financialData", "data"), undoPayload, { merge: true }).catch(console.error);
+        }
+      },
+      redo: () => {
+        setTransactions(nextTxs);
+        if (options?.revertFinancials) {
+          setAssets(nextAssets);
+          setGoals(nextGoals);
+        }
+        if (email) {
+          const redoPayload: any = { transactions: nextTxs };
+          if (options?.revertFinancials) {
+            redoPayload.assets = nextAssets;
+            redoPayload.goals = nextGoals;
+          }
+          setDoc(doc(db, "users", email, "financialData", "data"), redoPayload, { merge: true }).catch(console.error);
+        }
+      },
+    });
   };
 
   const handleResetTransactions = () => {
@@ -1056,23 +1160,28 @@ export default function App() {
                 return prevAssets.map((asset) => {
                   let updatedPrice = asset.currentPricePHP;
                   let updatedTrend = asset.change24h;
+                  const k = (asset.key || '').toLowerCase();
+                  const n = (asset.name || '').toLowerCase();
 
-                  if (asset.key === 'btc') {
+                  if (k === 'btc' || n.includes('bitcoin')) {
                     if (prices.btc_php) updatedPrice = prices.btc_php;
                     if (changes.btc !== undefined) updatedTrend = changes.btc;
-                  } else if (asset.key === 'paxg') {
+                  } else if (k === 'paxg' || n.includes('pax gold') || (k.includes('pax') && !k.includes('spc'))) {
                     if (prices.paxg_php) updatedPrice = prices.paxg_php;
                     if (changes.paxg !== undefined) updatedTrend = changes.paxg;
-                  } else if (asset.key === 'scc') {
+                  } else if (k.includes('scc') || n.includes('semirara') || n.includes('scc')) {
                     if (prices.scc_php) updatedPrice = prices.scc_php;
                     if (changes.scc !== undefined) updatedTrend = changes.scc;
-                  } else if (asset.key === 'spc') {
+                  } else if (k.includes('spc') || n.includes('spc power') || n.includes('spc')) {
                     if (prices.spc_php) updatedPrice = prices.spc_php;
                     if (changes.spc !== undefined) updatedTrend = changes.spc;
-                  } else if (asset.key === 'rcr') {
+                  } else if (k.includes('rcr') || n.includes('rcr reit') || n.includes('rl commercial') || n.includes('rcr')) {
                     if (prices.rcr_php) updatedPrice = prices.rcr_php;
                     if (changes.rcr !== undefined) updatedTrend = changes.rcr;
-                  } else if (asset.key === 'manulife') {
+                  } else if (k.includes('areit') || n.includes('areit')) {
+                    if (prices.areit_php) updatedPrice = prices.areit_php;
+                    if (changes.areit !== undefined) updatedTrend = changes.areit;
+                  } else if (k.includes('manulife') || n.includes('manulife')) {
                     if (prices.manulife_php) updatedPrice = prices.manulife_php;
                     if (changes.manulife !== undefined) updatedTrend = changes.manulife;
                   }
@@ -1170,11 +1279,26 @@ export default function App() {
               }
 
               // Match PSE equities & REITs
+              let matchedPse: { pricePHP: number; change24h: number } | undefined = undefined;
               if (psePrices[k]) {
+                matchedPse = psePrices[k];
+              } else if (k.includes('scc') || n.includes('semirara') || n.includes('scc')) {
+                matchedPse = psePrices['scc'];
+              } else if (k.includes('spc') || n.includes('spc power') || n.includes('spc')) {
+                matchedPse = psePrices['spc'];
+              } else if (k.includes('rcr') || n.includes('rcr reit') || n.includes('rl commercial') || n.includes('rcr')) {
+                matchedPse = psePrices['rcr'];
+              } else if (k.includes('areit') || n.includes('areit')) {
+                matchedPse = psePrices['areit'];
+              } else if (k.includes('manulife') || n.includes('manulife')) {
+                matchedPse = psePrices['manulife'];
+              }
+
+              if (matchedPse) {
                 return {
                   ...asset,
-                  currentPricePHP: psePrices[k].pricePHP,
-                  change24h: psePrices[k].change24h,
+                  currentPricePHP: matchedPse.pricePHP,
+                  change24h: matchedPse.change24h,
                 };
               }
 
@@ -2842,6 +2966,9 @@ export default function App() {
         {activeTab === 'transactions' && (
           <TransactionHistoryTab
             transactions={transactions}
+            assets={assets}
+            goals={goals}
+            expenses={expenses}
             onAddTransaction={handleAddTransaction}
             onDeleteTransaction={handleDeleteTransaction}
             onResetTransactions={handleResetTransactions}

@@ -2,12 +2,17 @@ import React from 'react';
 
 export interface TradingViewSymbolDetails {
   tvSymbol: string;
+  proxyTvSymbol?: string;
+  embedRestricted?: boolean;
   ticker: string;
   name: string;
   exchange: string;
   category: 'crypto' | 'equity' | 'commodity' | 'fund' | 'deposit';
   logo: string;
   tradingViewUrl: string;
+  marketWatchUrl?: string;
+  marketWatchPath?: string;
+  isPseStock?: boolean;
 }
 
 export const getTradingViewSymbolDetails = (assetKey: string, assetName: string = ''): TradingViewSymbolDetails => {
@@ -77,48 +82,116 @@ export const getTradingViewSymbolDetails = (assetKey: string, assetName: string 
   if (key.includes('scc') || name.includes('semirara')) {
     return {
       tvSymbol: 'PSE:SCC',
+      proxyTvSymbol: 'AMEX:EPHE',
+      embedRestricted: true,
       ticker: 'SCC',
       name: 'Semirara Mining & Power Corp',
       exchange: 'Philippine Stock Exchange (PSE)',
       category: 'equity',
       logo: '⛏️',
-      tradingViewUrl: 'https://www.tradingview.com/symbols/PSE-SCC/'
+      tradingViewUrl: 'https://www.tradingview.com/symbols/PSE-SCC/',
+      marketWatchPath: '/investing/stock/scc?countrycode=ph',
+      marketWatchUrl: 'https://www.marketwatch.com/investing/stock/scc?countrycode=ph',
+      isPseStock: true
     };
   }
 
   if (key.includes('spc') || name.includes('spc power')) {
     return {
       tvSymbol: 'PSE:SPC',
+      proxyTvSymbol: 'AMEX:EPHE',
+      embedRestricted: true,
       ticker: 'SPC',
       name: 'SPC Power Corporation',
       exchange: 'Philippine Stock Exchange (PSE)',
       category: 'equity',
       logo: '⚡',
-      tradingViewUrl: 'https://www.tradingview.com/symbols/PSE-SPC/'
+      tradingViewUrl: 'https://www.tradingview.com/symbols/PSE-SPC/',
+      marketWatchPath: '/investing/stock/spc?countrycode=ph',
+      marketWatchUrl: 'https://www.marketwatch.com/investing/stock/spc?countrycode=ph',
+      isPseStock: true
     };
   }
 
   if (key.includes('rcr') || name.includes('rcr reit') || name.includes('rl commercial')) {
     return {
       tvSymbol: 'PSE:RCR',
+      proxyTvSymbol: 'AMEX:VNQ',
+      embedRestricted: true,
       ticker: 'RCR',
       name: 'RL Commercial REIT, Inc.',
       exchange: 'Philippine Stock Exchange (PSE)',
       category: 'equity',
       logo: '🏢',
-      tradingViewUrl: 'https://www.tradingview.com/symbols/PSE-RCR/'
+      tradingViewUrl: 'https://www.tradingview.com/symbols/PSE-RCR/',
+      marketWatchPath: '/investing/stock/rcr?countrycode=ph',
+      marketWatchUrl: 'https://www.marketwatch.com/investing/stock/rcr?countrycode=ph',
+      isPseStock: true
+    };
+  }
+
+  if (key.includes('areit') || name.includes('areit')) {
+    return {
+      tvSymbol: 'PSE:AREIT',
+      proxyTvSymbol: 'AMEX:VNQ',
+      embedRestricted: true,
+      ticker: 'AREIT',
+      name: 'AREIT, Inc.',
+      exchange: 'Philippine Stock Exchange (PSE)',
+      category: 'equity',
+      logo: '🏢',
+      tradingViewUrl: 'https://www.tradingview.com/symbols/PSE-AREIT/',
+      marketWatchPath: '/investing/stock/areit?countrycode=ph',
+      marketWatchUrl: 'https://www.marketwatch.com/investing/stock/areit?countrycode=ph',
+      isPseStock: true
+    };
+  }
+
+  if (key.includes('creit') || name.includes('creit')) {
+    return {
+      tvSymbol: 'PSE:CREIT',
+      proxyTvSymbol: 'AMEX:VNQ',
+      embedRestricted: true,
+      ticker: 'CREIT',
+      name: 'Citicore Energy REIT Corp',
+      exchange: 'Philippine Stock Exchange (PSE)',
+      category: 'equity',
+      logo: '☀️',
+      tradingViewUrl: 'https://www.tradingview.com/symbols/PSE-CREIT/',
+      marketWatchPath: '/investing/stock/creit?countrycode=ph',
+      marketWatchUrl: 'https://www.marketwatch.com/investing/stock/creit?countrycode=ph',
+      isPseStock: true
+    };
+  }
+
+  if (key.includes('mreit') || name.includes('mreit')) {
+    return {
+      tvSymbol: 'PSE:MREIT',
+      proxyTvSymbol: 'AMEX:VNQ',
+      embedRestricted: true,
+      ticker: 'MREIT',
+      name: 'MREIT, Inc.',
+      exchange: 'Philippine Stock Exchange (PSE)',
+      category: 'equity',
+      logo: '🏢',
+      tradingViewUrl: 'https://www.tradingview.com/symbols/PSE-MREIT/',
+      marketWatchPath: '/investing/stock/mreit?countrycode=ph',
+      marketWatchUrl: 'https://www.marketwatch.com/investing/stock/mreit?countrycode=ph',
+      isPseStock: true
     };
   }
 
   if (key.includes('manulife') || name.includes('manulife')) {
     return {
-      tvSymbol: 'MYX:MREIT',
+      tvSymbol: 'AMEX:VNQ',
+      proxyTvSymbol: 'NASDAQ:AAXJ',
+      embedRestricted: true,
       ticker: 'Manulife Asia-Pac FoF',
       name: 'Manulife Asia Pacific REIT Fund of Funds',
-      exchange: 'Philippine UITF / Asia-Pac REITs',
-      category: 'equity',
+      exchange: 'Philippine UITF / Asia-Pac REITs (NAVPU Fund)',
+      category: 'fund',
       logo: '🏢',
-      tradingViewUrl: 'https://www.tradingview.com/symbols/MYX-MREIT/'
+      tradingViewUrl: 'https://www.tradingview.com/symbols/AMEX-VNQ/'
     };
   }
 
@@ -173,29 +246,93 @@ export const getTradingViewSymbolDetails = (assetKey: string, assetName: string 
   if (key.includes('bdo')) {
     return {
       tvSymbol: 'PSE:BDO',
+      proxyTvSymbol: 'AMEX:EPHE',
+      embedRestricted: true,
       ticker: 'BDO',
       name: 'BDO Unibank, Inc.',
       exchange: 'Philippine Stock Exchange (PSE)',
       category: 'equity',
       logo: '🏦',
-      tradingViewUrl: 'https://www.tradingview.com/symbols/PSE-BDO/'
+      tradingViewUrl: 'https://www.tradingview.com/symbols/PSE-BDO/',
+      marketWatchPath: '/investing/stock/bdo?countrycode=ph',
+      marketWatchUrl: 'https://www.marketwatch.com/investing/stock/bdo?countrycode=ph',
+      isPseStock: true
     };
   }
 
   if (key.includes('ali') || name.includes('ayala land')) {
     return {
       tvSymbol: 'PSE:ALI',
+      proxyTvSymbol: 'AMEX:EPHE',
+      embedRestricted: true,
       ticker: 'ALI',
       name: 'Ayala Land, Inc.',
       exchange: 'Philippine Stock Exchange (PSE)',
       category: 'equity',
       logo: '🏗️',
-      tradingViewUrl: 'https://www.tradingview.com/symbols/PSE-ALI/'
+      tradingViewUrl: 'https://www.tradingview.com/symbols/PSE-ALI/',
+      marketWatchPath: '/investing/stock/ali?countrycode=ph',
+      marketWatchUrl: 'https://www.marketwatch.com/investing/stock/ali?countrycode=ph',
+      isPseStock: true
     };
   }
 
-  // Fallback defaults
+  if (key.includes('smph') || name.includes('sm prime')) {
+    return {
+      tvSymbol: 'PSE:SMPH',
+      proxyTvSymbol: 'AMEX:EPHE',
+      embedRestricted: true,
+      ticker: 'SMPH',
+      name: 'SM Prime Holdings, Inc.',
+      exchange: 'Philippine Stock Exchange (PSE)',
+      category: 'equity',
+      logo: '🛍️',
+      tradingViewUrl: 'https://www.tradingview.com/symbols/PSE-SMPH/',
+      marketWatchPath: '/investing/stock/smph?countrycode=ph',
+      marketWatchUrl: 'https://www.marketwatch.com/investing/stock/smph?countrycode=ph',
+      isPseStock: true
+    };
+  }
+
+  if (key.includes('jfc') || name.includes('jollibee')) {
+    return {
+      tvSymbol: 'PSE:JFC',
+      proxyTvSymbol: 'AMEX:EPHE',
+      embedRestricted: true,
+      ticker: 'JFC',
+      name: 'Jollibee Foods Corporation',
+      exchange: 'Philippine Stock Exchange (PSE)',
+      category: 'equity',
+      logo: '🐝',
+      tradingViewUrl: 'https://www.tradingview.com/symbols/PSE-JFC/',
+      marketWatchPath: '/investing/stock/jfc?countrycode=ph',
+      marketWatchUrl: 'https://www.marketwatch.com/investing/stock/jfc?countrycode=ph',
+      isPseStock: true
+    };
+  }
+
+  // Fallback defaults: Check if ticker might be a PSE stock or crypto
   const cleanTicker = (key || 'ASSET').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const isLikelyPse = key.includes('pse') || name.includes('pse') || key.includes('dragonfi') || name.includes('dragonfi');
+  
+  if (isLikelyPse) {
+    const pseSym = cleanTicker.replace(/^PSE/, '').replace(/DRAGONFI$/, '');
+    return {
+      tvSymbol: `PSE:${pseSym}`,
+      proxyTvSymbol: 'AMEX:EPHE',
+      embedRestricted: true,
+      ticker: pseSym,
+      name: assetName || pseSym,
+      exchange: 'Philippine Stock Exchange (PSE)',
+      category: 'equity',
+      logo: '🇵🇭',
+      tradingViewUrl: `https://www.tradingview.com/symbols/PSE-${pseSym}/`,
+      marketWatchPath: `/investing/stock/${pseSym.toLowerCase()}?countrycode=ph`,
+      marketWatchUrl: `https://www.marketwatch.com/investing/stock/${pseSym.toLowerCase()}?countrycode=ph`,
+      isPseStock: true
+    };
+  }
+
   return {
     tvSymbol: cleanTicker.length <= 5 ? `BINANCE:${cleanTicker}USDT` : 'BITSTAMP:BTCUSD',
     ticker: cleanTicker,

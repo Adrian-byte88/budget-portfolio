@@ -272,65 +272,267 @@ const MARKET_CHANGES_24H = {
   MANULIFE_PHP: 0.00,
 };
 
-// Helper to fetch live spot market prices directly using yahoo-finance2
-async function fetchRealtimeInternetPrices() {
+// Philippine Stock Exchange (PSE) & MarketWatch real-time memory cache
+export interface PSEStockData {
+  ticker: string;
+  symbol: string;
+  marketwatchTicker: string;
+  marketwatchPath: string;
+  marketwatchUrl: string;
+  pricePHP: number;
+  change24h: number;
+  changePHP: number;
+  name: string;
+  high?: number;
+  low?: number;
+  open?: number;
+  volume?: number;
+  currency: 'PHP';
+  exchange: string;
+  timestamp: number;
+}
+
+const PSE_MARKET_CACHE: Record<string, PSEStockData> = {
+  scc: {
+    ticker: 'SCC',
+    symbol: 'SCC.PS',
+    marketwatchTicker: 'SCC',
+    marketwatchPath: '/investing/stock/scc?countrycode=ph',
+    marketwatchUrl: 'https://www.marketwatch.com/investing/stock/scc?countrycode=ph',
+    pricePHP: 20.80,
+    change24h: -1.19,
+    changePHP: -0.25,
+    name: 'Semirara Mining and Power Corp',
+    currency: 'PHP',
+    exchange: 'Philippine Stock Exchange (PSE)',
+    timestamp: Date.now()
+  },
+  spc: {
+    ticker: 'SPC',
+    symbol: 'SPC.PS',
+    marketwatchTicker: 'SPC',
+    marketwatchPath: '/investing/stock/spc?countrycode=ph',
+    marketwatchUrl: 'https://www.marketwatch.com/investing/stock/spc?countrycode=ph',
+    pricePHP: 10.28,
+    change24h: 0.00,
+    changePHP: 0.00,
+    name: 'SPC Power Corporation',
+    currency: 'PHP',
+    exchange: 'Philippine Stock Exchange (PSE)',
+    timestamp: Date.now()
+  },
+  rcr: {
+    ticker: 'RCR',
+    symbol: 'RCR.PS',
+    marketwatchTicker: 'RCR',
+    marketwatchPath: '/investing/stock/rcr?countrycode=ph',
+    marketwatchUrl: 'https://www.marketwatch.com/investing/stock/rcr?countrycode=ph',
+    pricePHP: 7.16,
+    change24h: -0.28,
+    changePHP: -0.02,
+    name: 'RL Commercial REIT Inc.',
+    currency: 'PHP',
+    exchange: 'Philippine Stock Exchange (PSE)',
+    timestamp: Date.now()
+  },
+  areit: {
+    ticker: 'AREIT',
+    symbol: 'AREIT.PS',
+    marketwatchTicker: 'AREIT',
+    marketwatchPath: '/investing/stock/areit?countrycode=ph',
+    marketwatchUrl: 'https://www.marketwatch.com/investing/stock/areit?countrycode=ph',
+    pricePHP: 38.00,
+    change24h: 1.06,
+    changePHP: 0.40,
+    name: 'AREIT, Inc.',
+    currency: 'PHP',
+    exchange: 'Philippine Stock Exchange (PSE)',
+    timestamp: Date.now()
+  },
+  creit: {
+    ticker: 'CREIT',
+    symbol: 'CREIT.PS',
+    marketwatchTicker: 'CREIT',
+    marketwatchPath: '/investing/stock/creit?countrycode=ph',
+    marketwatchUrl: 'https://www.marketwatch.com/investing/stock/creit?countrycode=ph',
+    pricePHP: 3.30,
+    change24h: -1.20,
+    changePHP: -0.04,
+    name: 'Citicore Energy REIT Corp',
+    currency: 'PHP',
+    exchange: 'Philippine Stock Exchange (PSE)',
+    timestamp: Date.now()
+  },
+  mreit: {
+    ticker: 'MREIT',
+    symbol: 'MREIT.PS',
+    marketwatchTicker: 'MREIT',
+    marketwatchPath: '/investing/stock/mreit?countrycode=ph',
+    marketwatchUrl: 'https://www.marketwatch.com/investing/stock/mreit?countrycode=ph',
+    pricePHP: 13.92,
+    change24h: 1.31,
+    changePHP: 0.18,
+    name: 'MREIT Inc.',
+    currency: 'PHP',
+    exchange: 'Philippine Stock Exchange (PSE)',
+    timestamp: Date.now()
+  }
+};
+
+// Realtime PSE Stock Quote Fetcher using Global Market Feeds with MarketWatch URL Normalization
+async function fetchPSEStockQuote(rawTicker: string): Promise<PSEStockData | null> {
+  const cleanTicker = rawTicker
+    .toUpperCase()
+    .replace(/\.PS$/, '')
+    .replace(/-PH$/, '')
+    .replace(/^PSE:/, '')
+    .replace(/[^A-Z0-9]/g, '')
+    .trim();
+
+  if (!cleanTicker) return null;
+  const key = cleanTicker.toLowerCase();
+
+  // Check cache freshness (valid for 20 seconds)
+  const cached = PSE_MARKET_CACHE[key];
+  if (cached && Date.now() - cached.timestamp < 20000) {
+    return cached;
+  }
+
+  const cnbcSymbol = `${cleanTicker}-PH`;
   try {
-    // 1. Primary Engine: yahoo-finance2 bulk quote
-    const yfTickers = [
-      'BTC-USD', 'PAXG-USD', 'ETH-USD', 'SOL-USD', 'USDPHP=X',
-      'SCC.PS', 'SPC.PS', 'RCR.PS', 'AREIT.PS', 'CREIT.PS', 'MREIT.PS', 'SMPH.PS', 'ALI.PS', 'BDO.PS', 'TEL.PS', 'GLO.PS',
-      'NVDA', 'AAPL', 'MSFT', 'SPY'
-    ];
-    let yfQuotes: any[] = [];
-    
-    try {
-      const res = await yf.quote(yfTickers);
-      if (Array.isArray(res)) {
-        yfQuotes = res;
-      } else if (res && typeof res === 'object') {
-        yfQuotes = [res];
+    const url = `https://quote.cnbc.com/quote-html-webservice/quote.htm?symbols=${encodeURIComponent(cnbcSymbol)}&output=json`;
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept': 'application/json'
       }
-    } catch (e: any) {
-      console.warn('YF bulk quote in fetchRealtimeInternetPrices warning:', e?.message || e);
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const q = data?.QuickQuoteResult?.QuickQuote;
+      const item = Array.isArray(q) ? q[0] : q;
+
+      if (item && item.last && parseFloat(item.last) > 0) {
+        const quoteObj: PSEStockData = {
+          ticker: cleanTicker,
+          symbol: `${cleanTicker}.PS`,
+          marketwatchTicker: cleanTicker,
+          marketwatchPath: `/investing/stock/${key}?countrycode=ph`,
+          marketwatchUrl: `https://www.marketwatch.com/investing/stock/${key}?countrycode=ph`,
+          pricePHP: parseFloat(item.last),
+          change24h: parseFloat(item.change_pct || '0'),
+          changePHP: parseFloat(item.change || '0'),
+          name: item.name || item.altSymbol || cleanTicker,
+          high: item.high ? parseFloat(item.high) : undefined,
+          low: item.low ? parseFloat(item.low) : undefined,
+          open: item.open ? parseFloat(item.open) : undefined,
+          volume: item.volume ? parseFloat(item.volume) : undefined,
+          currency: 'PHP',
+          exchange: 'Philippine Stock Exchange (PSE)',
+          timestamp: Date.now()
+        };
+
+        PSE_MARKET_CACHE[key] = quoteObj;
+
+        // Update active market prices store
+        if (key === 'scc') {
+          MARKET_PRICES.SCC_PHP = quoteObj.pricePHP;
+          MARKET_CHANGES_24H.SCC_PHP = quoteObj.change24h;
+        } else if (key === 'spc') {
+          MARKET_PRICES.SPC_PHP = quoteObj.pricePHP;
+          MARKET_CHANGES_24H.SPC_PHP = quoteObj.change24h;
+        } else if (key === 'rcr') {
+          MARKET_PRICES.RCR_PHP = quoteObj.pricePHP;
+          MARKET_CHANGES_24H.RCR_PHP = quoteObj.change24h;
+        }
+
+        return quoteObj;
+      }
     }
+  } catch (err) {
+    console.warn(`PSE stock quote fetch notice for ${cleanTicker}:`, err);
+  }
 
-    for (const q of yfQuotes) {
-      if (!q || !q.symbol) continue;
-      const sym = String(q.symbol).toUpperCase();
-      const price = q.regularMarketPrice ?? q.price ?? 0;
-      const changePct = q.regularMarketChangePercent ?? 0;
+  return cached || null;
+}
 
-      if (price > 0) {
-        if (sym === 'BTC-USD') {
-          MARKET_PRICES.BTC_USD = price;
-          MARKET_CHANGES_24H.BTC_USD = changePct;
-        } else if (sym === 'PAXG-USD') {
-          MARKET_PRICES.PAXG_USD = price;
-          MARKET_PRICES.GOLD_USD = price;
-          MARKET_CHANGES_24H.PAXG_USD = changePct;
-        } else if (sym === 'USDPHP=X' || sym === 'PHP=X') {
-          MARKET_PRICES.USD_PHP = Number(price.toFixed(4));
-          MARKET_CHANGES_24H.USD_PHP = changePct;
-        } else if (sym === 'SCC.PS') {
-          MARKET_PRICES.SCC_PHP = price;
-          MARKET_CHANGES_24H.SCC_PHP = changePct;
-        } else if (sym === 'SPC.PS') {
-          MARKET_PRICES.SPC_PHP = price;
-          MARKET_CHANGES_24H.SPC_PHP = changePct;
-        } else if (sym === 'RCR.PS') {
-          MARKET_PRICES.RCR_PHP = price;
-          MARKET_CHANGES_24H.RCR_PHP = changePct;
+// Bulk fetch all known PSE tickers
+async function fetchBulkPSEQuotes(tickers: string[] = ['SCC', 'SPC', 'RCR', 'AREIT', 'CREIT', 'MREIT', 'SMPH', 'ALI', 'BDO', 'BPI', 'TEL', 'GLO', 'JFC', 'ICT', 'MONDE', 'ACEN', 'DDMPR', 'FILRT', 'PREIT']) {
+  try {
+    const formatted = tickers.map(t => `${t.toUpperCase().replace(/\.PS$/, '').replace(/-PH$/, '').replace(/^PSE:/, '').trim()}-PH`);
+    const url = `https://quote.cnbc.com/quote-html-webservice/quote.htm?symbols=${formatted.join('|')}&output=json`;
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept': 'application/json'
+      }
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const list = data?.QuickQuoteResult?.QuickQuote || [];
+      const quotes = Array.isArray(list) ? list : [list];
+
+      for (const item of quotes) {
+        if (!item || !item.symbol || !item.last || parseFloat(item.last) <= 0) continue;
+        const cleanTicker = item.symbol.replace(/-PH$/, '').toUpperCase();
+        const key = cleanTicker.toLowerCase();
+        
+        const quoteObj: PSEStockData = {
+          ticker: cleanTicker,
+          symbol: `${cleanTicker}.PS`,
+          marketwatchTicker: cleanTicker,
+          marketwatchPath: `/investing/stock/${key}?countrycode=ph`,
+          marketwatchUrl: `https://www.marketwatch.com/investing/stock/${key}?countrycode=ph`,
+          pricePHP: parseFloat(item.last),
+          change24h: parseFloat(item.change_pct || '0'),
+          changePHP: parseFloat(item.change || '0'),
+          name: item.name || item.altSymbol || cleanTicker,
+          high: item.high ? parseFloat(item.high) : undefined,
+          low: item.low ? parseFloat(item.low) : undefined,
+          open: item.open ? parseFloat(item.open) : undefined,
+          volume: item.volume ? parseFloat(item.volume) : undefined,
+          currency: 'PHP',
+          exchange: 'Philippine Stock Exchange (PSE)',
+          timestamp: Date.now()
+        };
+
+        PSE_MARKET_CACHE[key] = quoteObj;
+
+        if (key === 'scc') {
+          MARKET_PRICES.SCC_PHP = quoteObj.pricePHP;
+          MARKET_CHANGES_24H.SCC_PHP = quoteObj.change24h;
+        } else if (key === 'spc') {
+          MARKET_PRICES.SPC_PHP = quoteObj.pricePHP;
+          MARKET_CHANGES_24H.SPC_PHP = quoteObj.change24h;
+        } else if (key === 'rcr') {
+          MARKET_PRICES.RCR_PHP = quoteObj.pricePHP;
+          MARKET_CHANGES_24H.RCR_PHP = quoteObj.change24h;
         }
       }
     }
+  } catch (err) {
+    console.warn('Bulk PSE quotes fetch notice:', err);
+  }
+}
 
-    // 2. Secondary Fallbacks if any key quote was missing
+// Helper to fetch live spot market prices directly using global feeds and yahoo-finance2
+async function fetchRealtimeInternetPrices() {
+  try {
+    // 1. Primary Engine: Fetch PSE Stock Exchange quotes via bulk MarketWatch / CNBC feed
+    await fetchBulkPSEQuotes();
+
+    // 2. Fetch Global crypto & commodities via Binance & Foreign Exchange
     const fetchFx = async () => {
       try {
         const r = await fetch('https://open.er-api.com/v6/latest/USD');
         if (r.ok) {
           const d = await r.json();
-          if (d?.rates?.PHP) return { rate: Number(d.rates.PHP), change: 0.05 };
+          if (d?.rates?.PHP) {
+            MARKET_PRICES.USD_PHP = Number(Number(d.rates.PHP).toFixed(4));
+            return { rate: Number(d.rates.PHP), change: 0.05 };
+          }
         }
       } catch (e) {}
       return null;
@@ -349,26 +551,25 @@ async function fetchRealtimeInternetPrices() {
         let livePaxg = binancePaxg?.lastPrice ? Number(binancePaxg.lastPrice) : null;
         let paxgChange = binancePaxg?.priceChangePercent ? Number(binancePaxg.priceChangePercent) : null;
 
+        if (liveBtc) {
+          MARKET_PRICES.BTC_USD = liveBtc;
+          if (btcChange !== null) MARKET_CHANGES_24H.BTC_USD = btcChange;
+        }
+
+        if (livePaxg) {
+          MARKET_PRICES.PAXG_USD = livePaxg;
+          MARKET_PRICES.GOLD_USD = livePaxg;
+          if (paxgChange !== null) MARKET_CHANGES_24H.PAXG_USD = paxgChange;
+        }
+
         return { liveBtc, btcChange, livePaxg, paxgChange };
       } catch (e) {
         return { liveBtc: null, btcChange: null, livePaxg: null, paxgChange: null };
       }
     };
 
-    // Fill missing values with secondary sources if YF didn't return them
-    if (!MARKET_PRICES.BTC_USD || !MARKET_PRICES.PAXG_USD || !MARKET_PRICES.USD_PHP) {
-      const [cryptoData, fxData] = await Promise.all([fetchCrypto(), fetchFx()]);
-      if (!MARKET_PRICES.PAXG_USD && cryptoData.livePaxg) {
-        MARKET_PRICES.PAXG_USD = cryptoData.livePaxg;
-        MARKET_PRICES.GOLD_USD = cryptoData.livePaxg;
-      }
-      if (!MARKET_PRICES.BTC_USD && cryptoData.liveBtc) {
-        MARKET_PRICES.BTC_USD = cryptoData.liveBtc;
-      }
-      if (!MARKET_PRICES.USD_PHP && fxData?.rate) {
-        MARKET_PRICES.USD_PHP = Number(fxData.rate.toFixed(4));
-      }
-    }
+    await Promise.all([fetchFx(), fetchCrypto()]);
+
   } catch (err) {
     console.error('Realtime internet market price fetch error:', err);
   }
@@ -399,13 +600,32 @@ app.get('/api/health', (req: Request, res: Response) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
-// API 2: Dynamic Live Prices & Ticker feeds (to support WebSockets-like updates)
+// API 2: Dynamic Live Prices & Ticker feeds with MarketWatch PSE Integration
 app.get('/api/market/ticks', async (req: Request, res: Response) => {
   try {
     await fetchRealtimeInternetPrices();
   } catch (err) {
     console.warn('Market ticks fetch notice:', err);
   }
+
+  // Compile all PSE quotes with MarketWatch paths
+  const pseQuotes: Record<string, any> = {};
+  for (const [key, val] of Object.entries(PSE_MARKET_CACHE)) {
+    pseQuotes[key] = {
+      ticker: val.ticker,
+      symbol: val.symbol,
+      marketwatchTicker: val.marketwatchTicker,
+      marketwatchPath: val.marketwatchPath,
+      marketwatchUrl: val.marketwatchUrl,
+      pricePHP: val.pricePHP,
+      change24h: val.change24h,
+      changePHP: val.changePHP,
+      name: val.name,
+      currency: 'PHP',
+      status: `Supported (Tracks ${val.name} in PHP)`
+    };
+  }
+
   res.json({
     success: true,
     timestamp: new Date().toISOString(),
@@ -418,6 +638,9 @@ app.get('/api/market/ticks', async (req: Request, res: Response) => {
       scc_php: MARKET_PRICES.SCC_PHP,
       spc_php: MARKET_PRICES.SPC_PHP,
       rcr_php: MARKET_PRICES.RCR_PHP,
+      areit_php: PSE_MARKET_CACHE['areit']?.pricePHP || 38.00,
+      creit_php: PSE_MARKET_CACHE['creit']?.pricePHP || 3.30,
+      mreit_php: PSE_MARKET_CACHE['mreit']?.pricePHP || 13.92,
       manulife_php: MARKET_PRICES.MANULIFE_PHP,
     },
     changes24h: {
@@ -427,9 +650,62 @@ app.get('/api/market/ticks', async (req: Request, res: Response) => {
       scc: MARKET_CHANGES_24H.SCC_PHP,
       spc: MARKET_CHANGES_24H.SPC_PHP,
       rcr: MARKET_CHANGES_24H.RCR_PHP,
+      areit: PSE_MARKET_CACHE['areit']?.change24h || 1.06,
+      creit: PSE_MARKET_CACHE['creit']?.change24h || -1.20,
+      mreit: PSE_MARKET_CACHE['mreit']?.change24h || 1.31,
       manulife: MARKET_CHANGES_24H.MANULIFE_PHP,
-    }
+    },
+    pseQuotes,
   });
+});
+
+// API 2.1: Dedicated Real-time PSE & MarketWatch Stock Quote Endpoint for Any Current or Future Investment
+app.get('/api/market/quote', async (req: Request, res: Response) => {
+  try {
+    const symbolParam = String(req.query.symbol || req.query.ticker || '').trim();
+    if (!symbolParam) {
+      return res.status(400).json({ success: false, error: 'Symbol or ticker query parameter is required' });
+    }
+
+    const quote = await fetchPSEStockQuote(symbolParam);
+    if (!quote) {
+      return res.status(404).json({
+        success: false,
+        error: `Could not resolve live MarketWatch quote for ticker: ${symbolParam}`,
+        ticker: symbolParam.toUpperCase(),
+        marketwatchPath: `/investing/stock/${symbolParam.toLowerCase()}?countrycode=ph`,
+        marketwatchUrl: `https://www.marketwatch.com/investing/stock/${symbolParam.toLowerCase()}?countrycode=ph`
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: quote
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err?.message || 'Quote lookup failed' });
+  }
+});
+
+// API 2.2: Dedicated PSE Batch Endpoint for Pro/Admin Future Stock Investments
+app.get('/api/market/pse', async (req: Request, res: Response) => {
+  try {
+    const symbolsParam = String(req.query.symbols || '').trim();
+    if (symbolsParam) {
+      const requestedTickers = symbolsParam.split(',').map(s => s.trim()).filter(Boolean);
+      await fetchBulkPSEQuotes(requestedTickers);
+    } else {
+      await fetchBulkPSEQuotes();
+    }
+
+    return res.json({
+      success: true,
+      count: Object.keys(PSE_MARKET_CACHE).length,
+      quotes: PSE_MARKET_CACHE
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err?.message || 'PSE quotes query failed' });
+  }
 });
 
 // Curated Philippine & Global Master Tickers for instant autocomplete matching

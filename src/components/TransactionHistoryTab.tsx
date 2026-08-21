@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { parseFormattedNumber } from '../utils/mathParser';
+import { AssetPosition, ExpenseEntry, FamilyGoal } from '../types';
 import {
   History,
   Plus,
@@ -8,7 +9,18 @@ import {
   Filter,
   Calendar,
   Check,
-  Trash2
+  Trash2,
+  AlertTriangle,
+  RotateCcw,
+  X,
+  ShieldCheck,
+  Wallet,
+  Target,
+  Receipt,
+  ArrowRight,
+  TrendingDown,
+  TrendingUp,
+  Landmark
 } from 'lucide-react';
 
 export interface HistoricalTx {
@@ -18,6 +30,173 @@ export interface HistoricalTx {
   type: string;
   amount: string;
   details: string;
+}
+
+export interface DeleteTxOptions {
+  revertFinancials?: boolean;
+  targetType?: 'asset' | 'goal' | 'expense' | 'account' | 'none';
+  targetAssetKey?: string;
+  targetGoalId?: string;
+  adjustmentAmount?: number;
+}
+
+export interface DetectedTargetInfo {
+  type: 'asset' | 'goal' | 'expense' | 'account' | 'none';
+  name: string;
+  assetKey?: string;
+  goalId?: string;
+  currentVal?: number;
+  targetVal?: number;
+  delta: number;
+  projectedVal?: number;
+  badgeLabel: string;
+  description: string;
+}
+
+export function findMatchingAsset(txAsset: string, assets: AssetPosition[]): AssetPosition | undefined {
+  if (!txAsset || !assets || assets.length === 0) return undefined;
+  const clean = txAsset.toLowerCase().trim();
+
+  // 1. Direct match on key or name
+  let found = assets.find(a => a.key.toLowerCase() === clean || a.name.toLowerCase() === clean);
+  if (found) return found;
+
+  // 2. Specialized keyword mappings
+  if (clean.includes('hys') || clean.includes('maya') || clean.includes('savings')) {
+    found = assets.find(a => a.key.includes('hys') || a.name.toLowerCase().includes('hys') || a.name.toLowerCase().includes('maya'));
+    if (found) return found;
+  }
+  if (clean.includes('gold') || clean.includes('pax')) {
+    found = assets.find(a => a.key.includes('paxg') || a.name.toLowerCase().includes('gold'));
+    if (found) return found;
+  }
+  if (clean.includes('btc') || clean.includes('bitcoin')) {
+    found = assets.find(a => a.key.includes('btc') || a.name.toLowerCase().includes('bitcoin'));
+    if (found) return found;
+  }
+  if (clean.includes('time deposit') || clean.includes('deposit')) {
+    found = assets.find(a => a.name.toLowerCase().includes('time deposit') || a.key.includes('td') || a.key.includes('deposit'));
+    if (found) return found;
+  }
+  if (clean.includes('bond') || clean.includes('t-bill') || clean.includes('tbill') || clean.includes('treasury')) {
+    found = assets.find(a => a.key.includes('tbill') || a.name.toLowerCase().includes('bond') || a.name.toLowerCase().includes('treasury'));
+    if (found) return found;
+  }
+  if (clean.includes('loan') || clean.includes('lend')) {
+    found = assets.find(a => a.key.includes('loan') || a.name.toLowerCase().includes('loan'));
+    if (found) return found;
+  }
+  if (clean.includes('cash') || clean.includes('reserve') || clean.includes('bank')) {
+    found = assets.find(a => a.assetType === 'cash' || a.key.includes('cash'));
+    if (found) return found;
+  }
+  if (clean.includes('income') || clean.includes('dragonfi') || clean.includes('stock') || clean.includes('reit') || clean.includes('equity') || clean.includes('fund')) {
+    found = assets.find(a => a.assetType === 'equity' || a.name.toLowerCase().includes('dragonfi') || a.name.toLowerCase().includes('reit') || a.name.toLowerCase().includes('manulife'));
+    if (found) return found;
+  }
+
+  // 3. Substring inclusion
+  found = assets.find(a => a.name.toLowerCase().includes(clean) || clean.includes(a.name.toLowerCase()));
+  if (found) return found;
+
+  return undefined;
+}
+
+export function detectTransactionOrigin(
+  tx: HistoricalTx,
+  assets: AssetPosition[] = [],
+  goals: FamilyGoal[] = [],
+  _expenses: ExpenseEntry[] = []
+): DetectedTargetInfo {
+  const rawAmt = Math.abs(parseFormattedNumber(tx.amount));
+  const isAddition =
+    ['Buy', 'Deposit', 'Maturity', 'Lend'].includes(tx.type) ||
+    tx.amount.startsWith('+') ||
+    (!tx.amount.startsWith('-') && !['Sell', 'Withdraw', 'Liquidate'].includes(tx.type));
+  const delta = isAddition ? -rawAmt : rawAmt;
+
+  const cleanAsset = (tx.asset || '').toLowerCase();
+  const cleanDetails = (tx.details || '').toLowerCase();
+
+  // 1. Check if tied to a Family Goal
+  if (goals && goals.length > 0) {
+    const matchedGoal = goals.find((g) => {
+      const gTitle = g.title.toLowerCase();
+      return (
+        cleanAsset.includes(gTitle) ||
+        cleanDetails.includes(gTitle) ||
+        (cleanAsset.includes('goal') && (cleanAsset.includes(g.id.toLowerCase()) || gTitle.includes(cleanAsset.replace('family goal:', '').trim())))
+      );
+    });
+
+    if (matchedGoal) {
+      const currentVal = matchedGoal.currentPHP || 0;
+      const projectedVal = Math.max(0, currentVal + delta);
+      return {
+        type: 'goal',
+        name: matchedGoal.title,
+        goalId: matchedGoal.id,
+        currentVal,
+        targetVal: matchedGoal.targetPHP,
+        delta,
+        projectedVal,
+        badgeLabel: 'Family Milestone Goal',
+        description: isAddition
+          ? `Money was credited to this goal and will be deducted from its current balance.`
+          : `Money was withdrawn from this goal and will be refunded back.`
+      };
+    }
+  }
+
+  // 2. Check if tied to an Asset Position
+  const matchedAsset = findMatchingAsset(tx.asset, assets);
+  if (matchedAsset) {
+    const isUnitPriced =
+      (matchedAsset.currentPricePHP || 0) > 1 &&
+      matchedAsset.assetType !== 'deposit' &&
+      matchedAsset.assetType !== 'cash' &&
+      matchedAsset.assetType !== 'hys';
+    const currentVal = isUnitPriced
+      ? (matchedAsset.units || 0) * (matchedAsset.currentPricePHP || 1)
+      : (matchedAsset.costBasisPHP !== undefined && matchedAsset.costBasisPHP > 0 ? matchedAsset.costBasisPHP : (matchedAsset.units || 0) * (matchedAsset.currentPricePHP || 1));
+    const projectedVal = Math.max(0, currentVal + delta);
+
+    return {
+      type: 'asset',
+      name: matchedAsset.name,
+      assetKey: matchedAsset.key,
+      currentVal,
+      delta,
+      projectedVal,
+      badgeLabel: matchedAsset.assetType ? `${matchedAsset.assetType.toUpperCase()} Asset` : 'Asset Position',
+      description: isAddition
+        ? `Money was added to this asset holding and will be subtracted from its balance.`
+        : `Money was deducted/sold from this asset and will be restored to its balance.`
+    };
+  }
+
+  // 3. Check if Expense
+  if (cleanAsset.startsWith('expense:') || cleanAsset.includes('expense')) {
+    const cat = tx.asset.replace(/^expense:\s*/i, '').trim() || 'Expense Outflow';
+    return {
+      type: 'expense',
+      name: cat,
+      delta,
+      badgeLabel: 'Expense Outflow Ledger',
+      description: `Reverses recorded expense outflow of ₱${rawAmt.toLocaleString()}.`
+    };
+  }
+
+  // 4. Default / General Account
+  return {
+    type: 'account',
+    name: tx.asset || 'Historical Account Ledger',
+    delta,
+    badgeLabel: 'Account Ledger Record',
+    description: isAddition
+      ? `Money added under "${tx.asset}" will be reversed by ₱${rawAmt.toLocaleString()}.`
+      : `Money deducted under "${tx.asset}" will be credited back by ₱${rawAmt.toLocaleString()}.`
+  };
 }
 
 export const INITIAL_HISTORICAL_TXS: HistoricalTx[] = [
@@ -54,13 +233,19 @@ export const INITIAL_HISTORICAL_TXS: HistoricalTx[] = [
 
 export interface TransactionHistoryTabProps {
   transactions?: HistoricalTx[];
+  assets?: AssetPosition[];
+  goals?: FamilyGoal[];
+  expenses?: ExpenseEntry[];
   onAddTransaction?: (tx: Omit<HistoricalTx, 'id'>) => void;
-  onDeleteTransaction?: (id: string) => void;
+  onDeleteTransaction?: (id: string, options?: DeleteTxOptions) => void;
   onResetTransactions?: () => void;
 }
 
 export default function TransactionHistoryTab({
   transactions: propTransactions,
+  assets = [],
+  goals = [],
+  expenses = [],
   onAddTransaction,
   onDeleteTransaction,
   onResetTransactions,
@@ -101,6 +286,17 @@ export default function TransactionHistoryTab({
   const [newType, setNewType] = useState('Buy');
   const [newAmount, setNewAmount] = useState('');
   const [newDetails, setNewDetails] = useState('');
+
+  // Delete Prompt Modal States
+  const [pendingDeleteTx, setPendingDeleteTx] = useState<HistoricalTx | null>(null);
+  const [revertOption, setRevertOption] = useState<'revert' | 'log_only'>('revert');
+  const [showResetModal, setShowResetModal] = useState(false);
+
+  // Detect target entity where money is added
+  const pendingTarget = useMemo(() => {
+    if (!pendingDeleteTx) return null;
+    return detectTransactionOrigin(pendingDeleteTx, assets, goals, expenses);
+  }, [pendingDeleteTx, assets, goals, expenses]);
 
   const filteredTxs = useMemo(() => {
     return txs.filter((tx) => {
@@ -191,23 +387,55 @@ export default function TransactionHistoryTab({
     setIsAddingTx(false);
   };
 
-  const handleDeleteTx = (id: string) => {
+  const initiateDeleteTx = (tx: HistoricalTx) => {
+    setPendingDeleteTx(tx);
+    setRevertOption('revert');
+  };
+
+  const confirmDeleteTx = () => {
+    if (!pendingDeleteTx) return;
+
+    const options: DeleteTxOptions = {
+      revertFinancials: revertOption === 'revert',
+      targetType: pendingTarget?.type,
+      targetAssetKey: pendingTarget?.assetKey,
+      targetGoalId: pendingTarget?.goalId,
+      adjustmentAmount: Math.abs(parseFormattedNumber(pendingDeleteTx.amount))
+    };
+
     if (onDeleteTransaction) {
-      onDeleteTransaction(id);
+      onDeleteTransaction(pendingDeleteTx.id, options);
     } else {
-      setLocalTxs(localTxs.filter(tx => tx.id !== id));
+      setLocalTxs(localTxs.filter(tx => tx.id !== pendingDeleteTx.id));
     }
+
+    setPendingDeleteTx(null);
   };
 
   const handleResetTxs = () => {
-    if (window.confirm('Are you sure you want to reset to default historical transactions?')) {
-      if (onResetTransactions) {
-        onResetTransactions();
-      } else {
-        setLocalTxs(INITIAL_HISTORICAL_TXS);
-      }
-    }
+    setShowResetModal(true);
   };
+
+  const confirmResetTxs = () => {
+    if (onResetTransactions) {
+      onResetTransactions();
+    } else {
+      setLocalTxs(INITIAL_HISTORICAL_TXS);
+    }
+    setShowResetModal(false);
+  };
+
+  const pendingAmountVal = useMemo(() => {
+    if (!pendingDeleteTx) return 0;
+    return Math.abs(parseFormattedNumber(pendingDeleteTx.amount));
+  }, [pendingDeleteTx]);
+
+  const isAdditionTx = useMemo(() => {
+    if (!pendingDeleteTx) return false;
+    return ['Buy', 'Deposit', 'Maturity', 'Lend'].includes(pendingDeleteTx.type) ||
+      pendingDeleteTx.amount.startsWith('+') ||
+      (!pendingDeleteTx.amount.startsWith('-') && !['Sell', 'Withdraw', 'Liquidate'].includes(pendingDeleteTx.type));
+  }, [pendingDeleteTx]);
 
   return (
     <div id="transaction-history-section" data-highlight-id="transaction-history-section" className="space-y-6">
@@ -459,7 +687,7 @@ export default function TransactionHistoryTab({
                       </td>
                       <td className="py-4 text-center">
                         <button
-                          onClick={() => handleDeleteTx(tx.id)}
+                          onClick={() => initiateDeleteTx(tx)}
                           className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-md transition-colors cursor-pointer"
                           title="Delete transaction record"
                         >
@@ -507,6 +735,173 @@ export default function TransactionHistoryTab({
           </div>
         )}
       </div>
+
+      {/* POP-UP CONFIRMATION MODAL: DELETE TRANSACTION & REVERT BALANCE IMPACT */}
+      {pendingDeleteTx && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in">
+          <div 
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl max-w-md w-full overflow-hidden text-slate-900 dark:text-white my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="px-5 py-3.5 border-b border-slate-100 dark:border-white/10 flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-1.5 bg-rose-500/15 text-rose-600 dark:text-rose-400 rounded-lg">
+                  <Trash2 className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Delete Transaction
+                </h3>
+              </div>
+              <button
+                onClick={() => setPendingDeleteTx(null)}
+                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-4 space-y-3">
+              {/* Compact Transaction summary row */}
+              <div className="p-3 bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-slate-100 dark:border-white/5 flex items-center justify-between text-xs">
+                <div className="space-y-0.5">
+                  <div className="font-bold text-slate-900 dark:text-white">
+                    {pendingDeleteTx.asset}
+                  </div>
+                  <div className="text-[11px] text-slate-400 font-mono">
+                    {pendingDeleteTx.date} • <span className="uppercase font-semibold">{pendingDeleteTx.type}</span>
+                  </div>
+                </div>
+                <div className="font-mono font-bold text-sm text-slate-900 dark:text-white">
+                  {pendingDeleteTx.amount}
+                </div>
+              </div>
+
+              {/* Options */}
+              <div className="space-y-2 text-xs">
+                <label
+                  onClick={() => setRevertOption('revert')}
+                  className={`p-2.5 rounded-xl border flex items-center gap-2.5 cursor-pointer transition-all ${
+                    revertOption === 'revert'
+                      ? 'bg-amber-500/10 border-amber-500/40 text-slate-900 dark:text-slate-100'
+                      : 'bg-white dark:bg-slate-900/40 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="revert_choice"
+                    checked={revertOption === 'revert'}
+                    onChange={() => setRevertOption('revert')}
+                    className="text-amber-600 focus:ring-amber-500 shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-[11px] flex items-center justify-between">
+                      <span className="truncate">Revert balance on {pendingTarget?.name || pendingDeleteTx.asset}</span>
+                      <span className="font-mono font-bold text-amber-600 dark:text-amber-400 shrink-0 ml-2">
+                        {pendingTarget && pendingTarget.delta < 0 ? `-₱${Math.abs(pendingTarget.delta).toLocaleString()}` : `+₱${Math.abs(pendingAmountVal).toLocaleString()}`}
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                      {pendingTarget?.delta && pendingTarget.delta < 0 ? 'Deducts' : 'Refunds'} money from where it was added
+                    </div>
+                  </div>
+                </label>
+
+                <label
+                  onClick={() => setRevertOption('log_only')}
+                  className={`p-2.5 rounded-xl border flex items-center gap-2.5 cursor-pointer transition-all ${
+                    revertOption === 'log_only'
+                      ? 'bg-slate-100 dark:bg-slate-800 border-slate-400 dark:border-slate-600 text-slate-900 dark:text-slate-100'
+                      : 'bg-white dark:bg-slate-900/40 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="revert_choice"
+                    checked={revertOption === 'log_only'}
+                    onChange={() => setRevertOption('log_only')}
+                    className="text-slate-600 focus:ring-slate-500 shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-[11px]">Delete log entry only</div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400">Keep current balances unchanged</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-4 py-3 bg-slate-50 dark:bg-slate-950/60 border-t border-slate-100 dark:border-white/10 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setPendingDeleteTx(null)}
+                className="px-3.5 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteTx}
+                className="px-4 py-1.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 active:scale-95 rounded-lg shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Confirm & Delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* POP-UP CONFIRMATION MODAL: RESET DEFAULTS */}
+      {showResetModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in">
+          <div 
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden text-slate-900 dark:text-white"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-slate-100 dark:border-white/10 flex items-center space-x-3.5 bg-gradient-to-r from-blue-500/10 to-transparent">
+              <div className="p-3 bg-blue-500/20 text-blue-500 dark:text-blue-400 rounded-xl">
+                <RotateCcw className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white tracking-tight">
+                  Reset Transaction Registry
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Restore default historical transaction entries
+                </p>
+              </div>
+            </div>
+            <div className="p-6 text-xs text-slate-600 dark:text-slate-300 leading-relaxed space-y-3">
+              <p>
+                Are you sure you want to reset the transaction registry to default historical records? All custom entries will be replaced with institutional templates.
+              </p>
+              <div className="p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/40 rounded-xl flex items-center space-x-2 text-blue-700 dark:text-blue-300 text-[11px]">
+                <ShieldCheck className="w-4 h-4 shrink-0 text-blue-500" />
+                <span>This action can also be reversed anytime using <strong>Ctrl+Z</strong>.</span>
+              </div>
+            </div>
+            <div className="p-4 bg-slate-50 dark:bg-slate-950/60 border-t border-slate-100 dark:border-white/10 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setShowResetModal(false)}
+                className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmResetTxs}
+                className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset to Defaults</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
