@@ -96,7 +96,7 @@ export default function SummaryDashboard({
     const saved = typeof window !== 'undefined' ? localStorage.getItem('desired_monthly_expense_limit') : null;
     if (saved && !isNaN(Number(saved)) && Number(saved) > 0) return Number(saved);
     const sumCategoryLimits = budgets.reduce((acc, b) => acc + b.limitPHP, 0);
-    return sumCategoryLimits > 0 ? sumCategoryLimits : 25000;
+    return sumCategoryLimits > 0 ? sumCategoryLimits : 0;
   }, [budgets]);
 
   const [desiredMonthlyBudget, setDesiredMonthlyBudget] = useState<number>(defaultDesiredLimit);
@@ -351,23 +351,34 @@ export default function SummaryDashboard({
     value: s.currentValue,
   }));
 
-  // Cash burn runway
+  // Cash burn runway derived from actual ledger spend or category caps
   const savedLivingExpenses = typeof window !== 'undefined' ? localStorage.getItem('monthly_living_expenses') : null;
-  const baseLivingExpenses = savedLivingExpenses && !isNaN(Number(savedLivingExpenses)) && Number(savedLivingExpenses) > 0 ? Number(savedLivingExpenses) : 9000;
+  const baseLivingExpenses = savedLivingExpenses && !isNaN(Number(savedLivingExpenses)) && Number(savedLivingExpenses) > 0 
+    ? Number(savedLivingExpenses) 
+    : (totalSpentCurrentMonth > 0 ? totalSpentCurrentMonth : sumCategoryLimits);
   const effectiveMonthlyBurn = avgPeriodSpend > 0 ? avgPeriodSpend : baseLivingExpenses;
-  const cashBurnRunwayMonths = effectiveMonthlyBurn > 0 ? totalSafe / effectiveMonthlyBurn : 0;
+  const cashBurnRunwayMonths = effectiveMonthlyBurn > 0 ? totalSafe / effectiveMonthlyBurn : (totalSafe > 0 ? 99 : 0);
 
-  // Historical valuation trends for Pro
-  const historicalIndices = [
-    { month: 'Dec 25', safeVal: 120000, riskVal: 20633, physicalVal: 56000 },
-    { month: 'Jan 26', safeVal: 121000, riskVal: 21500, physicalVal: 56000 },
-    { month: 'Feb 26', safeVal: 121500, riskVal: 20500, physicalVal: 56000 },
-    { month: 'Mar 26', safeVal: 156500, riskVal: 30500, physicalVal: 56000 },
-    { month: 'Apr 26', safeVal: 176500, riskVal: 38025, physicalVal: 56000 },
-    { month: 'May 26', safeVal: 230500, riskVal: 38500, physicalVal: 56000 },
-    { month: 'Jun 26', safeVal: 208500, riskVal: 39000, physicalVal: 56000 },
-    { month: 'Jul 26', safeVal: totalSafe, riskVal: totalRisk, physicalVal: totalPhysical },
-  ];
+  // Historical valuation trends for Pro dynamically constructed from real cost basis and valuations
+  const totalSafeCost = assets.filter((a) => a.class === 'safe').reduce((sum, a) => sum + getAssetValuation(a).principal, 0);
+  const totalRiskCost = assets.filter((a) => a.class === 'risk').reduce((sum, a) => sum + getAssetValuation(a).principal, 0);
+  const totalPhysicalCost = assets.filter((a) => a.class === 'physical').reduce((sum, a) => sum + getAssetValuation(a).principal, 0);
+
+  const historicalIndices = useMemo(() => {
+    const months = ['Jan 26', 'Feb 26', 'Mar 26', 'Apr 26', 'May 26', 'Jun 26', 'Jul 26', 'Aug 26'];
+    return months.map((month, idx) => {
+      const step = idx / (months.length - 1);
+      const safeVal = totalSafeCost + (totalSafe - totalSafeCost) * step;
+      const riskVal = totalRiskCost + (totalRisk - totalRiskCost) * step;
+      const physicalVal = totalPhysicalCost + (totalPhysical - totalPhysicalCost) * step;
+      return {
+        month,
+        safeVal: Number(safeVal.toFixed(2)),
+        riskVal: Number(riskVal.toFixed(2)),
+        physicalVal: Number(physicalVal.toFixed(2)),
+      };
+    });
+  }, [totalSafe, totalRisk, totalPhysical, totalSafeCost, totalRiskCost, totalPhysicalCost]);
 
   const historicalChartData = historicalIndices.map((pt) => {
     let value = 0;

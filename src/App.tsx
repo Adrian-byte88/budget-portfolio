@@ -542,7 +542,7 @@ export default function App() {
     {
       id: 'welcome-msg',
       sender: 'assistant',
-      text: "Hello! I am Ask AI, your AI Financial Assistant powered by Gemini. I can assist you with your portfolio analysis or perform actions. Try saying: 'Add ₱15,000 to HYS', 'Log spent ₱1,200 on dining', or ask me about market sentiments!"
+      text: "Hello! I am Budget Portfolio AI, your institutional financial assistant powered by Gemini. I can calculate your real-time Net Worth, calibrate your 15th/30th Payday Income Matrix, look up MarketWatch Philippine Equities & REITs, deploy funds to Safe Shield assets, or log expenses. How can I assist your wealth strategy today?"
     }
   ]);
 
@@ -1640,7 +1640,7 @@ export default function App() {
   const handleSearchSelect = (type: string, id: string, targetTab?: string) => {
     setHighlightId({ type, id, tab: targetTab });
     if (targetTab) {
-      if (['dashboard', 'portfolio', 'assets', 'ledger', 'social', 'audit', 'transactions'].includes(targetTab)) {
+      if (['home', 'dashboard', 'portfolio', 'assets', 'ledger', 'social', 'audit', 'transactions', 'pricing'].includes(targetTab)) {
         setActiveTab(targetTab as any);
       } else if (targetTab === 'settings') {
         setIsSettingsOpen(true);
@@ -2794,6 +2794,7 @@ export default function App() {
             subscriptionTier={subscriptionTier}
             isAdmin={isAdmin}
             onOpenPricing={() => setActiveTab('pricing')}
+            incomeBudgetPlan={incomeBudgetPlan}
           />
         )}
 
@@ -3037,22 +3038,40 @@ export default function App() {
       {/* --- GEMINI AI CHAT BOX FLOATING SYSTEM --- */}
       <div className="fixed bottom-6 right-6 z-50 font-sans">
         {isChatOpen ? (
-          <div className="w-[380px] h-[500px] bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-fade-in">
+          <div className="w-[390px] h-[520px] bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-fade-in">
             {/* Header */}
-            <div className="p-4 bg-gradient-to-r from-slate-900 to-indigo-950 text-white flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-indigo-400 animate-pulse" />
+            <div className="p-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex items-center justify-between border-b border-indigo-500/20">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-indigo-600/30 border border-indigo-400/30 flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-indigo-300 animate-pulse" />
+                </div>
                 <div>
                   <h4 className="text-xs font-black uppercase tracking-wider text-white">Budget Portfolio AI</h4>
-                  <span className="text-[9px] text-slate-300 block">Powered by Gemini 3.5 Flash</span>
+                  <span className="text-[9.5px] text-indigo-200/80 block">Institutional Copilot • Gemini & MarketWatch</span>
                 </div>
               </div>
-              <button
-                onClick={() => setIsChatOpen(false)}
-                className="p-1 hover:bg-white/10 rounded-lg text-slate-300 hover:text-white transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setMessages([
+                    {
+                      id: 'welcome-msg-reset',
+                      sender: 'assistant',
+                      text: "Chat cleared. What financial operation or market query can I assist you with?"
+                    }
+                  ])}
+                  className="p-1.5 hover:bg-white/10 rounded-lg text-slate-300 hover:text-white transition-colors cursor-pointer text-[10px]"
+                  title="Clear conversation"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setIsChatOpen(false)}
+                  className="p-1.5 hover:bg-white/10 rounded-lg text-slate-300 hover:text-white transition-colors cursor-pointer"
+                  title="Close chat"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {/* Messages Body */}
@@ -3128,6 +3147,27 @@ export default function App() {
               )}
             </div>
 
+            {/* Quick Prompts Suggestions */}
+            <div className="px-3 py-1.5 bg-slate-100 dark:bg-slate-900/60 border-t border-slate-200/60 dark:border-white/5 flex gap-1.5 overflow-x-auto no-scrollbar">
+              {[
+                { label: '📊 Net Worth Breakdown', query: 'What is my current net worth and balance sheet status?' },
+                { label: '📅 Income Matrix', query: 'Set my monthly net take-home income to ₱80,000' },
+                { label: '🏦 Deposit ₱15k HYS', query: 'Deposit ₱15,000 to Maya Bank HYS' },
+                { label: '📈 MarketWatch PSE', query: 'Check MarketWatch price for SCC and SPC stock' },
+                { label: '🧾 Log ₱1,500 Dining', query: 'Spent ₱1,500 on family dinner' },
+              ].map((p, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setChatInput(p.query);
+                  }}
+                  className="px-2 py-1 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 border border-slate-200 dark:border-white/10 rounded-lg text-[10px] font-semibold shrink-0 cursor-pointer transition-all hover:border-indigo-500/40"
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+
             {/* Input Form */}
             <form onSubmit={handleSendChatMessage} className="p-3 border-t border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 flex items-center gap-1.5">
               <button
@@ -3146,7 +3186,7 @@ export default function App() {
                 type="text"
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Ask AI..."
+                placeholder="Ask Budget Portfolio AI or command actions..."
                 className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500 outline-hidden text-slate-800 dark:text-slate-200 font-medium"
               />
               <button
@@ -3160,10 +3200,10 @@ export default function App() {
         ) : (
           <button
             onClick={() => setIsChatOpen(true)}
-            className="bg-gradient-to-r from-slate-900 to-indigo-950 text-white px-4 py-3 rounded-full shadow-2xl hover:shadow-indigo-500/10 border border-white/15 flex items-center gap-2.5 cursor-pointer transition-all hover:-translate-y-0.5 select-none"
+            className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white px-4 py-3 rounded-full shadow-2xl hover:shadow-indigo-500/20 border border-indigo-500/30 flex items-center gap-2.5 cursor-pointer transition-all hover:-translate-y-0.5 select-none"
           >
             <Sparkles className="w-4 h-4 text-indigo-400 animate-pulse" />
-            <span className="text-xs font-black uppercase tracking-wider">Ask AI</span>
+            <span className="text-xs font-black uppercase tracking-wider">Budget Portfolio AI</span>
             <MessageSquare className="w-4 h-4 text-slate-300" />
           </button>
         )}

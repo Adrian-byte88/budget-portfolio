@@ -24,7 +24,7 @@ import {
   Layers,
   Banknote
 } from 'lucide-react';
-import { AssetPosition, ExpenseEntry, BudgetLimit, FamilyGoal } from '../types';
+import { AssetPosition, ExpenseEntry, BudgetLimit, FamilyGoal, IncomeBudgetPlan } from '../types';
 import { HistoricalTx } from './TransactionHistoryTab';
 import { getAssetValuation } from '../lib/formatters';
 
@@ -43,6 +43,7 @@ interface HomePageProps {
   subscriptionTier?: 'free' | 'pro';
   isAdmin?: boolean;
   onOpenPricing?: () => void;
+  incomeBudgetPlan?: IncomeBudgetPlan;
 }
 
 export default function HomePage({
@@ -60,6 +61,7 @@ export default function HomePage({
   subscriptionTier = 'free',
   isAdmin = false,
   onOpenPricing,
+  incomeBudgetPlan,
 }: HomePageProps) {
   // User greeting based on hour
   const currentHour = new Date().getHours();
@@ -72,7 +74,7 @@ export default function HomePage({
 
   const userName = email ? email.split('@')[0] : 'Member';
 
-  // Calculate Key Portfolio Metrics
+  // Calculate Key Portfolio Metrics dynamically
   const safeAssets = assets.filter((a) => a.class === 'safe');
   const riskAssets = assets.filter((a) => a.class === 'risk');
   const physicalAssets = assets.filter((a) => a.class === 'physical');
@@ -87,26 +89,40 @@ export default function HomePage({
   const grandTotalAssets = totalFinancialAssets + totalPhysical;
   const netWorth = grandTotalAssets - totalLiabilities;
 
-  // High-Yield Savings (5%) & Cash Reserve Amount
-  const hysAsset = assets.find((a) => a.key === 'hys' || a.assetType === 'hys' || a.name.toLowerCase().includes('high-yield'));
+  // Total Safe Cost & Total Risk Cost basis for dynamic overall performance
+  const totalSafeCost = safeAssets.reduce((sum, a) => sum + getAssetValuation(a).principal, 0);
+  const totalRiskCost = riskAssets.reduce((sum, a) => sum + getAssetValuation(a).principal, 0);
+  const totalCostBasis = totalSafeCost + totalRiskCost;
+  const totalUnrealizedGains = (totalSafe + totalRisk) - totalCostBasis;
+  const totalGainPct = totalCostBasis > 0 ? (totalUnrealizedGains / totalCostBasis) * 100 : 0;
+
+  // Annual and monthly passive yield calculated dynamically from actual asset holdings
+  const totalAnnualYieldPHP = assets.reduce((sum, a) => {
+    const val = getAssetValuation(a);
+    const annualYield = val.totalValue * ((a.yieldPercent || 0) / 100) * (1 - (a.withholdingTaxPercent || 0) / 100);
+    return sum + annualYield;
+  }, 0);
+  const weightedAnnualYieldPct = totalFinancialAssets > 0 ? (totalAnnualYieldPHP / totalFinancialAssets) * 100 : 0;
+  const monthlyYieldPHP = totalAnnualYieldPHP / 12;
+
+  // High-Yield Savings & Cash Reserve Amount dynamically identified
+  const hysAsset = assets.find((a) => a.key === 'hys' || a.assetType === 'hys' || a.name.toLowerCase().includes('high-yield') || a.name.toLowerCase().includes('savings') || a.name.toLowerCase().includes('maya'));
   const cashReserveAsset = assets.find((a) => a.key === 'available_cash');
   const cashReserveVal = hysAsset
     ? getAssetValuation(hysAsset).totalValue
     : cashReserveAsset
     ? getAssetValuation(cashReserveAsset).totalValue
-    : 0;
+    : (safeAssets.length > 0 ? getAssetValuation(safeAssets[0]).totalValue : 0);
 
-  // Estimated Monthly Passive Yield from Safe Assets
-  const monthlyYieldPHP = safeAssets.reduce((sum, a) => {
-    const val = getAssetValuation(a);
-    const annualYield = val.totalValue * (a.yieldPercent / 100) * (1 - (a.withholdingTaxPercent || 0) / 100);
-    return sum + annualYield / 12;
-  }, 0);
+  const cashReserveYield = hysAsset ? hysAsset.yieldPercent : (safeAssets[0]?.yieldPercent ?? 0);
+  const cashReserveName = hysAsset ? hysAsset.name : (safeAssets[0]?.name ?? 'Cash Reserve');
 
-  // Budget calculations
+  // Budget and Real-time Cash Flow calculations
+  const monthlyNetIncome = incomeBudgetPlan?.monthlyNetIncome ?? 0;
   const totalMonthlyBudget = budgets.reduce((sum, b) => sum + b.limitPHP, 0);
   const totalExpensesSpent = expenses.reduce((sum, e) => sum + e.amountPHP, 0);
   const budgetBurnPercent = totalMonthlyBudget > 0 ? Math.min(Math.round((totalExpensesSpent / totalMonthlyBudget) * 100), 100) : 0;
+  const netMonthlyCashFlow = monthlyNetIncome > 0 ? monthlyNetIncome - totalExpensesSpent : -totalExpensesSpent;
 
   // Recent 5 transactions
   const recentTransactions = transactions.slice(0, 5);
@@ -149,7 +165,7 @@ export default function HomePage({
               </h1>
               <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl font-medium leading-relaxed">
                 {isPro
-                  ? 'Here is your live financial command center. Sourced directly from your Maya High-Yield Savings (5% APY), investments, expense ledger, and asset registry.'
+                  ? 'Here is your live financial command center, computed directly in real-time from your active assets, savings yields, expense ledger, and balance sheet.'
                   : 'Welcome to your Budget Portfolio. Access your Expense Ledger, Summary Analytics, Social Family Sync, and Transaction Audit Log.'}
               </p>
             </div>
@@ -179,7 +195,7 @@ export default function HomePage({
       {/* Key Metric Summary Cards Grid */}
       {isPro ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Net Worth Card */}
+          {/* Total Net Worth Card */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Net Worth</span>
@@ -192,19 +208,21 @@ export default function HomePage({
                 ₱{netWorth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
               <div className="flex items-center justify-between mt-2 text-xs">
-                <span className="text-emerald-600 dark:text-emerald-400 font-extrabold flex items-center gap-0.5">
-                  <ArrowUpRight className="w-3.5 h-3.5" />
-                  +2.4% portfolio yield
+                <span className={`font-extrabold flex items-center gap-0.5 ${totalGainPct >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}`}>
+                  {totalGainPct >= 0 ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                  {totalGainPct >= 0 ? `+${totalGainPct.toFixed(1)}%` : `${totalGainPct.toFixed(1)}%`} total returns
                 </span>
                 <span className="text-slate-400 font-medium">USD ${(netWorth / usdPhpRate).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
               </div>
             </div>
           </div>
 
-          {/* High Yield Cash Reserve Card */}
+          {/* Dynamic Cash & Safe Reserve Card */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Cash Reserve (5% HYS)</span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate max-w-[170px]" title={cashReserveName}>
+                {cashReserveName}
+              </span>
               <div className="p-2 bg-teal-50 dark:bg-teal-950/50 rounded-xl text-teal-600 dark:text-teal-400">
                 <Banknote className="w-5 h-5" />
               </div>
@@ -218,27 +236,41 @@ export default function HomePage({
                   <Zap className="w-3 h-3" />
                   ~₱{monthlyYieldPHP.toLocaleString(undefined, { maximumFractionDigits: 0 })}/mo yield
                 </span>
-                <span className="text-xs bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300 px-1.5 py-0.5 rounded font-bold">5.0% APY</span>
+                <span className="text-xs bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300 px-1.5 py-0.5 rounded font-bold">
+                  {cashReserveYield > 0 ? `${cashReserveYield.toFixed(1)}% APY` : 'Safe Reserve'}
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Monthly Budget Burn Card */}
+          {/* Monthly Cash Flow & Spending Card */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Monthly Spending</span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                {monthlyNetIncome > 0 ? 'Monthly Net Cash Flow' : 'Monthly Spending Outflow'}
+              </span>
               <div className="p-2 bg-blue-50 dark:bg-blue-950/50 rounded-xl text-blue-600 dark:text-blue-400">
                 <CreditCard className="w-5 h-5" />
               </div>
             </div>
             <div className="mt-3">
               <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                ₱{totalExpensesSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {monthlyNetIncome > 0 ? (
+                  <span className={netMonthlyCashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}>
+                    {netMonthlyCashFlow >= 0 ? '+' : ''}₱{netMonthlyCashFlow.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                ) : (
+                  <span>₱{totalExpensesSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                )}
               </div>
               <div className="mt-2 space-y-1">
                 <div className="flex justify-between text-[11px] font-bold text-slate-500">
-                  <span>Cap: ₱{totalMonthlyBudget.toLocaleString()}</span>
-                  <span className={budgetBurnPercent > 90 ? 'text-rose-500' : 'text-emerald-500'}>{budgetBurnPercent}% Used</span>
+                  <span>
+                    {monthlyNetIncome > 0 ? `Spent: ₱${totalExpensesSpent.toLocaleString()}` : `Cap: ₱${totalMonthlyBudget.toLocaleString()}`}
+                  </span>
+                  <span className={budgetBurnPercent > 90 ? 'text-rose-500' : 'text-emerald-500'}>
+                    {budgetBurnPercent}% {monthlyNetIncome > 0 ? 'Cap Used' : 'Spent'}
+                  </span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                   <div
@@ -274,24 +306,36 @@ export default function HomePage({
           </div>
         </div>
       ) : (
-        /* Free User Overview Cards (5% APY, Net Worth, Safe Shield Ratio removed) */
+        /* Free User Overview Cards */
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Monthly Budget Burn Card */}
+          {/* Monthly Cash Flow & Expense Ledger Card */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Cash Flow & Expense Ledger</span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                {monthlyNetIncome > 0 ? 'Monthly Net Cash Flow' : 'Cash Flow & Spending'}
+              </span>
               <div className="p-2 bg-blue-50 dark:bg-blue-950/50 rounded-xl text-blue-600 dark:text-blue-400">
                 <CreditCard className="w-5 h-5" />
               </div>
             </div>
             <div className="mt-3">
               <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                ₱{totalExpensesSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {monthlyNetIncome > 0 ? (
+                  <span className={netMonthlyCashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}>
+                    {netMonthlyCashFlow >= 0 ? '+' : ''}₱{netMonthlyCashFlow.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                ) : (
+                  <span>₱{totalExpensesSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                )}
               </div>
               <div className="mt-2 space-y-1">
                 <div className="flex justify-between text-[11px] font-bold text-slate-500">
-                  <span>Monthly Budget Cap: ₱{totalMonthlyBudget.toLocaleString()}</span>
-                  <span className={budgetBurnPercent > 90 ? 'text-rose-500' : 'text-emerald-500'}>{budgetBurnPercent}% Spent</span>
+                  <span>
+                    {monthlyNetIncome > 0 ? `Spent: ₱${totalExpensesSpent.toLocaleString()}` : `Cap: ₱${totalMonthlyBudget.toLocaleString()}`}
+                  </span>
+                  <span className={budgetBurnPercent > 90 ? 'text-rose-500' : 'text-emerald-500'}>
+                    {budgetBurnPercent}% {monthlyNetIncome > 0 ? 'Cap Used' : 'Spent'}
+                  </span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                   <div
@@ -316,10 +360,10 @@ export default function HomePage({
             <div className="mt-3 space-y-2">
               <div className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span>3 Active Platform Modules</span>
+                <span>Active Financial Modules</span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">
-                Cash Flow Ledger • Social Family Sync • Transaction Audit Log
+                Cash Flow Ledger • Summary Analytics • Social Family Sync • Audit Log
               </p>
             </div>
           </div>

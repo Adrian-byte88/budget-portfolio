@@ -25,50 +25,60 @@ interface SearchItem {
 
 const STATIC_INDEX: SearchItem[] = [
   // TABS
-  { type: 'Tab', name: 'Summary Dashboard', id: 'dashboard', targetTab: 'dashboard', subtitle: 'Main Overview & KPIs', keywords: 'home dashboard kpis metrics summary net worth' },
-  { type: 'Tab', name: 'My Financial Portfolio', id: 'portfolio', targetTab: 'portfolio', subtitle: 'Allocation & Yield Projections', keywords: 'portfolio yield asset allocation breakdown returns' },
-  { type: 'Tab', name: 'Risk & Safe Assets', id: 'assets', targetTab: 'assets', subtitle: 'Asset Sleeve Holdings & Trades', keywords: 'safe risk maya bank hys tbills crypto stocks market alerts trades sleeve' },
-  { type: 'Tab', name: 'Cash Flow & Expense Ledger', id: 'ledger', targetTab: 'ledger', subtitle: 'Outflow Logs, Category Limits & Personal Goals', keywords: 'expenses spending budget bank sync transactions outflows cashflow goals personal savings targets' },
-  { type: 'Tab', name: 'Social Family Sync', id: 'social', targetTab: 'social', subtitle: 'Collaborative Family Goals', keywords: 'family goals savings contributions tuition vacation household' },
-  { type: 'Tab', name: 'Cycle Audit', id: 'audit', targetTab: 'audit', subtitle: 'Macroeconomic Cycle Analysis', keywords: 'audit market phase rebalance macro risk cycle recommendation' },
-  { type: 'Tab', name: 'Transaction History', id: 'transactions', targetTab: 'transactions', subtitle: 'Audit Trail & Ledger History', keywords: 'history logs audit trail trades system ledger' },
-  { type: 'Tab', name: 'Settings & Export Engine', id: 'settings-export', targetTab: 'settings', subtitle: 'Profile, Theme & Excel/JSON Backup', keywords: 'settings profile dark mode theme backup export excel json csv restore' },
+  { type: 'Tab', name: 'Home Overview', id: 'home-overview', targetTab: 'home', subtitle: 'Dynamic Net Worth, Cash Flow & Safe Reserve', keywords: 'home overview net worth balance sheet cash flow safe reserve spending burn payday' },
+  { type: 'Tab', name: 'Summary Dashboard', id: 'dashboard', targetTab: 'dashboard', subtitle: 'Historical Net Worth Curves & Multi-Period KPIs', keywords: 'home dashboard kpis metrics summary net worth valuation trends runway' },
+  { type: 'Tab', name: 'My Financial Portfolio', id: 'portfolio', targetTab: 'portfolio', subtitle: 'Asset Allocation, Yield Projections & Target Slider', keywords: 'portfolio yield asset allocation breakdown returns rebalance target dial' },
+  { type: 'Tab', name: 'Risk & Safe Assets', id: 'assets', targetTab: 'assets', subtitle: 'Safe Shield, MarketWatch PSE Stocks, Crypto & Physical Assets', keywords: 'safe risk maya bank hys tbills crypto stocks psei marketwatch scc spc rcr tradingview trades sleeve physical real estate debt liabilities' },
+  { type: 'Tab', name: 'Cash Flow & Expense Ledger', id: 'ledger', targetTab: 'ledger', subtitle: '15th/30th Payday Hub, Outflows & Personal Goals', keywords: 'expenses spending budget bank sync transactions outflows cashflow goals personal savings targets payday matrix' },
+  { type: 'Tab', name: 'Social Family Sync', id: 'social', targetTab: 'social', subtitle: 'Collaborative Family Goals & Outflows', keywords: 'family goals savings contributions tuition vacation household collaborative' },
+  { type: 'Tab', name: 'Cycle Audit', id: 'audit', targetTab: 'audit', subtitle: 'Macroeconomic Cycle Analysis & USD Hedge', keywords: 'audit market phase rebalance macro risk cycle recommendation hedge' },
+  { type: 'Tab', name: 'Transaction History', id: 'transactions', targetTab: 'transactions', subtitle: 'Audit Trail & Trade Execution History', keywords: 'history logs audit trail trades system ledger' },
+  { type: 'Tab', name: 'Settings & Export Engine', id: 'settings-export', targetTab: 'settings', subtitle: 'Multi-Sheet Excel Reports & Cloud Vault Backup', keywords: 'settings profile dark mode theme backup export excel json csv restore' },
+  { type: 'Tab', name: 'Pricing & PRO Membership', id: 'pricing-plans', targetTab: 'pricing', subtitle: 'Enterprise PRO & GCash / Maya Verification', keywords: 'pricing pro subscription tier gcash maya payment upgrade membership' },
+
+  // SECTIONS - HOME OVERVIEW
+  { type: 'Section', name: 'Real-Time Net Worth Balance Sheet', id: 'net-worth-hero', targetTab: 'home', subtitle: 'Home Section', keywords: 'net worth total assets total liabilities balance sheet dynamic returns php usd' },
+  { type: 'Section', name: 'Monthly Cash Flow & Payday Surplus Matrix', id: 'cash-flow-matrix-section', targetTab: 'home', subtitle: 'Home Section', keywords: 'monthly net take home income spent outflows net surplus deficit cash flow' },
+  { type: 'Section', name: 'Safe Shield Reserve & Weighted Yield Engine', id: 'safe-reserve-section', targetTab: 'home', subtitle: 'Home Section', keywords: 'safe reserve liquid cash high yield apy weighted yield passive income' },
+  { type: 'Section', name: 'Monthly Spending Burn & Category Progress', id: 'spending-burn-section', targetTab: 'home', subtitle: 'Home Section', keywords: 'monthly spend category budget caps spending burn limits alarms' },
 
   // SECTIONS - SUMMARY DASHBOARD
-  { type: 'Section', name: 'Cash Burn & Shield Hardening KPI Cards', id: 'net-worth-summary', targetTab: 'dashboard', subtitle: 'Dashboard Section', keywords: 'cash burn rate runway shield hardening alert summary' },
-  { type: 'Section', name: 'Historical Net Worth Curves Chart', id: 'asset-allocation-section', targetTab: 'dashboard', subtitle: 'Dashboard Section', keywords: 'line chart valuation trends net worth curves' },
+  { type: 'Section', name: 'Cash Burn Runway & Shield Hardening KPI Cards', id: 'net-worth-summary', targetTab: 'dashboard', subtitle: 'Dashboard Section', keywords: 'cash burn rate runway shield hardening alert summary' },
+  { type: 'Section', name: 'Historical Net Worth Valuation Trends', id: 'asset-allocation-section', targetTab: 'dashboard', subtitle: 'Dashboard Section', keywords: 'line chart valuation trends net worth curves cost basis' },
   { type: 'Section', name: 'Asset Allocation Mix & Target vs Current Weights', id: 'portfolio-charts-section', targetTab: 'dashboard', subtitle: 'Dashboard Section', keywords: 'asset allocation mix target vs current weights pie chart bar chart breakdown' },
   { type: 'Section', name: 'Monthly Spend Overview & Outflow Timeline', id: 'monthly-spend-overview', targetTab: 'dashboard', subtitle: 'Dashboard Section', keywords: 'bar chart monthly spend expenditure trends mom change peak spend timeline' },
-  { type: 'Section', name: 'Category Budget Limits & Progress Tracker', id: 'category-limits-section', targetTab: 'ledger', subtitle: 'Expense Ledger Section', keywords: 'budget caps spending thresholds violation tracker limits progress alarms desired monthly expense cap' },
 
   // SECTIONS - PORTFOLIO
   { type: 'Section', name: 'Asset Class Breakdown Table & Yields', id: 'portfolio-table-section', targetTab: 'portfolio', subtitle: 'Portfolio Section', keywords: 'holdings table yield php value portfolio percentage return' },
-  { type: 'Section', name: 'Target Allocation Slider & Rebalancing Shield', id: 'portfolio-allocation-section', targetTab: 'portfolio', subtitle: 'Portfolio Section', keywords: 'target allocation risk dial safe shield rebalance strategy slider' },
+  { type: 'Section', name: 'Target Allocation Slider & Rebalancing Shield', id: 'portfolio-allocation-section', targetTab: 'portfolio', subtitle: 'Portfolio Section', keywords: 'target allocation risk dial safe shield rebalance strategy slider 85 15' },
 
   // SECTIONS - RISK & SAFE ASSETS
   { type: 'Section', name: 'Safe Asset Sleeve (Maya Bank HYS, TBills, Digital Banks)', id: 'safe-assets-section', targetTab: 'assets', subtitle: 'Assets Section', keywords: 'maya bank hys high yield savings treasury bills time deposit safe sleeve' },
-  { type: 'Section', name: 'Risk Asset Sleeve (Crypto, PSEi, Global Equities)', id: 'risk-assets-section', targetTab: 'assets', subtitle: 'Assets Section', keywords: 'bitcoin stocks psei s&p500 global equities crypto risk capital equity' },
-  { type: 'Section', name: 'Physical Assets & Illiquid Real Estate', id: 'physical-assets-section', targetTab: 'assets', subtitle: 'Assets Section', keywords: 'condominium lot real estate property gold vehicle physical illiquid' },
-  { type: 'Section', name: 'Personal Price Alerts & 1-Click Guardrails', id: 'personal-price-alerts', targetTab: 'assets', subtitle: 'Header Bell Menu', keywords: 'price alarms alert thresholds notifications upper bound lower bound trigger presets guardrails bell' },
+  { type: 'Section', name: 'Risk Asset Sleeve (MarketWatch PSE Stocks, REITs, Crypto)', id: 'risk-assets-section', targetTab: 'assets', subtitle: 'Assets Section', keywords: 'bitcoin stocks psei s&p500 marketwatch scc spc rcr tradingview global equities crypto risk capital equity' },
+  { type: 'Section', name: 'Physical Assets (Real Estate, Land, Vehicles)', id: 'physical-assets-section', targetTab: 'assets', subtitle: 'Assets Section', keywords: 'condominium lot real estate property gold vehicle physical illiquid' },
+  { type: 'Section', name: 'Debts & Liabilities (Mortgages, Loans, Credit)', id: 'liabilities-assets-section', targetTab: 'assets', subtitle: 'Assets Section', keywords: 'debt loan mortgage credit card car loan liability deducted balance sheet' },
+  { type: 'Section', name: 'TradingView Candlestick Charting Modal', id: 'tradingview-modal', targetTab: 'assets', subtitle: 'Assets Section', keywords: 'tradingview candlestick interactive technical chart btc crypto pse stocks' },
+  { type: 'Section', name: 'Personal Price Alerts & 1-Click Guardrails', id: 'personal-price-alerts', targetTab: 'assets', subtitle: 'Header Bell Menu', keywords: 'price alarms alert thresholds notifications upper bound lower bound trigger presets guardrails bell btc gold 5%' },
 
   // SECTIONS - CASH FLOW & EXPENSE LEDGER
-  { type: 'Section', name: 'Monthly Net Income & 15th/30th Payday Hub', id: 'net-income-section', targetTab: 'ledger', subtitle: 'Ledger Section', keywords: 'monthly net income payday 15th 30th semi-monthly schedule salary earnings cash flow allocation budget matrix' },
+  { type: 'Section', name: '15th & 30th Payday Hub & Monthly Income Ceiling', id: 'net-income-section', targetTab: 'ledger', subtitle: 'Ledger Section', keywords: 'monthly net income payday 15th 30th semi-monthly schedule salary earnings cash flow allocation budget matrix' },
   { type: 'Section', name: 'Personal Goals & Savings Targets Tracker', id: 'personal-goals-section', targetTab: 'ledger', subtitle: 'Ledger Section', keywords: 'personal goals savings targets vacation emergency fund milestone contribute funding surplus' },
+  { type: 'Section', name: 'Category Budget Limits & Progress Tracker', id: 'category-limits-section', targetTab: 'ledger', subtitle: 'Ledger Section', keywords: 'budget caps spending thresholds violation tracker limits progress alarms desired monthly expense cap' },
   { type: 'Section', name: 'Expense Ledger Outflow Table', id: 'expense-table-section', targetTab: 'ledger', subtitle: 'Ledger Section', keywords: 'expense list transactions outflow table delete adjust log' },
   { type: 'Section', name: 'Log New Expense Outflow Form', id: 'add-expense-section', targetTab: 'ledger', subtitle: 'Ledger Section', keywords: 'add expense new transaction outflow form grocery dining shopping' },
-  { type: 'Section', name: 'Bank Synchronization & CSV Import', id: 'bank-sync-section', targetTab: 'ledger', subtitle: 'Ledger Section', keywords: 'bank sync bpi bdo unionbank gcash maya import csv link bank' },
+  { type: 'Section', name: 'Bank Synchronization & CSV Import Engine', id: 'bank-sync-section', targetTab: 'ledger', subtitle: 'Ledger Section', keywords: 'bank sync bpi bdo unionbank gcash maya import csv link bank' },
 
   // SECTIONS - SOCIAL FAMILY SYNC
-  { type: 'Section', name: 'Family Financial Goals & Progress', id: 'family-goals-section', targetTab: 'social', subtitle: 'Social Section', keywords: 'collaborative goals emergency fund tuition japan vacation target family' },
+  { type: 'Section', name: 'Collaborative Family Goals & Progress', id: 'family-goals-section', targetTab: 'social', subtitle: 'Social Section', keywords: 'collaborative goals emergency fund tuition japan vacation target family' },
   { type: 'Section', name: 'Add New Family Goal Form', id: 'add-goal-section', targetTab: 'social', subtitle: 'Social Section', keywords: 'create goal target amount contribution new goal collaborative' },
   { type: 'Section', name: 'Household Outflow Contribution Breakdown', id: 'family-contribution-section', targetTab: 'social', subtitle: 'Social Section', keywords: 'family contributions member share outflow distribution household' },
 
-  // SECTIONS - CYCLE AUDIT & HISTORY & SETTINGS
+  // SECTIONS - CYCLE AUDIT, HISTORY & SETTINGS
   { type: 'Section', name: 'Market Cycle Macroeconomic Analysis', id: 'cycle-audit-section', targetTab: 'audit', subtitle: 'Cycle Audit Section', keywords: 'macro risk economic cycle rebalance recommendation audit positioning' },
   { type: 'Section', name: 'System Audit Trail & Transaction Ledger', id: 'transaction-history-section', targetTab: 'transactions', subtitle: 'History Section', keywords: 'history audit trail system logs trades price updates events' },
-  { type: 'Section', name: 'Profile & Identity Settings', id: 'settings-profile', targetTab: 'settings', subtitle: 'Settings Modal', keywords: 'email profile account settings identity user' },
-  { type: 'Section', name: 'System Preferences & Dark Mode', id: 'settings-preferences', targetTab: 'settings', subtitle: 'Settings Modal', keywords: 'dark mode theme currency preferences accessibility accessibility' },
-  { type: 'Section', name: 'Data Export Engine (Excel / JSON Backup)', id: 'settings-export', targetTab: 'settings', subtitle: 'Settings Modal', keywords: 'export excel download csv backup json restore data save' },
+  { type: 'Section', name: 'Data Export Engine (Multi-Sheet Excel / JSON Backup)', id: 'settings-export', targetTab: 'settings', subtitle: 'Settings Modal', keywords: 'export excel download csv backup json restore data save sheets' },
+  { type: 'Section', name: 'Profile & Identity Settings', id: 'settings-profile', targetTab: 'settings', subtitle: 'Settings Modal', keywords: 'email profile account settings identity user dual auth' },
+  { type: 'Section', name: 'System Preferences & Dark Mode Theme', id: 'settings-preferences', targetTab: 'settings', subtitle: 'Settings Modal', keywords: 'dark mode theme currency preferences accessibility' },
 ];
 
 export default function SearchEngine({ assets, expenses, goals, budgets, transactions = [], cycleItems = [], onSelect }: SearchEngineProps) {
@@ -126,14 +136,47 @@ export default function SearchEngine({ assets, expenses, goals, budgets, transac
     const dynamicItems: SearchItem[] = [];
 
     assets.forEach(a => {
+      const isLiability = a.class === 'liability';
+      const isPhysical = a.class === 'physical';
+      const isSafe = a.class === 'safe';
+      const classLabel = isLiability ? 'Liability / Debt' : isPhysical ? 'Physical Asset' : isSafe ? 'Safe Shield' : 'Risk Sleeve (MarketWatch / Equity)';
+      const valuation = getAssetValuation(a);
+      const prefix = isLiability ? '-₱' : '₱';
+
       dynamicItems.push({
         type: 'Asset',
         name: `${a.name} (${a.platform})`,
         id: a.key,
         targetTab: 'assets',
-        subtitle: `Asset Sleeve • ₱${getAssetValuation(a).totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-        keywords: `${a.class} ${a.name} ${a.platform} ${a.assetType}`
+        subtitle: `${classLabel} • ${prefix}${valuation.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        keywords: `${a.class} ${a.name} ${a.platform} ${a.assetType} ${a.key} marketwatch pse stock crypto reit`
       });
+    });
+
+    // Index popular MarketWatch Philippine tickers for instant jump
+    const popularPseTickers = [
+      { code: 'SCC', name: 'Semirara Mining & Power (PSE: SCC)', platform: 'MarketWatch PSE' },
+      { code: 'SPC', name: 'SPC Power Corporation (PSE: SPC)', platform: 'MarketWatch PSE' },
+      { code: 'RCR', name: 'RL Commercial REIT (PSE: RCR)', platform: 'MarketWatch PSE' },
+      { code: 'AREIT', name: 'AREIT Inc. (PSE: AREIT)', platform: 'MarketWatch PSE' },
+      { code: 'CREIT', name: 'Citicore Energy REIT (PSE: CREIT)', platform: 'MarketWatch PSE' },
+      { code: 'BDO', name: 'BDO Unibank (PSE: BDO)', platform: 'MarketWatch PSE' },
+      { code: 'BPI', name: 'Bank of the Philippine Islands (PSE: BPI)', platform: 'MarketWatch PSE' },
+      { code: 'SMPH', name: 'SM Prime Holdings (PSE: SMPH)', platform: 'MarketWatch PSE' },
+      { code: 'ALI', name: 'Ayala Land Inc. (PSE: ALI)', platform: 'MarketWatch PSE' },
+    ];
+
+    popularPseTickers.forEach(ticker => {
+      if (!assets.some(a => a.key.toLowerCase() === ticker.code.toLowerCase())) {
+        dynamicItems.push({
+          type: 'Asset',
+          name: `${ticker.name}`,
+          id: 'risk-assets-section',
+          targetTab: 'assets',
+          subtitle: `MarketWatch Live PSE Feed • Ready to Track`,
+          keywords: `${ticker.code} ${ticker.name} marketwatch philippine equities stocks`
+        });
+      }
     });
 
     expenses.forEach(e => {
