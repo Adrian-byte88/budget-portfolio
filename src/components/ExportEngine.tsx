@@ -372,10 +372,17 @@ V. FINANCIAL FREEDOM & CASH FLOW METRICS
               <Download className="w-3.5 h-3.5" />
               <span>Download Excel Backup</span>
             </button>
-            <label className="text-xs text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white flex items-center space-x-1 cursor-pointer">
+            <label htmlFor="export-engine-upload-excel" className="text-xs text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white flex items-center space-x-1 cursor-pointer">
               <Upload className="w-3.5 h-3.5" />
               <span>Upload Excel Backup</span>
-              <input type="file" accept=".xlsx" onChange={handleBackupImportExcel} className="hidden" />
+              <input 
+                id="export-engine-upload-excel"
+                name="excel_backup_file"
+                type="file" 
+                accept=".xlsx" 
+                onChange={handleBackupImportExcel} 
+                className="hidden" 
+              />
             </label>
           </div>
         </div>

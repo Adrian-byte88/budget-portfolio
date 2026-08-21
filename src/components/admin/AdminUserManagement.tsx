@@ -72,8 +72,11 @@ export default function AdminUserManagement({
             </h4>
             <div className="flex items-center space-x-2">
               <input
+                id="admin-user-search-input"
+                name="admin_user_search"
                 type="text"
                 placeholder="Search email..."
+                aria-label="Search user email"
                 value={userSearchTerm}
                 onChange={(e) => setUserSearchTerm(e.target.value)}
                 className="px-3 py-1.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-purple-500"

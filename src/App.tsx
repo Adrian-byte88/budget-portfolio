@@ -3183,10 +3183,13 @@ export default function App() {
                 <Mic className="w-4 h-4" />
               </button>
               <input
+                id="ai-chat-prompt-input"
+                name="ai_chat_prompt"
                 type="text"
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 placeholder="Ask Budget Portfolio AI or command actions..."
+                aria-label="Ask Budget Portfolio AI or command actions"
                 className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500 outline-hidden text-slate-800 dark:text-slate-200 font-medium"
               />
               <button

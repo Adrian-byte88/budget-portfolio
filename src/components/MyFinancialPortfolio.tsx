@@ -789,11 +789,14 @@ export default function MyFinancialPortfolio({
                 </div>
               </div>
               <input
+                id="my-portfolio-target-allocation-slider"
+                name="my_portfolio_target_allocation"
                 type="range"
                 min="50"
                 max="95"
                 value={targetAllocation}
                 onChange={(e) => onUpdateTargetAllocation && onUpdateTargetAllocation(Number(e.target.value))}
+                aria-label="Target allocation percentage slider"
                 className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-600 outline-none transition-colors"
               />
             </div>
@@ -1181,10 +1184,13 @@ export default function MyFinancialPortfolio({
                     {isEditingRiskSleeveTargets ? (
                       <div className="flex items-center justify-end space-x-1">
                         <input
+                          id="target-cryptogold-weight-input"
+                          name="target_cryptogold_weight"
                           type="text"
                           inputMode="decimal"
                           value={targetCryptoGoldOfTotal}
                           onChange={(e) => setTargetCryptoGoldOfTotal(parseFormattedNumber(e.target.value))}
+                          aria-label="Crypto and Gold Target Weight Percentage"
                           className="w-20 px-2 py-1 text-xs font-mono text-right bg-white dark:bg-slate-800 border border-blue-500 rounded text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 font-bold"
                         />
                         <span className="text-xs text-slate-400 font-mono">%</span>
@@ -1216,10 +1222,13 @@ export default function MyFinancialPortfolio({
                     {isEditingRiskSleeveTargets ? (
                       <div className="flex items-center justify-end space-x-1">
                         <input
+                          id="target-reits-weight-input"
+                          name="target_reits_weight"
                           type="text"
                           inputMode="decimal"
                           value={targetReitOfTotal}
                           onChange={(e) => setTargetReitOfTotal(parseFormattedNumber(e.target.value))}
+                          aria-label="REITs Target Weight Percentage"
                           className="w-20 px-2 py-1 text-xs font-mono text-right bg-white dark:bg-slate-800 border border-blue-500 rounded text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 font-bold"
                         />
                         <span className="text-xs text-slate-400 font-mono">%</span>
@@ -1251,10 +1260,13 @@ export default function MyFinancialPortfolio({
                     {isEditingRiskSleeveTargets ? (
                       <div className="flex items-center justify-end space-x-1">
                         <input
+                          id="target-stocks-weight-input"
+                          name="target_stocks_weight"
                           type="text"
                           inputMode="decimal"
                           value={targetStockOfTotal}
                           onChange={(e) => setTargetStockOfTotal(parseFormattedNumber(e.target.value))}
+                          aria-label="Stocks Target Weight Percentage"
                           className="w-20 px-2 py-1 text-xs font-mono text-right bg-white dark:bg-slate-800 border border-blue-500 rounded text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 font-bold"
                         />
                         <span className="text-xs text-slate-400 font-mono">%</span>
@@ -1318,10 +1330,12 @@ export default function MyFinancialPortfolio({
             
             {/* Monthly Living Expense Baseline Input */}
             <div className="flex items-center space-x-2 bg-slate-50 dark:bg-slate-950 p-2 rounded-xl border border-slate-200 dark:border-white/10 shrink-0">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Monthly Living Expenses:</span>
+              <label htmlFor="portfolio-monthly-living-expenses-input" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer">Monthly Living Expenses:</label>
               <div className="flex items-center space-x-1">
                 <span className="text-xs font-bold text-slate-700 dark:text-slate-300">₱</span>
                 <input
+                  id="portfolio-monthly-living-expenses-input"
+                  name="portfolio_monthly_living_expenses"
                   type="text"
                   inputMode="decimal"
                   value={monthlyLivingExpensesInput}

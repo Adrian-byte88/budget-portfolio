@@ -386,8 +386,10 @@ export default function Navbar({
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Asset / Target</label>
+                        <label htmlFor="price-alert-asset" className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Asset / Target</label>
                         <select
+                          id="price-alert-asset"
+                          name="price_alert_asset"
                           value={newAsset}
                           onChange={(e) => setNewAsset(e.target.value)}
                           className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-lg text-xs p-1.5 font-bold text-slate-800 dark:text-slate-200"
@@ -402,8 +404,10 @@ export default function Navbar({
                       </div>
 
                       <div>
-                        <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Trigger Condition</label>
+                        <label htmlFor="price-alert-condition" className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Trigger Condition</label>
                         <select
+                          id="price-alert-condition"
+                          name="price_alert_condition"
                           value={newType}
                           onChange={(e) => setNewType(e.target.value as any)}
                           className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-lg text-xs p-1.5 font-bold text-slate-800 dark:text-slate-200"
@@ -418,8 +422,10 @@ export default function Navbar({
 
                     <div className="grid grid-cols-3 gap-2">
                       <div className="col-span-1">
-                        <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Threshold %</label>
+                        <label htmlFor="price-alert-threshold" className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Threshold %</label>
                         <input
+                          id="price-alert-threshold"
+                          name="price_alert_threshold"
                           type="number"
                           value={newThreshold}
                           onChange={(e) => setNewThreshold(e.target.value)}
@@ -428,8 +434,10 @@ export default function Navbar({
                         />
                       </div>
                       <div className="col-span-2">
-                        <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Notification Note</label>
+                        <label htmlFor="price-alert-note" className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Notification Note</label>
                         <input
+                          id="price-alert-note"
+                          name="price_alert_note"
                           type="text"
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}

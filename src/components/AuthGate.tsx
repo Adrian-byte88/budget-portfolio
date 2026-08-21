@@ -141,32 +141,38 @@ export default function AuthGate({ onLoginSuccess }: AuthGateProps) {
           {step === 'LOGIN' ? (
             <form onSubmit={handleCredentialsSubmit} className="space-y-6">
               <div>
-                <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-2">
+                <label htmlFor="authgate-email-input" className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-2">
                   System Authorized Email
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-3 h-4.5 w-4.5 text-slate-400" />
                   <input
+                    id="authgate-email-input"
+                    name="auth_email"
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-100 rounded-lg pl-12 pr-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 transition-all placeholder:text-slate-400"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-2">
+                <label htmlFor="authgate-password-input" className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-2">
                   User Passcode
                 </label>
                 <div className="relative">
                   <Key className="absolute left-4 top-3 h-4.5 w-4.5 text-slate-400" />
                   <input
+                    id="authgate-password-input"
+                    name="auth_password"
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-100 rounded-lg pl-12 pr-12 py-2.5 text-sm focus:outline-none focus:border-blue-500 transition-all placeholder:text-slate-400"
                   />
                   <button
@@ -182,6 +188,8 @@ export default function AuthGate({ onLoginSuccess }: AuthGateProps) {
               <div className="flex items-center justify-between">
                 <label className="flex items-center space-x-2.5 cursor-pointer">
                   <input
+                    id="authgate-biometric-checkbox"
+                    name="auth_biometric"
                     type="checkbox"
                     checked={biometricEnabled}
                     onChange={(e) => setBiometricEnabled(e.target.checked)}
@@ -229,16 +237,19 @@ export default function AuthGate({ onLoginSuccess }: AuthGateProps) {
               </div>
 
               <div>
-                <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-2 text-center">
+                <label htmlFor="authgate-otp-input" className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-2 text-center">
                   6-Digit OTP Pin Code
                 </label>
                 <input
+                  id="authgate-otp-input"
+                  name="auth_otp"
                   type="text"
                   required
                   placeholder="e.g. 123456"
                   maxLength={6}
                   value={verificationCode}
                   onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+                  autoComplete="one-time-code"
                   className="w-full text-center tracking-widest font-mono text-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-100 rounded-lg py-3 focus:outline-none focus:border-blue-500 transition-all"
                 />
               </div>

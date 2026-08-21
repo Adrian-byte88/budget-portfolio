@@ -182,8 +182,10 @@ export default function SocialFamilyHub({
               <h4 className="text-xs font-bold text-blue-600 dark:text-teal-400 uppercase tracking-wider">Establish family target standard</h4>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5">Target Title</label>
+                  <label htmlFor="family-goal-title-input" className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5">Target Title</label>
                   <input
+                    id="family-goal-title-input"
+                    name="family_goal_title"
                     type="text"
                     required
                     placeholder="e.g. Travel, Emergency, Car buy..."
@@ -194,6 +196,8 @@ export default function SocialFamilyHub({
                 </div>
                 <div>
                   <SmartCalculatorInput
+                    id="family-goal-size-input"
+                    name="family_goal_size"
                     label="Goal Size (PHP)"
                     placeholder="e.g. 50000"
                     value={goalTarget}
@@ -201,8 +205,10 @@ export default function SocialFamilyHub({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5">Target Deadline</label>
+                  <label htmlFor="family-goal-deadline-input" className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5">Target Deadline</label>
                   <input
+                    id="family-goal-deadline-input"
+                    name="family_goal_deadline"
                     type="date"
                     required
                     value={goalDeadline}
@@ -355,10 +361,12 @@ export default function SocialFamilyHub({
             ) : (
               <form onSubmit={handleJoinGroup} className="space-y-3">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest block mb-1">
+                  <label htmlFor="family-invite-code-input" className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest block mb-1">
                     Enter Vault Invite Code
                   </label>
                   <input
+                    id="family-invite-code-input"
+                    name="family_invite_code"
                     type="text"
                     value={inputCode}
                     onChange={(e) => setInputCode(e.target.value.toUpperCase())}
@@ -432,8 +440,10 @@ export default function SocialFamilyHub({
 
               <form onSubmit={handleEditSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5">Goal Title</label>
+                  <label htmlFor="family-edit-title-input" className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5">Goal Title</label>
                   <input
+                    id="family-edit-title-input"
+                    name="family_edit_title"
                     type="text"
                     required
                     value={editTitle}
@@ -444,6 +454,8 @@ export default function SocialFamilyHub({
 
                 <div>
                   <SmartCalculatorInput
+                    id="family-edit-target-input"
+                    name="family_edit_target"
                     label="Target Size (PHP)"
                     value={editTargetPHP}
                     onChange={setEditTargetPHP}
@@ -452,6 +464,8 @@ export default function SocialFamilyHub({
 
                 <div>
                   <SmartCalculatorInput
+                    id="family-edit-current-input"
+                    name="family_edit_current"
                     label="Current Saved Amount (PHP)"
                     value={editCurrentPHP}
                     onChange={setEditCurrentPHP}
@@ -459,8 +473,10 @@ export default function SocialFamilyHub({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5">Target Deadline</label>
+                  <label htmlFor="family-edit-deadline-input" className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5">Target Deadline</label>
                   <input
+                    id="family-edit-deadline-input"
+                    name="family_edit_deadline"
                     type="date"
                     required
                     value={editDeadline}

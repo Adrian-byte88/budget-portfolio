@@ -488,10 +488,12 @@ export default function TransactionHistoryTab({
       {isAddingTx && (
         <form onSubmit={handleAddTx} className="p-6 bg-white dark:bg-slate-900 border border-blue-500/30 rounded-2xl shadow-md grid grid-cols-1 md:grid-cols-5 gap-4 items-end animate-fade-in">
           <div className="space-y-1 md:col-span-1">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Date</label>
+            <label htmlFor="tx-date-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Date</label>
             <div className="relative">
               <Calendar className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
               <input
+                id="tx-date-input"
+                name="tx_date"
                 type="date"
                 required
                 value={newDate}
@@ -502,8 +504,10 @@ export default function TransactionHistoryTab({
           </div>
 
           <div className="space-y-1 md:col-span-1">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Asset / Registry</label>
+            <label htmlFor="tx-asset-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Asset / Registry</label>
             <input
+              id="tx-asset-input"
+              name="tx_asset"
               type="text"
               required
               placeholder="e.g. HYS Savings"
@@ -514,8 +518,10 @@ export default function TransactionHistoryTab({
           </div>
 
           <div className="space-y-1 md:col-span-1">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Type</label>
+            <label htmlFor="tx-type-select" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Type</label>
             <select
+              id="tx-type-select"
+              name="tx_type"
               value={newType}
               onChange={(e) => setNewType(e.target.value)}
               className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 outline-hidden text-slate-800 dark:text-slate-200"
@@ -533,8 +539,10 @@ export default function TransactionHistoryTab({
           </div>
 
           <div className="space-y-1 md:col-span-1">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Amount</label>
+            <label htmlFor="tx-amount-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Amount</label>
             <input
+              id="tx-amount-input"
+              name="tx_amount"
               type="text"
               required
               placeholder="e.g. 10000 or Proportional 20%"
@@ -545,8 +553,10 @@ export default function TransactionHistoryTab({
           </div>
 
           <div className="space-y-1 md:col-span-1">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Details / Notes</label>
+            <label htmlFor="tx-details-input" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Details / Notes</label>
             <input
+              id="tx-details-input"
+              name="tx_details"
               type="text"
               required
               placeholder="e.g. Salary-based cash injection"
@@ -582,8 +592,11 @@ export default function TransactionHistoryTab({
           <div className="relative w-full md:w-80">
             <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
             <input
+              id="tx-search-filter-input"
+              name="tx_search_filter"
               type="text"
               placeholder="Search assets, details, dates..."
+              aria-label="Search transaction history"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs focus:ring-1 focus:ring-blue-500 outline-hidden text-slate-800 dark:text-slate-200"

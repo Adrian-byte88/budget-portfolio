@@ -4,6 +4,7 @@ import { safeEvaluate, parseFormattedNumber } from '../utils/mathParser';
 
 interface SmartCalculatorInputProps {
   id?: string;
+  name?: string;
   value: string;
   onChange: (val: string) => void;
   placeholder?: string;
@@ -15,6 +16,7 @@ interface SmartCalculatorInputProps {
 
 export default function SmartCalculatorInput({
   id,
+  name,
   value,
   onChange,
   placeholder = '0',
@@ -23,6 +25,9 @@ export default function SmartCalculatorInput({
   currencySymbol = '₱',
   disabled = false,
 }: SmartCalculatorInputProps) {
+  const generatedId = React.useId();
+  const inputId = id || `smart-calc-${generatedId.replace(/:/g, '')}`;
+  const inputName = name || inputId;
   const [isOpen, setIsOpen] = useState(false);
   const [calcExpr, setCalcExpr] = useState(value);
   const [realtimeEval, setRealtimeEval] = useState<number | null>(null);
@@ -118,7 +123,7 @@ export default function SmartCalculatorInput({
   return (
     <div ref={containerRef} className="relative w-full font-sans">
       {label && (
-        <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5">
+        <label htmlFor={inputId} className="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5">
           {label}
         </label>
       )}
@@ -130,11 +135,13 @@ export default function SmartCalculatorInput({
           </span>
         )}
         <input
-          id={id}
+          id={inputId}
+          name={inputName}
           type="text"
           value={isOpen ? calcExpr : value}
           onChange={handleInputChange}
           placeholder={placeholder}
+          aria-label={label || placeholder || 'Amount input'}
           disabled={disabled}
           className={`${currencySymbol ? 'pl-7' : 'px-3'} pr-10 py-2 w-full ${disabled ? 'bg-slate-100 dark:bg-slate-900/60 text-slate-400 cursor-not-allowed opacity-75' : 'bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-200'} border border-slate-200 dark:border-white/10 rounded-lg text-xs font-mono focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all ${className}`}
         />

@@ -306,10 +306,12 @@ export default function PricingPlanTab({
         {/* Quick GCash Reference Form */}
         <form onSubmit={handleDirectSubmit} className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
           <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+            <label htmlFor="gcash-ref-number-input" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
               GCash Reference Number
             </label>
             <input
+              id="gcash-ref-number-input"
+              name="gcash_reference_number"
               type="text"
               required
               placeholder="e.g. 2026080112345"
@@ -320,14 +322,17 @@ export default function PricingPlanTab({
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+            <label htmlFor="gcash-sender-name-input" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
               Sender Name (Optional)
             </label>
             <input
+              id="gcash-sender-name-input"
+              name="gcash_sender_name"
               type="text"
               placeholder="Your GCash Name"
               value={senderName}
               onChange={(e) => setSenderName(e.target.value)}
+              autoComplete="name"
               className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>

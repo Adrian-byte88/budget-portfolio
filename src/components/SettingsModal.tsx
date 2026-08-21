@@ -271,9 +271,11 @@ export default function SettingsModal({
                     </div>
                   )}
 
-                  <label className="absolute -bottom-2 -right-2 p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg cursor-pointer transition-transform group-hover:scale-105">
+                  <label htmlFor="settings-avatar-upload-input" className="absolute -bottom-2 -right-2 p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg cursor-pointer transition-transform group-hover:scale-105" title="Upload avatar image">
                     <Camera className="w-4 h-4" />
                     <input
+                      id="settings-avatar-upload-input"
+                      name="avatar_image_file"
                       type="file"
                       accept="image/*"
                       onChange={handleImageUpload}
@@ -330,27 +332,33 @@ export default function SettingsModal({
               {/* Editable Fields */}
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  <label htmlFor="settings-display-name-input" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                     Display Name / Account Owner
                   </label>
                   <input
+                    id="settings-display-name-input"
+                    name="display_name"
                     type="text"
                     required
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
+                    autoComplete="name"
                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-xs text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  <label htmlFor="settings-email-display-input" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                     Email Address (Verified Account)
                   </label>
                   <div className="relative">
                     <input
+                      id="settings-email-display-input"
+                      name="account_email"
                       type="email"
                       disabled
                       value={email}
+                      autoComplete="email"
                       className="w-full bg-slate-100 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 rounded-xl px-4 py-2.5 text-xs text-slate-500 dark:text-slate-400 font-mono cursor-not-allowed"
                     />
                     <span className="absolute right-3 top-2.5 px-2 py-0.5 bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold uppercase rounded-md flex items-center gap-1">
@@ -469,12 +477,15 @@ export default function SettingsModal({
 
                 <div className="flex items-center space-x-4 pt-1">
                   <input
+                    id="settings-target-allocation-range"
+                    name="settings_target_allocation"
                     type="range"
                     min="50"
                     max="95"
                     step="5"
                     value={targetAllocation}
                     onChange={(e) => onUpdateTargetAllocation(Number(e.target.value))}
+                    aria-label="Target Safe Reserve Allocation Percentage"
                     className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-600"
                   />
                 </div>
@@ -545,15 +556,17 @@ export default function SettingsModal({
               <div className="p-5 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-white/5 rounded-2xl space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
+                    <label htmlFor="settings-notifications-checkbox" className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2 cursor-pointer">
                       <Bell className="w-4 h-4 text-blue-500" />
                       <span>Market & Budget Alerts</span>
-                    </h4>
+                    </label>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">
                       Receive notifications for price movements and expense threshold breaches
                     </p>
                   </div>
                   <input
+                    id="settings-notifications-checkbox"
+                    name="settings_notifications_enabled"
                     type="checkbox"
                     checked={notificationsEnabled}
                     onChange={(e) => setNotificationsEnabled(e.target.checked)}
@@ -563,15 +576,17 @@ export default function SettingsModal({
 
                 <div className="border-t border-slate-200/60 dark:border-white/5 pt-3 flex items-center justify-between">
                   <div>
-                    <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
+                    <label htmlFor="settings-autosync-checkbox" className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2 cursor-pointer">
                       <RefreshCw className="w-4 h-4 text-emerald-500" />
                       <span>Automated Cloud Sync</span>
-                    </h4>
+                    </label>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">
                       Periodically push local financial records to Firestore backend
                     </p>
                   </div>
                   <input
+                    id="settings-autosync-checkbox"
+                    name="settings_autosync_enabled"
                     type="checkbox"
                     checked={autoSyncEnabled}
                     onChange={(e) => setAutoSyncEnabled(e.target.checked)}

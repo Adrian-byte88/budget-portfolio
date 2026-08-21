@@ -455,8 +455,11 @@ export default function AdminPortal({
               <div className="relative">
                 <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
+                  id="admin-verification-filter-input"
+                  name="admin_verification_filter"
                   type="text"
                   placeholder="Filter by email or Ref #..."
+                  aria-label="Filter verification queue by email or reference number"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-9 pr-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-purple-500 shadow-2xs"
@@ -630,12 +633,15 @@ export default function AdminPortal({
 
             <form onSubmit={handleManualProActivate} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Target User Email Address</label>
+                <label htmlFor="admin-activator-email-input" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Target User Email Address</label>
                 <input
+                  id="admin-activator-email-input"
+                  name="admin_target_user_email"
                   type="email"
                   value={activatorEmail}
                   onChange={(e) => setActivatorEmail(e.target.value)}
                   placeholder="user@example.com"
+                  autoComplete="email"
                   className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-purple-500 outline-none"
                   required
                 />

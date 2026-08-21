@@ -77,12 +77,15 @@ export default function SignInPanel({ onSignIn, onClose, onBack }: SignInPanelPr
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isResetMode && (
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email Address</label>
+              <label htmlFor="signin-email-input" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email Address</label>
               <input
+                id="signin-email-input"
+                name="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@example.com"
+                autoComplete="email"
                 className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 required
               />
@@ -91,12 +94,15 @@ export default function SignInPanel({ onSignIn, onClose, onBack }: SignInPanelPr
 
           {!isResetMode && (
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Password</label>
+              <label htmlFor="signin-password-input" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Password</label>
               <input
+                id="signin-password-input"
+                name="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
+                autoComplete={isSignUpMode ? "new-password" : "current-password"}
                 className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 required
               />

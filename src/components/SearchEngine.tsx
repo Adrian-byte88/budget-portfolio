@@ -306,12 +306,15 @@ export default function SearchEngine({ assets, expenses, goals, budgets, transac
           <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 transition-colors shrink-0" />
           <input 
             ref={inputRef}
+            id="global-search-engine-input"
+            name="global_search_query"
             type="text" 
             value={query}
             onChange={(e) => { setQuery(e.target.value); setIsOpen(true); }}
             onFocus={() => setIsOpen(true)}
             onKeyDown={handleKeyDownInput}
             placeholder="Search tabs, sections..."
+            aria-label="Search tabs, sections, assets and transactions"
             className="bg-transparent border-none outline-none text-xs w-full text-slate-700 dark:text-slate-200 placeholder:text-slate-400 truncate"
           />
         </div>
