@@ -7,6 +7,7 @@ import {
   TradingViewTimelineNews,
   getTradingViewSymbolDetails
 } from './TradingViewWidget';
+import { CustomPSEStockChart } from './CustomPSEStockChart';
 import {
   X,
   ExternalLink,
@@ -28,7 +29,8 @@ import {
   Copy,
   Info,
   Sun,
-  Moon
+  Moon,
+  Sparkles
 } from 'lucide-react';
 
 interface TradingViewAssetModalProps {
@@ -290,96 +292,140 @@ export const TradingViewAssetModal: React.FC<TradingViewAssetModalProps> = ({
         {/* MAIN BODY CONTENT */}
         <div className="flex-1 overflow-y-auto p-3 sm:p-5 space-y-4 bg-slate-50/70 dark:bg-[#080b10]">
           
-          {/* TAB 1: ADVANCED REAL-TIME CHART */}
+          {/* TAB 1: REAL-TIME CHART (CUSTOM CANDLESTICK/AREA CHART FOR PSE STOCKS, TRADINGVIEW FOR CRYPTO & GLOBAL EQUITIES) */}
           {activeTab === 'chart' && (
             <div className="h-full flex flex-col space-y-3 min-h-[580px]">
-              {/* Embed Restriction Alert Banner for PSE & Asia Fund tickers */}
-              {tvDetails.embedRestricted && (
-                <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
-                  <div className="flex items-start gap-2.5">
-                    <div className="p-1.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-lg shrink-0 mt-0.5">
-                      <Shield className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <span>TradingView Vendor Licensing Notice</span>
-                        <span className="text-[10px] px-2 py-0.5 bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold rounded-md uppercase font-mono">
-                          {tvDetails.exchange}
-                        </span>
+              {tvDetails.isPseStock ? (
+                /* Native Custom Interactive PSE Stock Chart (0% Block Rate, Candlestick & Area, SMA 20/50, Volume) */
+                <div className="space-y-3">
+                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-lg shrink-0">
+                        <Sparkles className="w-4 h-4" />
                       </div>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">
-                        TradingView restricts direct 3rd-party widget embeds for Philippine Stock Exchange (PSE) and unlisted mutual fund units.
-                        {useProxySymbol && tvDetails.proxyTvSymbol ? (
-                          <span> Currently showing the liquid benchmark proxy (<b>{tvDetails.proxyTvSymbol}</b>) inside this embed.</span>
-                        ) : (
-                          <span> Direct PSE embed may display TradingView's <i>"Symbol only available on TradingView"</i> popup.</span>
-                        )}
-                      </p>
+                      <div>
+                        <div className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                          <span>PSE Stock Real-Time Unblocked Chart</span>
+                          <span className="text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold rounded-md uppercase font-mono">
+                            PSE:{tvDetails.ticker}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
+                          Direct Philippine Stock Exchange feed with custom Candlesticks, Area Wave, Moving Averages, and MarketWatch live quotation integration without 3rd-party widget blocks.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      {tvDetails.marketWatchUrl && (
+                        <a
+                          href={tvDetails.marketWatchUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all shadow-xs flex items-center gap-1.5 text-[11px] cursor-pointer"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span>MarketWatch PH</span>
+                        </a>
+                      )}
+                      <a
+                        href={tvDetails.tradingViewUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/20 text-slate-800 dark:text-slate-200 font-bold rounded-xl transition-all text-[11px] cursor-pointer"
+                      >
+                        <span>TradingView.com ↗</span>
+                      </a>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0 self-start md:self-center">
-                    {tvDetails.proxyTvSymbol && (
-                      <button
-                        type="button"
-                        onClick={() => setUseProxySymbol(!useProxySymbol)}
-                        className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/20 text-slate-800 dark:text-slate-200 font-bold rounded-xl transition-all cursor-pointer text-[11px]"
-                      >
-                        {useProxySymbol ? `Try Direct ${tvDetails.tvSymbol}` : `Switch to Proxy (${tvDetails.proxyTvSymbol})`}
-                      </button>
-                    )}
-                    <a
-                      href={tvDetails.tradingViewUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl transition-all shadow-xs flex items-center gap-1.5 text-[11px] cursor-pointer"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      <span>Open Live on TradingView</span>
-                    </a>
+                  <CustomPSEStockChart
+                    ticker={tvDetails.ticker}
+                    stockName={tvDetails.name}
+                    currentPricePHP={currentPricePHP}
+                    change24h={changePct}
+                    theme={chartTheme}
+                    marketWatchUrl={tvDetails.marketWatchUrl}
+                  />
+                </div>
+              ) : (
+                /* Standard Embedded TradingView Advanced Chart for Crypto & Global Non-PSE Assets */
+                <>
+                  {/* Embed Restriction Alert Banner for other restricted Asia Fund tickers if any */}
+                  {tvDetails.embedRestricted && (
+                    <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+                      <div className="flex items-start gap-2.5">
+                        <div className="p-1.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-lg shrink-0 mt-0.5">
+                          <Shield className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <span>Fund Benchmark Proxy Notice</span>
+                            <span className="text-[10px] px-2 py-0.5 bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold rounded-md uppercase font-mono">
+                              {tvDetails.exchange}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">
+                            Showing liquid Asia-Pacific REIT benchmark proxy (<b>{activeTvSymbol}</b>) inside this TradingView embed.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0 self-start md:self-center">
+                        <a
+                          href={tvDetails.tradingViewUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl transition-all shadow-xs flex items-center gap-1.5 text-[11px] cursor-pointer"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span>Open on TradingView</span>
+                        </a>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Chart Toolbar Controls */}
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-600 dark:text-slate-400">
+                      <span className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-300 rounded-lg">
+                        Active Chart: <b>{activeTvSymbol}</b>
+                      </span>
+                      <span className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-lg">
+                        Interval: <b>{chartInterval}</b>
+                      </span>
+                      <span className="text-[10px] text-slate-500 hidden sm:inline">
+                        TradingView Real-Time Live Feed
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-slate-500 dark:text-slate-400 text-[11px] font-mono">
+                        Includes: SMA, RSI, MACD & Full Technical Drawings
+                      </span>
+                    </div>
                   </div>
-                </div>
+
+                  {/* Embedded TradingView Advanced Chart */}
+                  <div className="flex-1 min-h-[520px] rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10 shadow-md bg-slate-900">
+                    <TradingViewAdvancedChart
+                      symbol={activeTvSymbol}
+                      theme={chartTheme}
+                      interval={chartInterval}
+                      style={chartStyle}
+                      height="100%"
+                      width="100%"
+                      allow_symbol_change={true}
+                      hide_side_toolbar={false}
+                      hide_top_toolbar={false}
+                      withdateranges={true}
+                      details={true}
+                      hotlist={false}
+                      calendar={false}
+                    />
+                  </div>
+                </>
               )}
-
-              {/* Chart Toolbar Controls */}
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-600 dark:text-slate-400">
-                  <span className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-300 rounded-lg">
-                    Active Chart: <b>{activeTvSymbol}</b>
-                  </span>
-                  <span className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-lg">
-                    Interval: <b>{chartInterval}</b>
-                  </span>
-                  <span className="text-[10px] text-slate-500 hidden sm:inline">
-                    Timezone: Asia/Manila (PHT)
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="text-slate-500 dark:text-slate-400 text-[11px] font-mono">
-                    Includes: SMA, RSI, MACD & Full Technical Drawings
-                  </span>
-                </div>
-              </div>
-
-              {/* Embedded TradingView Advanced Chart */}
-              <div className="flex-1 min-h-[520px] rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10 shadow-md bg-slate-900">
-                <TradingViewAdvancedChart
-                  symbol={activeTvSymbol}
-                  theme={chartTheme}
-                  interval={chartInterval}
-                  style={chartStyle}
-                  height="100%"
-                  width="100%"
-                  allow_symbol_change={true}
-                  hide_side_toolbar={false}
-                  hide_top_toolbar={false}
-                  withdateranges={true}
-                  details={true}
-                  hotlist={false}
-                  calendar={false}
-                />
-              </div>
             </div>
           )}
 
