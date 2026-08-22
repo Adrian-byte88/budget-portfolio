@@ -199,37 +199,7 @@ export function detectTransactionOrigin(
   };
 }
 
-export const INITIAL_HISTORICAL_TXS: HistoricalTx[] = [
-  { id: 'h-1', date: '2025-12-29', asset: 'Time Deposit', type: 'Buy', amount: '₱60,000.00', details: 'Initial Placement (Accrued).' },
-  { id: 'h-2', date: '2025-12-29', asset: 'PAX Gold', type: 'Buy', amount: '₱10,000.00', details: 'Initial commodity hedge.' },
-  { id: 'h-3', date: '2025-12-30', asset: 'Bitcoin', type: 'Buy', amount: '₱10,000.00', details: 'Initial GCrypto entry.' },
-  { id: 'h-4', date: '2026-02-24', asset: 'PAX Gold', type: 'Sell', amount: '-₱1,000.00', details: 'Tactical trim.' },
-  { id: 'h-5', date: '2026-03-02', asset: 'PAX Gold', type: 'Sell', amount: '-₱1,000.00', details: 'Profit take.' },
-  { id: 'h-6', date: '2026-03-03', asset: 'Manulife Asia Pacific REIT Fund of Funds', type: 'Buy', amount: '₱10,000.00', details: 'Asia-Pacific REIT Entry.' },
-  { id: 'h-7', date: '2026-03-04', asset: 'Bond', type: 'Buy', amount: '₱25,000.00', details: 'Principal locked.' },
-  { id: 'h-8', date: '2026-03-11', asset: 'PAX Gold', type: 'Buy', amount: '+₱12,000.00', details: 'Major scale-in.' },
-  { id: 'h-9', date: '2026-04-08', asset: 'HYS Savings', type: 'Deposit', amount: '+₱1,000.00', details: 'Shield hardening.' },
-  { id: 'h-10', date: '2026-04-10', asset: 'HYS Savings', type: 'Deposit', amount: '+₱30,000.00', details: 'Major liquidity injection.' },
-  { id: 'h-11', date: '2026-04-14', asset: 'HYS Savings', type: 'Deposit', amount: '+₱10,000.00', details: 'Shield consolidation.' },
-  { id: 'h-12', date: '2026-04-21', asset: 'Income Assets', type: 'Buy', amount: '₱7,493.07', details: 'DragonFi entry (RCR, SCC, SPC).' },
-  { id: 'h-13', date: '2026-04-27', asset: 'BTC', type: 'Buy', amount: '+₱316.00', details: 'Micro-Sizing execution.' },
-  { id: 'h-14', date: '2026-04-27', asset: 'PAX Gold', type: 'Buy', amount: '+₱633.00', details: 'Micro-Sizing execution.' },
-  { id: 'h-15', date: '2026-04-28', asset: 'Strategy', type: 'Pivot', amount: 'Proportional 20%', details: 'Pivot to 80/20 Salary Funding model.' },
-  { id: 'h-16', date: '2026-04-29', asset: 'HYS Savings', type: 'Deposit', amount: '+₱10,000.00', details: 'Independent liquidity addition.' },
-  { id: 'h-17', date: '2026-05-17', asset: 'HYS Savings', type: 'Deposit', amount: '+₱43,000.00', details: 'Massive Shield Hardening Inflow (Cash).' },
-  { id: 'h-18', date: '2026-05-30', asset: 'HYS Savings', type: 'Deposit', amount: '+₱11,000.00', details: 'Liquidity sync / surplus placement.' },
-  { id: 'h-19', date: '2026-06-03', asset: 'Bond (June 3)', type: 'Liquidate', amount: '-₱25,350.00', details: 'Bond matured at yield ceiling. Full liquidation.' },
-  { id: 'h-20', date: '2026-06-03', asset: 'HYS Savings', type: 'Transfer', amount: '+₱25,350.00', details: 'Matured bond proceeds.' },
-  { id: 'h-21', date: '2026-06-03', asset: 'Time Deposit', type: 'Buy', amount: '-₱100,000.00', details: '6-Month Placement (6% p.a., matures Dec 3, 2026).' },
-  { id: 'h-22', date: '2026-06-03', asset: 'HYS Savings', type: 'Withdraw', amount: '-₱100,000.00', details: 'Consolidated HYS capital transfer to Time Deposit.' },
-  { id: 'h-23', date: '2026-06-09', asset: 'HYS Savings', type: 'Deposit', amount: '+₱8,500.00', details: 'Cash deposit; initial HYS rate change.' },
-  { id: 'h-24', date: '2026-06-11', asset: 'HYS Savings', type: 'Withdraw', amount: '-₱10,000.00', details: 'Capital withdrawal for private loan.' },
-  { id: 'h-25', date: '2026-06-11', asset: 'Personal Loan', type: 'Lend', amount: '+₱10,000.00', details: '1-Month cash loan to friend (5% fixed interest, matures Jul 11).' },
-  { id: 'h-26', date: '2026-06-16', asset: 'HYS Savings', type: 'Deposit', amount: '+₱11,500.00', details: 'Cash deposit; HYS interest rate consolidated to 5% p.a.' },
-  { id: 'h-27', date: '2026-06-21', asset: 'HYS Savings', type: 'Withdraw', amount: '-₱3,000.00', details: 'Capital withdrawal from savings reserves.' },
-  { id: 'h-28', date: '2026-06-29', asset: 'Time Deposit', type: 'Maturity', amount: '+₱1,271.51', details: 'Dec 29 TD matured at 4.25% p.a. holding in matured pending status.' },
-  { id: 'h-29', date: '2026-07-02', asset: 'HYS Savings', type: 'Deposit', amount: '+₱10,000.00', details: 'Salary-based cash injection; Safe Shield consolidation.' }
-];
+export const INITIAL_HISTORICAL_TXS: HistoricalTx[] = [];
 
 export interface TransactionHistoryTabProps {
   transactions?: HistoricalTx[];

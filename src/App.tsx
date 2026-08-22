@@ -70,148 +70,17 @@ export interface AppToast {
 }
 
 const DEFAULT_BUDGETS: BudgetLimit[] = [
-  { category: 'Lifestyle', limitPHP: 4050, spentPHP: 0 },
-  { category: 'Rent & Utilities', limitPHP: 700, spentPHP: 0 },
-  { category: 'Travel / Fuel', limitPHP: 1600, spentPHP: 0 },
-  { category: 'Shopping', limitPHP: 500, spentPHP: 0 },
-  { category: 'Food & Dining', limitPHP: 500, spentPHP: 0 },
-  { category: 'Other', limitPHP: 500, spentPHP: 0 },
+  { category: 'Lifestyle', limitPHP: 0, spentPHP: 0 },
+  { category: 'Rent & Utilities', limitPHP: 0, spentPHP: 0 },
+  { category: 'Travel / Fuel', limitPHP: 0, spentPHP: 0 },
+  { category: 'Shopping', limitPHP: 0, spentPHP: 0 },
+  { category: 'Food & Dining', limitPHP: 0, spentPHP: 0 },
+  { category: 'Other', limitPHP: 0, spentPHP: 0 },
 ];
 
 const FREE_ALLOWED_TABS = ['home', 'pricing', 'ledger', 'social', 'transactions'] as const;
 
-const DEFAULT_INITIAL_ASSETS: AssetPosition[] = [
-  {
-    key: 'available_cash',
-    name: 'Available Cash Reserve',
-    class: 'safe',
-    assetType: 'cash',
-    platform: 'Primary Operating Bank',
-    units: 0,
-    currentPricePHP: 1,
-    costBasisPHP: 0,
-    yieldPercent: 0,
-    yieldFrequency: 'annual',
-    withholdingTaxPercent: 0,
-    change24h: 0.00
-  },
-  {
-    key: 'hys',
-    name: 'Maya High-Yield Savings (5% HYS)',
-    class: 'safe',
-    assetType: 'deposit',
-    platform: 'Maya Bank',
-    units: 250000,
-    currentPricePHP: 1,
-    costBasisPHP: 250000,
-    yieldPercent: 5.0,
-    yieldFrequency: 'annual',
-    withholdingTaxPercent: 20,
-    change24h: 0.05
-  },
-  {
-    key: 'tbills',
-    name: 'Philippine Treasury Bills (T-Bills)',
-    class: 'safe',
-    assetType: 'deposit',
-    platform: 'BDO Trust / Bureau of Treasury',
-    units: 150000,
-    currentPricePHP: 1,
-    costBasisPHP: 150000,
-    yieldPercent: 5.75,
-    yieldFrequency: 'annual',
-    withholdingTaxPercent: 20,
-    change24h: 0.01
-  },
-  {
-    key: 'paxg',
-    name: 'Pax Gold (PAXG) - Physical Bullion',
-    class: 'risk',
-    platform: 'Binance / Secure Vault',
-    units: 1.5,
-    currentPricePHP: 237386.23,
-    costBasisPHP: 135000,
-    assetType: 'crypto',
-    change24h: 0.85
-  },
-  {
-    key: 'btc',
-    name: 'Bitcoin (BTC) Treasury Reserve',
-    class: 'risk',
-    platform: 'Cold Storage Vault',
-    units: 0.12,
-    currentPricePHP: 3800000,
-    costBasisPHP: 384000,
-    assetType: 'crypto',
-    change24h: 2.14
-  },
-  {
-    key: 'scc',
-    name: 'Semirara Mining & Power (SCC)',
-    class: 'risk',
-    platform: 'COL Financial',
-    units: 5000,
-    currentPricePHP: 20.80,
-    costBasisPHP: 150000,
-    assetType: 'equity',
-    change24h: -1.19
-  },
-  {
-    key: 'spc',
-    name: 'SPC Power Corporation (SPC)',
-    class: 'risk',
-    platform: 'DragonFi / COL Financial',
-    units: 10000,
-    currentPricePHP: 10.28,
-    costBasisPHP: 98500,
-    assetType: 'equity',
-    change24h: 0.00
-  },
-  {
-    key: 'rcr',
-    name: 'RL Commercial REIT (RCR)',
-    class: 'risk',
-    platform: 'First Metro Sec',
-    units: 20000,
-    currentPricePHP: 7.16,
-    costBasisPHP: 102000,
-    assetType: 'equity',
-    change24h: -0.28
-  },
-  {
-    key: 'manulife',
-    name: 'Manulife Asia Pacific REIT Fund of Funds',
-    class: 'risk',
-    platform: 'Manulife Trust',
-    units: 2000,
-    currentPricePHP: 50.47,
-    costBasisPHP: 100000,
-    assetType: 'equity',
-    change24h: 0.00
-  },
-  {
-    key: 'realestate',
-    name: 'Primary Residential Property',
-    class: 'physical',
-    platform: 'Taguig City',
-    units: 1,
-    currentPricePHP: 4500000,
-    costBasisPHP: 4000000,
-    assetType: 'property',
-    change24h: 0.00
-  },
-  {
-    key: 'mortgage',
-    name: 'Bank Home Mortgage Loan',
-    class: 'liability',
-    platform: 'Metrobank',
-    units: 1,
-    currentPricePHP: 1200000,
-    costBasisPHP: 1200000,
-    assetType: 'liability',
-    change24h: 0.00
-  }
-];
+const DEFAULT_INITIAL_ASSETS: AssetPosition[] = [];
 
 const DEFAULT_ALERTS: MarketAlert[] = [];
 
@@ -641,7 +510,7 @@ export default function App() {
   useEffect(() => {
     if (!email) {
       const localGuestAssets = localStorage.getItem('wealth_vault_assets_guest');
-      let guestAssets = DEFAULT_INITIAL_ASSETS;
+      let guestAssets: AssetPosition[] = [];
       if (localGuestAssets) {
         try {
           const parsed = JSON.parse(localGuestAssets);
@@ -660,15 +529,15 @@ export default function App() {
       }
       setAssets(guestAssets);
       setExpenses([]);
-      setTransactions(INITIAL_HISTORICAL_TXS);
+      setTransactions([]);
       setGoals([]);
       setBudgets(DEFAULT_BUDGETS);
-      setCycleItems(INITIAL_CYCLE_ITEMS);
-      setDevaluationItems(INITIAL_DEVALUATION_ITEMS);
-      setDevaluationTactics('🛡️ USD Defense Tactics: Crypto positions (BTC) and Commodities (PAX Gold) act as proxy hedges, effectively minimizing raw PHP purchasing power devaluations.');
-      setAuditChanges(INITIAL_AUDIT_CHANGES);
-      setDeploymentItems(INITIAL_DEPLOYMENT_ITEMS);
-      setBudgetCap('Budget Cap: ₱20,000 Total (100% Allocation to Safe Shield, unchanged mandate)');
+      setCycleItems([]);
+      setDevaluationItems([]);
+      setDevaluationTactics('');
+      setAuditChanges([]);
+      setDeploymentItems([]);
+      setBudgetCap('');
       return;
     }
 
@@ -687,7 +556,7 @@ export default function App() {
         const data = docSnap.data();
         isRemoteUpdate.current = true;
 
-        const rawAssets: AssetPosition[] = Array.isArray(data.assets) ? data.assets : (isAdmin ? DEFAULT_INITIAL_ASSETS : []);
+        const rawAssets: AssetPosition[] = Array.isArray(data.assets) ? data.assets : [];
         const userAssets = rawAssets.map(a => {
           if (a.key === 'paxg' || a.name.toLowerCase().includes('pax gold') || a.name.toLowerCase().includes('gold')) {
             return { ...a, class: 'risk' as const, assetType: 'crypto' as const };
@@ -698,15 +567,15 @@ export default function App() {
           return a;
         });
         const userExpenses = Array.isArray(data.expenses) ? data.expenses : [];
-        const userTransactions = Array.isArray(data.transactions) ? data.transactions : (isAdmin ? INITIAL_HISTORICAL_TXS : []);
+        const userTransactions = Array.isArray(data.transactions) ? data.transactions : [];
         const userGoals = Array.isArray(data.goals) ? data.goals : [];
         const userBudgets = Array.isArray(data.budgets) ? data.budgets : DEFAULT_BUDGETS.map(b => ({ ...b, spentPHP: 0 }));
-        const userCycleItems = Array.isArray(data.cycleItems) ? data.cycleItems : (isAdmin ? INITIAL_CYCLE_ITEMS : []);
-        const userDevaluationItems = Array.isArray(data.devaluationItems) ? data.devaluationItems : (isAdmin ? INITIAL_DEVALUATION_ITEMS : []);
-        const userDevaluationTactics = data.devaluationTactics !== undefined ? data.devaluationTactics : (isAdmin ? '🛡️ USD Defense Tactics: Crypto positions (BTC) and Commodities (PAX Gold) act as proxy hedges, effectively minimizing raw PHP purchasing power devaluations.' : '');
-        const userAuditChanges = Array.isArray(data.auditChanges) ? data.auditChanges : (isAdmin ? INITIAL_AUDIT_CHANGES : []);
-        const userDeploymentItems = Array.isArray(data.deploymentItems) ? data.deploymentItems : (isAdmin ? INITIAL_DEPLOYMENT_ITEMS : []);
-        const userBudgetCap = data.budgetCap !== undefined ? data.budgetCap : (isAdmin ? 'Budget Cap: ₱20,000 Total (100% Allocation to Safe Shield, unchanged mandate)' : '');
+        const userCycleItems = Array.isArray(data.cycleItems) ? data.cycleItems : [];
+        const userDevaluationItems = Array.isArray(data.devaluationItems) ? data.devaluationItems : [];
+        const userDevaluationTactics = data.devaluationTactics !== undefined ? data.devaluationTactics : '';
+        const userAuditChanges = Array.isArray(data.auditChanges) ? data.auditChanges : [];
+        const userDeploymentItems = Array.isArray(data.deploymentItems) ? data.deploymentItems : [];
+        const userBudgetCap = data.budgetCap !== undefined ? data.budgetCap : '';
 
         setAssets(userAssets);
         setExpenses(userExpenses);
@@ -771,7 +640,7 @@ export default function App() {
         // Document does not exist in Firestore for this user
         // Check user-scoped localStorage fallback
         const localAssets = localStorage.getItem(`wealth_vault_assets_${email}`);
-        let initAssets = isAdmin ? DEFAULT_INITIAL_ASSETS : [];
+        let initAssets: AssetPosition[] = [];
         if (localAssets) {
           try {
             const parsed = JSON.parse(localAssets);
@@ -784,7 +653,7 @@ export default function App() {
         if (localExpenses) { try { initExpenses = JSON.parse(localExpenses); } catch {} }
 
         const localTxs = localStorage.getItem(`wealth_vault_transactions_${email}`);
-        let initTxs: HistoricalTx[] = isAdmin ? INITIAL_HISTORICAL_TXS : [];
+        let initTxs: HistoricalTx[] = [];
         if (localTxs) { try { initTxs = JSON.parse(localTxs); } catch {} }
 
         const localGoals = localStorage.getItem(`wealth_vault_goals_${email}`);
@@ -796,26 +665,26 @@ export default function App() {
         if (localBudgets) { try { initBudgets = JSON.parse(localBudgets); } catch {} }
 
         const localCycle = localStorage.getItem(`wealth_vault_cycle_${email}`);
-        let initCycle: CycleItem[] = isAdmin ? INITIAL_CYCLE_ITEMS : [];
+        let initCycle: CycleItem[] = [];
         if (localCycle) { try { initCycle = JSON.parse(localCycle); } catch {} }
 
         const localDeval = localStorage.getItem(`wealth_vault_devaluation_${email}`);
-        let initDeval: DevaluationItem[] = isAdmin ? INITIAL_DEVALUATION_ITEMS : [];
+        let initDeval: DevaluationItem[] = [];
         if (localDeval) { try { initDeval = JSON.parse(localDeval); } catch {} }
 
         const localDevalTactics = localStorage.getItem(`wealth_vault_devaluation_tactics_${email}`);
-        let initDevalTactics = localDevalTactics || (isAdmin ? '🛡️ USD Defense Tactics: Crypto positions (BTC) and Commodities (PAX Gold) act as proxy hedges, effectively minimizing raw PHP purchasing power devaluations.' : '');
+        let initDevalTactics = localDevalTactics || '';
 
         const localAudit = localStorage.getItem(`wealth_vault_audit_${email}`);
-        let initAudit: AuditChangeItem[] = isAdmin ? INITIAL_AUDIT_CHANGES : [];
+        let initAudit: AuditChangeItem[] = [];
         if (localAudit) { try { initAudit = JSON.parse(localAudit); } catch {} }
 
         const localDeployment = localStorage.getItem(`wealth_vault_deployment_${email}`);
-        let initDeployment: DeploymentPlanItem[] = isAdmin ? INITIAL_DEPLOYMENT_ITEMS : [];
+        let initDeployment: DeploymentPlanItem[] = [];
         if (localDeployment) { try { initDeployment = JSON.parse(localDeployment); } catch {} }
 
         const localBudgetCap = localStorage.getItem(`wealth_vault_budget_cap_${email}`);
-        let initBudgetCap = localBudgetCap || (isAdmin ? 'Budget Cap: ₱20,000 Total (100% Allocation to Safe Shield, unchanged mandate)' : '');
+        let initBudgetCap = localBudgetCap || '';
 
         const localIncomePlan = localStorage.getItem(`wealth_vault_income_plan_${email}`);
         let initIncomePlan: IncomeBudgetPlan = DEFAULT_INCOME_PLAN;
@@ -1160,14 +1029,96 @@ export default function App() {
                 return prevAssets.map((asset) => {
                   let updatedPrice = asset.currentPricePHP;
                   let updatedTrend = asset.change24h;
+                  let updatedPriceUSD = asset.currentPriceUSD;
                   const k = (asset.key || '').toLowerCase();
                   const n = (asset.name || '').toLowerCase();
+                  const sym = (asset.symbol || '').toUpperCase();
+
+                  // 1. Check data.navpuQuotes dictionary for UITFs / Manulife Asia Pacific REIT Fund of Funds
+                  if (data.navpuQuotes) {
+                    const navpuKey = Object.keys(data.navpuQuotes).find((nk) =>
+                      k === nk ||
+                      k.includes(nk) ||
+                      n.includes(nk) ||
+                      (data.navpuQuotes[nk]?.fundCode && sym.includes(data.navpuQuotes[nk].fundCode)) ||
+                      (data.navpuQuotes[nk]?.name && n.includes(data.navpuQuotes[nk].name.toLowerCase()))
+                    );
+
+                    if (navpuKey && data.navpuQuotes[navpuKey] && data.navpuQuotes[navpuKey].navpuPHP > 0) {
+                      const nQuote = data.navpuQuotes[navpuKey];
+                      return {
+                        ...asset,
+                        currentPricePHP: nQuote.navpuPHP,
+                        change24h: nQuote.change24h,
+                        valuationType: 'NAVPU',
+                      };
+                    }
+                  }
+
+                  // 2. Check data.cryptoQuotes dictionary for exact real-time Binance / Yahoo Finance quote
+                  if (data.cryptoQuotes) {
+                    const cryptoKey = Object.keys(data.cryptoQuotes).find((ck) =>
+                      k === ck ||
+                      k.includes(ck) ||
+                      n.includes(ck) ||
+                      (data.cryptoQuotes[ck]?.ticker && (n.toUpperCase().includes(data.cryptoQuotes[ck].ticker) || sym.includes(data.cryptoQuotes[ck].ticker))) ||
+                      (data.cryptoQuotes[ck]?.name && n.includes(data.cryptoQuotes[ck].name.toLowerCase()))
+                    );
+
+                    if (cryptoKey && data.cryptoQuotes[cryptoKey] && data.cryptoQuotes[cryptoKey].pricePHP > 0) {
+                      const cQuote = data.cryptoQuotes[cryptoKey];
+                      return {
+                        ...asset,
+                        currentPricePHP: cQuote.pricePHP,
+                        currentPriceUSD: cQuote.priceUSD,
+                        change24h: cQuote.change24h,
+                      };
+                    }
+                  }
+
+                  // 3. Check data.pseQuotes dictionary for exact real-time MarketWatch PSE quote
+                  if (data.pseQuotes) {
+                    const pseKey = Object.keys(data.pseQuotes).find((pk) => 
+                      k === pk || 
+                      k.includes(pk) || 
+                      n.includes(pk) ||
+                      (data.pseQuotes[pk]?.ticker && (n.toUpperCase().includes(data.pseQuotes[pk].ticker) || sym.includes(data.pseQuotes[pk].ticker)))
+                    );
+                    if (pseKey && data.pseQuotes[pseKey] && data.pseQuotes[pseKey].pricePHP > 0) {
+                      return {
+                        ...asset,
+                        currentPricePHP: data.pseQuotes[pseKey].pricePHP,
+                        change24h: data.pseQuotes[pseKey].change24h,
+                      };
+                    }
+                  }
+
+                  // 4. Check data.globalQuotes dictionary for US & Global Equities via Yahoo Finance
+                  if (data.globalQuotes) {
+                    const gKey = Object.keys(data.globalQuotes).find((gk) =>
+                      k === gk ||
+                      k.includes(gk) ||
+                      n.includes(gk) ||
+                      (data.globalQuotes[gk]?.ticker && (n.toUpperCase().includes(data.globalQuotes[gk].ticker) || sym.includes(data.globalQuotes[gk].ticker)))
+                    );
+                    if (gKey && data.globalQuotes[gKey] && data.globalQuotes[gKey].pricePHP > 0) {
+                      const gQuote = data.globalQuotes[gKey];
+                      return {
+                        ...asset,
+                        currentPricePHP: gQuote.pricePHP,
+                        currentPriceUSD: gQuote.priceUSD,
+                        change24h: gQuote.change24h,
+                      };
+                    }
+                  }
 
                   if (k === 'btc' || n.includes('bitcoin')) {
                     if (prices.btc_php) updatedPrice = prices.btc_php;
+                    if (prices.btc_usd) updatedPriceUSD = prices.btc_usd;
                     if (changes.btc !== undefined) updatedTrend = changes.btc;
                   } else if (k === 'paxg' || n.includes('pax gold') || (k.includes('pax') && !k.includes('spc'))) {
                     if (prices.paxg_php) updatedPrice = prices.paxg_php;
+                    if (prices.paxg_usd) updatedPriceUSD = prices.paxg_usd;
                     if (changes.paxg !== undefined) updatedTrend = changes.paxg;
                   } else if (k.includes('scc') || n.includes('semirara') || n.includes('scc')) {
                     if (prices.scc_php) updatedPrice = prices.scc_php;
@@ -1181,6 +1132,12 @@ export default function App() {
                   } else if (k.includes('areit') || n.includes('areit')) {
                     if (prices.areit_php) updatedPrice = prices.areit_php;
                     if (changes.areit !== undefined) updatedTrend = changes.areit;
+                  } else if (k.includes('creit') || n.includes('creit')) {
+                    if (prices.creit_php) updatedPrice = prices.creit_php;
+                    if (changes.creit !== undefined) updatedTrend = changes.creit;
+                  } else if (k.includes('mreit') || n.includes('mreit')) {
+                    if (prices.mreit_php) updatedPrice = prices.mreit_php;
+                    if (changes.mreit !== undefined) updatedTrend = changes.mreit;
                   } else if (k.includes('manulife') || n.includes('manulife')) {
                     if (prices.manulife_php) updatedPrice = prices.manulife_php;
                     if (changes.manulife !== undefined) updatedTrend = changes.manulife;
@@ -1189,6 +1146,7 @@ export default function App() {
                   return {
                     ...asset,
                     currentPricePHP: updatedPrice,
+                    currentPriceUSD: updatedPriceUSD,
                     change24h: updatedTrend,
                   };
                 });
@@ -1236,16 +1194,34 @@ export default function App() {
             }
           });
 
-          // 3. Fallback benchmark rates for PSE equities & REITs
+          // 3. Live real-time fetch for Philippine Stock Exchange (PSE) stocks
           const psePrices: Record<string, { pricePHP: number; change24h: number }> = {
-            scc: { pricePHP: 20.80, change24h: -1.19 },
-            spc: { pricePHP: 10.28, change24h: 0.00 },
-            rcr: { pricePHP: 7.16, change24h: -0.28 },
-            areit: { pricePHP: 34.50, change24h: 0.29 },
-            creit: { pricePHP: 2.85, change24h: 0.00 },
-            mreit: { pricePHP: 12.80, change24h: 0.16 },
+            scc: { pricePHP: 18.70, change24h: 3.09 },
+            spc: { pricePHP: 9.90, change24h: 2.59 },
+            rcr: { pricePHP: 7.47, change24h: 3.18 },
+            areit: { pricePHP: 38.00, change24h: 1.06 },
+            creit: { pricePHP: 3.30, change24h: -1.20 },
+            mreit: { pricePHP: 13.92, change24h: 1.31 },
             manulife: { pricePHP: 50.47, change24h: 0.00 },
           };
+
+          try {
+            const phisixRes = await fetch('http://phisix-api3.appspot.com/stocks.json').catch(() => null);
+            if (phisixRes && phisixRes.ok) {
+              const phisixData = await phisixRes.json();
+              if (Array.isArray(phisixData?.stocks)) {
+                for (const s of phisixData.stocks) {
+                  if (s && s.symbol && s.price && typeof s.price.amount === 'number') {
+                    const sk = String(s.symbol).toLowerCase();
+                    psePrices[sk] = {
+                      pricePHP: s.price.amount,
+                      change24h: typeof s.percentChange === 'number' ? s.percentChange : 0,
+                    };
+                  }
+                }
+              }
+            }
+          } catch (e) {}
 
           isTickerUpdateRef.current = true;
           setAssets((prevAssets) => {

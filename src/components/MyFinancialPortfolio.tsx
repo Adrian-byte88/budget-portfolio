@@ -54,37 +54,7 @@ interface HistoricalTx {
   details: string;
 }
 
-const INITIAL_HISTORICAL_TXS: HistoricalTx[] = [
-  { id: 'h-1', date: '2025-12-29', asset: 'Time Deposit', type: 'Buy', amount: '₱60,000.00', details: 'Initial Placement (Accrued).' },
-  { id: 'h-2', date: '2025-12-29', asset: 'PAX Gold', type: 'Buy', amount: '₱10,000.00', details: 'Initial commodity hedge.' },
-  { id: 'h-3', date: '2025-12-30', asset: 'Bitcoin', type: 'Buy', amount: '₱10,000.00', details: 'Initial GCrypto entry.' },
-  { id: 'h-4', date: '2026-02-24', asset: 'PAX Gold', type: 'Sell', amount: '-₱1,000.00', details: 'Tactical trim.' },
-  { id: 'h-5', date: '2026-03-02', asset: 'PAX Gold', type: 'Sell', amount: '-₱1,000.00', details: 'Profit take.' },
-  { id: 'h-6', date: '2026-03-03', asset: 'Manulife Asia Pacific REIT Fund of Funds', type: 'Buy', amount: '₱10,000.00', details: 'Asia-Pacific REIT Entry.' },
-  { id: 'h-7', date: '2026-03-04', asset: 'Bond', type: 'Buy', amount: '₱25,000.00', details: 'Principal locked.' },
-  { id: 'h-8', date: '2026-03-11', asset: 'PAX Gold', type: 'Buy', amount: '+₱12,000.00', details: 'Major scale-in.' },
-  { id: 'h-9', date: '2026-04-08', asset: 'HYS Savings', type: 'Deposit', amount: '+₱1,000.00', details: 'Shield hardening.' },
-  { id: 'h-10', date: '2026-04-10', asset: 'HYS Savings', type: 'Deposit', amount: '+₱30,000.00', details: 'Major liquidity injection.' },
-  { id: 'h-11', date: '2026-04-14', asset: 'HYS Savings', type: 'Deposit', amount: '+₱10,000.00', details: 'Shield consolidation.' },
-  { id: 'h-12', date: '2026-04-21', asset: 'Income Assets', type: 'Buy', amount: '₱7,493.07', details: 'DragonFi entry (RCR, SCC, SPC).' },
-  { id: 'h-13', date: '2026-04-27', asset: 'BTC', type: 'Buy', amount: '+₱316.00', details: 'Micro-Sizing execution.' },
-  { id: 'h-14', date: '2026-04-27', asset: 'PAX Gold', type: 'Buy', amount: '+₱633.00', details: 'Micro-Sizing execution.' },
-  { id: 'h-15', date: '2026-04-28', asset: 'Strategy', type: 'Pivot', amount: 'Proportional 20%', details: 'Pivot to 80/20 Salary Funding model.' },
-  { id: 'h-16', date: '2026-04-29', asset: 'HYS Savings', type: 'Deposit', amount: '+₱10,000.00', details: 'Independent liquidity addition.' },
-  { id: 'h-17', date: '2026-05-17', asset: 'HYS Savings', type: 'Deposit', amount: '+₱43,000.00', details: 'Massive Shield Hardening Inflow (Cash).' },
-  { id: 'h-18', date: '2026-05-30', asset: 'HYS Savings', type: 'Deposit', amount: '+₱11,000.00', details: 'Liquidity sync / surplus placement.' },
-  { id: 'h-19', date: '2026-06-03', asset: 'Bond (June 3)', type: 'Liquidate', amount: '-₱25,350.00', details: 'Bond matured at yield ceiling. Full liquidation.' },
-  { id: 'h-20', date: '2026-06-03', asset: 'HYS Savings', type: 'Transfer', amount: '+₱25,350.00', details: 'Matured bond proceeds.' },
-  { id: 'h-21', date: '2026-06-03', asset: 'Time Deposit', type: 'Buy', amount: '-₱100,000.00', details: '6-Month Placement (6% p.a., matures Dec 3, 2026).' },
-  { id: 'h-22', date: '2026-06-03', asset: 'HYS Savings', type: 'Withdraw', amount: '-₱100,000.00', details: 'Consolidated HYS capital transfer to Time Deposit.' },
-  { id: 'h-23', date: '2026-06-09', asset: 'HYS Savings', type: 'Deposit', amount: '+₱8,500.00', details: 'Cash deposit; initial HYS rate change.' },
-  { id: 'h-24', date: '2026-06-11', asset: 'HYS Savings', type: 'Withdraw', amount: '-₱10,000.00', details: 'Capital withdrawal for private loan.' },
-  { id: 'h-25', date: '2026-06-11', asset: 'Personal Loan', type: 'Lend', amount: '+₱10,000.00', details: '1-Month cash loan to friend (5% fixed interest, matures Jul 11).' },
-  { id: 'h-26', date: '2026-06-16', asset: 'HYS Savings', type: 'Deposit', amount: '+₱11,500.00', details: 'Cash deposit; HYS interest rate consolidated to 5% p.a.' },
-  { id: 'h-27', date: '2026-06-21', asset: 'HYS Savings', type: 'Withdraw', amount: '-₱3,000.00', details: 'Capital withdrawal from savings reserves.' },
-  { id: 'h-28', date: '2026-06-29', asset: 'Time Deposit', type: 'Maturity', amount: '+₱1,271.51', details: 'Dec 29 TD matured at 4.25% p.a. holding in matured pending status.' },
-  { id: 'h-29', date: '2026-07-02', asset: 'HYS Savings', type: 'Deposit', amount: '+₱10,000.00', details: 'Salary-based cash injection; Safe Shield consolidation.' }
-];
+const INITIAL_HISTORICAL_TXS: HistoricalTx[] = [];
 
 interface CycleItem {
   id: string;
@@ -94,14 +64,7 @@ interface CycleItem {
   logic: string;
 }
 
-const INITIAL_CYCLE_ITEMS: CycleItem[] = [
-  { id: 'c-1', asset: 'Bitcoin', phase: 'Consolidation', sentiment: 'Neutral', logic: 'BTC trading near $63,900, range-bound between roughly $62,700-$65,400 over the past week after slipping from summer highs near $65k-71k. Maintain long-term accumulation bias; no fresh catalyst either way.' },
-  { id: 'c-2', asset: 'PAX Gold', phase: 'Consolidation', sentiment: 'Neutral', logic: 'Spot gold trading around $4,010-4,015/oz, down modestly from the ~$4,043 level in the prior audit but still near record territory. Heavy defensive base asset intact.' },
-  { id: 'c-3', asset: 'REITs', phase: 'Markup', sentiment: 'Bullish', logic: 'RCR REIT up roughly 5.8% over the past month on continued dividend demand; office/commercial REIT sentiment remains constructive.' },
-  { id: 'c-4', asset: 'SCC Energy', phase: 'Markdown', sentiment: 'Bearish', logic: 'SCC has drifted down toward the ₱21-25 range from ₱29+ earlier in the year on softer coal prices and lower 2025 earnings; a high-yield dividend name but still trending lower.' },
-  { id: 'c-5', asset: 'SPC Power', phase: 'Markup', sentiment: 'Bullish', logic: 'SPC has climbed from the ₱9.85-10.46 range earlier in the year to ₱10.78, a solid utility demand story with a net-cash balance sheet.' },
-  { id: 'c-6', asset: 'Safe Shield', phase: 'Hardening', sentiment: 'Bullish', logic: 'Dec 29 TD remains in matured/pending status; Dec 3 TD continuing to accrue at 6% p.a. HYS compounding at 5% p.a.' }
-];
+const INITIAL_CYCLE_ITEMS: CycleItem[] = [];
 
 interface DeploymentPlanItem {
   id: string;
@@ -112,11 +75,7 @@ interface DeploymentPlanItem {
   description: string;
 }
 
-const INITIAL_DEPLOYMENT_ITEMS: DeploymentPlanItem[] = [
-  { id: 'dp-1', date: 'Aug 15', asset: 'HYS Savings', amount: '₱10,000.00', status: 'PROCEED', description: 'direct 100% of cash surplus to shrink the gap' },
-  { id: 'dp-2', date: 'Aug 30', asset: 'HYS Savings', amount: '₱10,000.00', status: 'PROCEED', description: 'continue building cash reserves toward 85% Shield' },
-  { id: 'dp-3', date: 'Risk Assets', asset: 'Various', amount: '₱0.00', status: 'ABORT', description: 'risk sleeve remains overweight' }
-];
+const INITIAL_DEPLOYMENT_ITEMS: DeploymentPlanItem[] = [];
 
 interface DevaluationItem {
   id: string;
@@ -127,12 +86,7 @@ interface DevaluationItem {
   statusType: 'SECURE' | 'UNDER-YIELDING' | 'CRITICAL' | 'NEUTRAL';
 }
 
-const INITIAL_DEVALUATION_ITEMS: DevaluationItem[] = [
-  { id: 'dv-1', indicator: 'USD/PHP FX Benchmark', marketRef: '₱61.24 (BSP Market Ref)', portfolioExposure: '15.00% (Risk Sleeve)', hedgeStatus: 'SECURE (USD assets act as natural hedge against PHP weakness)', statusType: 'SECURE' },
-  { id: 'dv-2', indicator: 'PH Inflation (PSA CPI)', marketRef: '3.4% Baseline', portfolioExposure: '85.00% (Safe Shield)', hedgeStatus: 'SECURE (High-Yield Maya Bank interest outpacing 3.4% inflation)', statusType: 'SECURE' },
-  { id: 'dv-3', indicator: 'High-Yield Reserve Defense (Maya Bank HYS / TD)', marketRef: '6.50% Policy Rate | 6.0% - 10.0% HYS Base', portfolioExposure: '₱85,000.00', hedgeStatus: 'SECURE (Maya Bank high-yield savings interest shields capital from local currency degradation)', statusType: 'SECURE' },
-  { id: 'dv-4', indicator: 'USD & Commodity Proxy Hedge Ratio', marketRef: '₱15,000.00 (BTC, Gold & Foreign Assets)', portfolioExposure: '15.00% (Total Net Worth)', hedgeStatus: 'SECURE (Sufficient USD/Gold proxy hedge against PHP devaluation)', statusType: 'SECURE' }
-];
+const INITIAL_DEVALUATION_ITEMS: DevaluationItem[] = [];
 
 interface AuditChangeItem {
   id: string;
@@ -140,13 +94,7 @@ interface AuditChangeItem {
   description: string;
 }
 
-const INITIAL_AUDIT_CHANGES: AuditChangeItem[] = [
-  { id: 'ac-1', title: 'BTC & PAXG Volatility', description: 'Both positions held steady in peso terms as spot USD/PHP rate stabilized around ₱61.24.' },
-  { id: 'ac-2', title: 'Equities Trend Divergence', description: 'SCC Energy continued its steady downtrend (now down roughly 15.21% below registered cost bases), while SPC Power (+4.76%) and RCR REIT (+5.45%) extended positive momentum.' },
-  { id: 'ac-3', title: 'Inflation Moderation', description: 'Headline Philippine Inflation eased slightly to 6.4% in June 2026, narrowing the real under-yielding yield gap versus safe cash reserves, though structural under-yielding persists.' },
-  { id: 'ac-4', title: 'Loan Collection Receipt', description: 'The short-term personal receivable of ₱10,000 extended to your friend matured on Jul 11—carried over in cash balances as fully collected at ₱10,500 (+₱500 accrued premium).' },
-  { id: 'ac-5', title: 'Net Capital Stagnation', description: 'Total Core Portfolio value remains essentially flat versus our last audit (-0.91%), as moderate gold/crypto soft spots were safely hedged by fixed-income deposits and REIT/utility dividends.' }
-];
+const INITIAL_AUDIT_CHANGES: AuditChangeItem[] = [];
 
 interface MyFinancialPortfolioProps {
   assets: AssetPosition[];
@@ -350,7 +298,7 @@ export default function MyFinancialPortfolio({
   const deploymentItems = (propDeploymentItems && propDeploymentItems.length > 0) ? propDeploymentItems : localDeploymentItems;
 
   const [localBudgetCap, setLocalBudgetCap] = useState(() => {
-    return localStorage.getItem('portfolio_budget_cap') || 'Budget Cap: ₱20,000 Total (100% Allocation to Safe Shield, unchanged mandate)';
+    return localStorage.getItem('portfolio_budget_cap') || '';
   });
   const budgetCap = propBudgetCap || localBudgetCap;
   const [isEditingDeployment, setIsEditingDeployment] = useState(false);
@@ -385,7 +333,7 @@ export default function MyFinancialPortfolio({
   const devaluationItems = propDevaluationItems !== undefined ? propDevaluationItems : localDevaluationItems;
 
   const [localDevaluationTactics, setLocalDevaluationTactics] = useState(() => {
-    return localStorage.getItem('portfolio_devaluation_tactics') || '🛡️ USD Defense Tactics: Crypto positions (BTC) and Commodities (PAX Gold) act as proxy hedges, effectively minimizing raw PHP purchasing power devaluations.';
+    return localStorage.getItem('portfolio_devaluation_tactics') || '';
   });
   const devaluationTactics = propDevaluationTactics !== undefined ? propDevaluationTactics : localDevaluationTactics;
   const [isEditingDevaluation, setIsEditingDevaluation] = useState(false);
@@ -431,10 +379,10 @@ export default function MyFinancialPortfolio({
   const [isAddingTx, setIsAddingTx] = useState(false);
   const [monthlyLivingExpensesInput, setMonthlyLivingExpensesInput] = useState<string>(() => {
     const saved = localStorage.getItem('monthly_living_expenses');
-    return saved || '9000';
+    return saved || '0';
   });
 
-  const monthlyLivingExpenses = parseFormattedNumber(monthlyLivingExpensesInput) > 0 ? parseFormattedNumber(monthlyLivingExpensesInput) : 9000;
+  const monthlyLivingExpenses = parseFormattedNumber(monthlyLivingExpensesInput) > 0 ? parseFormattedNumber(monthlyLivingExpensesInput) : 0;
 
   useEffect(() => {
     localStorage.setItem('monthly_living_expenses', monthlyLivingExpensesInput);

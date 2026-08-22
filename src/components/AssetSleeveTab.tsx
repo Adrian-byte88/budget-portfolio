@@ -42,15 +42,15 @@ export const MASTER_MARKET_ASSETS: MarketSearchSuggestion[] = [
   { key: 'near', symbol: 'NEAR-USD', name: 'NEAR Protocol (NEAR)', platform: 'Binance', class: 'risk', assetType: 'crypto', exchange: 'Binance Spot', currentPriceUSD: 5.10, currentPricePHP: 310.50, source: 'binance', categoryLabel: 'Crypto & Digital' },
   
   // Philippine Equities via MarketWatch Feed
-  { key: 'scc', symbol: 'SCC', name: 'Semirara Mining & Power Corp (SCC)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 20.80, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/scc?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/scc?countrycode=ph' },
-  { key: 'spc', symbol: 'SPC', name: 'SPC Power Corporation (SPC)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 10.28, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/spc?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/spc?countrycode=ph' },
-  { key: 'smph', symbol: 'SMPH', name: 'SM Prime Holdings (SMPH)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 26.50, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/smph?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/smph?countrycode=ph' },
-  { key: 'ali', symbol: 'ALI', name: 'Ayala Land Inc. (ALI)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 29.80, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/ali?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/ali?countrycode=ph' },
-  { key: 'bdo', symbol: 'BDO', name: 'BDO Unibank (BDO)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 145.00, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/bdo?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/bdo?countrycode=ph' },
-  { key: 'bpi', symbol: 'BPI', name: 'Bank of the Philippine Islands (BPI)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 118.00, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/bpi?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/bpi?countrycode=ph' },
+  { key: 'scc', symbol: 'SCC', name: 'Semirara Mining & Power Corp (SCC)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 18.70, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/scc?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/scc?countrycode=ph' },
+  { key: 'spc', symbol: 'SPC', name: 'SPC Power Corporation (SPC)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 9.90, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/spc?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/spc?countrycode=ph' },
+  { key: 'smph', symbol: 'SMPH', name: 'SM Prime Holdings (SMPH)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 18.24, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/smph?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/smph?countrycode=ph' },
+  { key: 'ali', symbol: 'ALI', name: 'Ayala Land Inc. (ALI)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 15.12, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/ali?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/ali?countrycode=ph' },
+  { key: 'bdo', symbol: 'BDO', name: 'BDO Unibank (BDO)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 122.70, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/bdo?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/bdo?countrycode=ph' },
+  { key: 'bpi', symbol: 'BPI', name: 'Bank of the Philippine Islands (BPI)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 107.30, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/bpi?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/bpi?countrycode=ph' },
   { key: 'tel', symbol: 'TEL', name: 'PLDT Inc. (TEL)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 1420.00, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/tel?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/tel?countrycode=ph' },
   { key: 'glo', symbol: 'GLO', name: 'Globe Telecom (GLO)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 2150.00, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/glo?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/glo?countrycode=ph' },
-  { key: 'jfc', symbol: 'JFC', name: 'Jollibee Foods Corp (JFC)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 242.00, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/jfc?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/jfc?countrycode=ph' },
+  { key: 'jfc', symbol: 'JFC', name: 'Jollibee Foods Corp (JFC)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 158.00, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/jfc?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/jfc?countrycode=ph' },
   { key: 'ict', symbol: 'ICT', name: 'International Container Terminal (ICT)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 395.00, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/ict?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/ict?countrycode=ph' },
   { key: 'monde', symbol: 'MONDE', name: 'Monde Nissin Corp (MONDE)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 9.20, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/monde?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/monde?countrycode=ph' },
   { key: 'acen', symbol: 'ACEN', name: 'ACEN Corporation (ACEN)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 3.90, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/acen?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/acen?countrycode=ph' },
@@ -58,17 +58,17 @@ export const MASTER_MARKET_ASSETS: MarketSearchSuggestion[] = [
   { key: 'mer', symbol: 'MER', name: 'Manila Electric Company (MER)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 412.00, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/mer?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/mer?countrycode=ph' },
   { key: 'sm', symbol: 'SM', name: 'SM Investments Corporation (SM)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 885.00, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/sm?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/sm?countrycode=ph' },
   { key: 'ac', symbol: 'AC', name: 'Ayala Corporation (AC)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 650.00, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/ac?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/ac?countrycode=ph' },
-  { key: 'meg', symbol: 'MEG', name: 'Megaworld Corporation (MEG)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 2.10, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/meg?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/meg?countrycode=ph' },
+  { key: 'meg', symbol: 'MEG', name: 'Megaworld Corporation (MEG)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 2.37, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/meg?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/meg?countrycode=ph' },
   { key: 'dmci', symbol: 'DMCI', name: 'DMCI Holdings, Inc. (DMCI)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine Stock Exchange (MarketWatch)', currentPricePHP: 11.40, source: 'marketwatch', categoryLabel: 'Philippine Stocks (MarketWatch)', marketwatchPath: '/investing/stock/dmci?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/dmci?countrycode=ph' },
 
   // Philippine REITs via MarketWatch Feed & Trust Funds
-  { key: 'rcr', symbol: 'RCR', name: 'RL Commercial REIT (RCR)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine REIT (MarketWatch)', currentPricePHP: 7.16, source: 'marketwatch', categoryLabel: 'Philippine REITs (MarketWatch)', marketwatchPath: '/investing/stock/rcr?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/rcr?countrycode=ph' },
-  { key: 'areit', symbol: 'AREIT', name: 'AREIT Inc. (AREIT)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine REIT (MarketWatch)', currentPricePHP: 34.50, source: 'marketwatch', categoryLabel: 'Philippine REITs (MarketWatch)', marketwatchPath: '/investing/stock/areit?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/areit?countrycode=ph' },
-  { key: 'creit', symbol: 'CREIT', name: 'Citicore Energy REIT (CREIT)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine REIT (MarketWatch)', currentPricePHP: 2.85, source: 'marketwatch', categoryLabel: 'Philippine REITs (MarketWatch)', marketwatchPath: '/investing/stock/creit?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/creit?countrycode=ph' },
-  { key: 'mreit', symbol: 'MREIT', name: 'MREIT Inc. (MREIT)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine REIT (MarketWatch)', currentPricePHP: 12.80, source: 'marketwatch', categoryLabel: 'Philippine REITs (MarketWatch)', marketwatchPath: '/investing/stock/mreit?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/mreit?countrycode=ph' },
-  { key: 'ddmpr', symbol: 'DDMPR', name: 'DDMP REIT Inc. (DDMPR)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine REIT (MarketWatch)', currentPricePHP: 1.15, source: 'marketwatch', categoryLabel: 'Philippine REITs (MarketWatch)', marketwatchPath: '/investing/stock/ddmpr?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/ddmpr?countrycode=ph' },
-  { key: 'filrt', symbol: 'FILRT', name: 'Filinvest REIT (FILRT)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine REIT (MarketWatch)', currentPricePHP: 2.80, source: 'marketwatch', categoryLabel: 'Philippine REITs (MarketWatch)', marketwatchPath: '/investing/stock/filrt?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/filrt?countrycode=ph' },
-  { key: 'preit', symbol: 'PREIT', name: 'Premiere Island Power REIT (PREIT)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine REIT (MarketWatch)', currentPricePHP: 1.55, source: 'marketwatch', categoryLabel: 'Philippine REITs (MarketWatch)', marketwatchPath: '/investing/stock/preit?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/preit?countrycode=ph' },
+  { key: 'rcr', symbol: 'RCR', name: 'RL Commercial REIT (RCR)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine REIT (MarketWatch)', currentPricePHP: 7.47, source: 'marketwatch', categoryLabel: 'Philippine REITs (MarketWatch)', marketwatchPath: '/investing/stock/rcr?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/rcr?countrycode=ph' },
+  { key: 'areit', symbol: 'AREIT', name: 'AREIT Inc. (AREIT)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine REIT (MarketWatch)', currentPricePHP: 38.00, source: 'marketwatch', categoryLabel: 'Philippine REITs (MarketWatch)', marketwatchPath: '/investing/stock/areit?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/areit?countrycode=ph' },
+  { key: 'creit', symbol: 'CREIT', name: 'Citicore Energy REIT (CREIT)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine REIT (MarketWatch)', currentPricePHP: 3.30, source: 'marketwatch', categoryLabel: 'Philippine REITs (MarketWatch)', marketwatchPath: '/investing/stock/creit?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/creit?countrycode=ph' },
+  { key: 'mreit', symbol: 'MREIT', name: 'MREIT Inc. (MREIT)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine REIT (MarketWatch)', currentPricePHP: 13.92, source: 'marketwatch', categoryLabel: 'Philippine REITs (MarketWatch)', marketwatchPath: '/investing/stock/mreit?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/mreit?countrycode=ph' },
+  { key: 'ddmpr', symbol: 'DDMPR', name: 'DDMP REIT Inc. (DDMPR)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine REIT (MarketWatch)', currentPricePHP: 1.04, source: 'marketwatch', categoryLabel: 'Philippine REITs (MarketWatch)', marketwatchPath: '/investing/stock/ddmpr?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/ddmpr?countrycode=ph' },
+  { key: 'filrt', symbol: 'FILRT', name: 'Filinvest REIT (FILRT)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine REIT (MarketWatch)', currentPricePHP: 2.92, source: 'marketwatch', categoryLabel: 'Philippine REITs (MarketWatch)', marketwatchPath: '/investing/stock/filrt?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/filrt?countrycode=ph' },
+  { key: 'preit', symbol: 'PREIT', name: 'Premiere Island Power REIT (PREIT)', platform: 'DragonFi / PSE (MarketWatch)', class: 'risk', assetType: 'equity', exchange: 'Philippine REIT (MarketWatch)', currentPricePHP: 1.04, source: 'marketwatch', categoryLabel: 'Philippine REITs (MarketWatch)', marketwatchPath: '/investing/stock/preit?countrycode=ph', marketwatchUrl: 'https://www.marketwatch.com/investing/stock/preit?countrycode=ph' },
   { key: 'manulife', symbol: 'MANULIFE-FOF', name: 'Manulife Asia Pacific REIT Fund of Funds', platform: 'Manulife Trust', class: 'risk', assetType: 'equity', exchange: 'Philippine Trust Fund / UITF', currentPricePHP: 50.47, source: 'uitf', categoryLabel: 'REITs & Trust Funds' },
 
   // US Equities & Global ETFs (NYSE / NASDAQ)
@@ -846,9 +846,35 @@ export default function AssetSleeveTab({
       return;
     }
 
-    // 2. Fetch live suggestions from server (/api/market/search)
+    // 2. Fetch live suggestions from server (/api/market/search and /api/market/crypto)
     setIsSearchingMarket(true);
     try {
+      // Check if crypto query specifically
+      if (category === 'crypto' || q.length <= 8) {
+        const cryptoRes = await fetch(`/api/market/crypto?symbol=${encodeURIComponent(q)}`).catch(() => null);
+        if (cryptoRes && cryptoRes.ok) {
+          const cData = await cryptoRes.json();
+          if (cData.success && cData.quote && cData.quote.pricePHP > 0) {
+            const cq = cData.quote;
+            const newCryptoSug: MarketSearchSuggestion = {
+              key: cq.ticker.toLowerCase(),
+              symbol: `${cq.ticker.toUpperCase()}-USD`,
+              name: `${cq.name} (${cq.ticker.toUpperCase()})`,
+              platform: 'GCrypto / Binance',
+              class: 'risk',
+              assetType: 'crypto',
+              exchange: `${cq.source === 'binance' ? 'Binance Spot' : 'Yahoo Finance'} Live Feed`,
+              currentPriceUSD: cq.priceUSD,
+              currentPricePHP: cq.pricePHP,
+              change24h: cq.change24h,
+              source: 'binance',
+              categoryLabel: 'Crypto & Digital (Live Feed)',
+            };
+            localFiltered = [newCryptoSug, ...localFiltered.filter(x => x.key !== cq.ticker.toLowerCase())];
+          }
+        }
+      }
+
       const res = await fetch(`/api/market/search?q=${encodeURIComponent(q)}`);
       if (res.ok) {
         const data = await res.json();
@@ -864,8 +890,10 @@ export default function AssetSleeveTab({
             }
           }
           setMarketSuggestions(merged.slice(0, 30));
+          return;
         }
       }
+      setMarketSuggestions(localFiltered.slice(0, 30));
     } catch (err) {
       // 3. Fallback client-side Binance check for crypto symbols
       if (q.length >= 2 && q.length <= 8) {
@@ -876,7 +904,7 @@ export default function AssetSleeveTab({
             const bData = await binanceRes.json();
             if (bData?.lastPrice) {
               const lastP = parseFloat(bData.lastPrice);
-              const liveFx = usdPhpRate || 60.5;
+              const liveFx = usdPhpRate || 58.50;
               const phpP = Number((lastP * liveFx).toFixed(2));
               const newCrypto: MarketSearchSuggestion = {
                 key: q.toLowerCase(),
@@ -1285,32 +1313,66 @@ export default function AssetSleeveTab({
         )}
 
         {activeSubTab === 'risk' && (
-          <div className="bg-slate-50/90 dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 p-4 sm:p-5 rounded-2xl mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs shadow-2xs transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 rounded-xl border border-indigo-200 dark:border-indigo-500/30 shrink-0">
-                <BarChart2 className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2 flex-wrap">
-                  <span>TradingView® Live Technical Charts & Market Analysis</span>
-                  <span className="px-2 py-0.5 bg-indigo-600 dark:bg-indigo-500 text-white rounded text-[9px] font-mono font-black shadow-2xs">
-                    LIVE WIDGET
-                  </span>
-                </h4>
-                <p className="text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-                  Click any risk asset below or the <b className="text-slate-900 dark:text-white bg-slate-200/70 dark:bg-indigo-950/60 border border-slate-300 dark:border-indigo-500/30 px-1.5 py-0.5 rounded">TradingView 📊</b> badge to launch the full TradingView® interactive chart, technical indicators (RSI, MACD, SMAs), asset financials, and market news timeline.
-                </p>
-              </div>
-            </div>
-            {/* Matrix allocation indicator for Risk Sleeve Growth */}
-            {isProOrAdmin && expectedMonthlyAssetAlloc > 0 && (
-              <div className="shrink-0 flex items-center gap-2">
-                <div className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-500/30 rounded-xl text-[11px] font-mono font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                  <span>Matrix Allocation: ₱{expectedPaydayAssetAlloc.toLocaleString()} / Payday</span>
+          <div className="bg-slate-50/90 dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 p-4 sm:p-5 rounded-2xl mb-4 flex flex-col gap-3 text-xs shadow-2xs transition-colors">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 rounded-xl border border-indigo-200 dark:border-indigo-500/30 shrink-0">
+                  <BarChart2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2 flex-wrap">
+                    <span>Risk Sleeve Growth • Live Quota Feeds</span>
+                    <span className="px-2 py-0.5 bg-indigo-600 dark:bg-indigo-500 text-white rounded text-[9px] font-mono font-black shadow-2xs">
+                      LIVE 24H FEED
+                    </span>
+                  </h4>
+                  <p className="text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                    Real-time market price quota and 24-hour performance tracking via <b>Binance Spot Feed & Yahoo Finance</b> for Bitcoin and crypto, and <b>Philippine Stock Exchange (PSE) & MarketWatch</b> for equities and REITs.
+                  </p>
                 </div>
               </div>
-            )}
+              {/* Matrix allocation indicator for Risk Sleeve Growth */}
+              {isProOrAdmin && expectedMonthlyAssetAlloc > 0 && (
+                <div className="shrink-0 flex items-center gap-2">
+                  <div className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-500/30 rounded-xl text-[11px] font-mono font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                    <span>Matrix Allocation: ₱{expectedPaydayAssetAlloc.toLocaleString()} / Payday</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Live Feed Status Bar */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 pt-2 border-t border-slate-200/80 dark:border-white/5 text-[11px] font-mono">
+              <div className="flex items-center gap-2 px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-900 dark:text-amber-300">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                </span>
+                <span className="font-bold">⚡ Binance Crypto:</span>
+                <span className="text-amber-800 dark:text-amber-200 truncate">Live 24h Feed</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-900 dark:text-emerald-300">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="font-bold">🏛️ PSE / MarketWatch:</span>
+                <span className="text-emerald-800 dark:text-emerald-200 truncate">Live Tickers</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-2 bg-sky-500/10 border border-sky-500/20 rounded-xl text-sky-900 dark:text-sky-300">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
+                </span>
+                <span className="font-bold">📊 Manulife REIT:</span>
+                <span className="text-sky-800 dark:text-sky-200 truncate">NAVPU Feed</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-indigo-900 dark:text-indigo-300">
+                <span className="font-bold">💱 Spot FX / Yahoo:</span>
+                <span className="text-indigo-800 dark:text-indigo-200 truncate">1 USD = ₱{(usdPhpRate || 58.50).toFixed(2)}</span>
+              </div>
+            </div>
           </div>
         )}
 
@@ -1383,13 +1445,51 @@ export default function AssetSleeveTab({
                     <td className="p-5 text-slate-500 dark:text-slate-400 text-xs">{asset.platform}</td>
                     <td className="p-5 text-right text-xs font-mono font-bold">
                       {activeSubTab === 'risk' ? (
-                        <div className="flex flex-col items-end gap-0.5">
+                        <div className="flex flex-col items-end gap-1">
                           <span className="font-extrabold text-slate-900 dark:text-white text-xs">
                             ₱{((asset.currentPricePHP > 0 && !(asset.currentPricePHP === 1 && asset.costBasisPHP > 10)) ? asset.currentPricePHP : (asset.costBasisPHP / (asset.units || 1))).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
                           </span>
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold border bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20">
-                            Live Market
-                          </span>
+                          {/* Display USD Equivalent for Cryptos & Global Assets */}
+                          {(asset.assetType === 'crypto' || asset.key === 'btc' || asset.key === 'paxg' || asset.currentPriceUSD) && (
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono font-normal">
+                              ${(asset.currentPriceUSD || (asset.currentPricePHP / (usdPhpRate || 58.50))).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} USD
+                            </span>
+                          )}
+                          <div className="flex items-center gap-1">
+                            {asset.key.toLowerCase().includes('manulife') || asset.name.toLowerCase().includes('manulife') || (asset as any).valuationType === 'NAVPU' || asset.key.includes('fof') ? (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold border bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-200 dark:border-sky-500/20 inline-flex items-center gap-1">
+                                <span className="relative flex h-1.5 w-1.5">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-sky-500"></span>
+                                </span>
+                                <span>Manulife NAVPU Feed</span>
+                              </span>
+                            ) : asset.assetType === 'crypto' || asset.key === 'btc' || asset.key === 'paxg' || asset.platform.toLowerCase().includes('binance') || asset.platform.toLowerCase().includes('gcrypto') ? (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold border bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/20 inline-flex items-center gap-1">
+                                <span className="relative flex h-1.5 w-1.5">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
+                                </span>
+                                <span>Binance Crypto Feed</span>
+                              </span>
+                            ) : asset.platform.toLowerCase().includes('pse') || asset.platform.toLowerCase().includes('dragonfi') || ['scc', 'spc', 'rcr', 'areit', 'creit', 'mreit', 'ddmpr', 'filrt', 'preit', 'smph', 'ali', 'bdo', 'bpi', 'jfc', 'tel', 'glo', 'ict', 'monde', 'acen', 'cnvrg', 'mer', 'sm', 'ac', 'meg', 'dmci'].includes(asset.key.toLowerCase()) ? (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold border bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20 inline-flex items-center gap-1">
+                                <span className="relative flex h-1.5 w-1.5">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                                </span>
+                                <span>PSE / MarketWatch</span>
+                              </span>
+                            ) : (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold border bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400 border-violet-200 dark:border-violet-500/20 inline-flex items-center gap-1">
+                                <span className="relative flex h-1.5 w-1.5">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-violet-500"></span>
+                                </span>
+                                <span>Yahoo Global Feed</span>
+                              </span>
+                            )}
+                          </div>
                         </div>
                       ) : activeSubTab === 'liability' ? (
                         <div className="flex flex-col items-end gap-1">

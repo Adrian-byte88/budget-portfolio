@@ -121,26 +121,11 @@ export function buildCycleItemsFromAssets(assetsList: AssetPosition[], totalVal:
   });
 }
 
-export const INITIAL_DEVALUATION_ITEMS: DevaluationItem[] = [
-  { id: 'dv-1', indicator: 'USD/PHP FX Benchmark', marketRef: '₱61.24 (BSP Market Ref)', portfolioExposure: '15.00% (Risk Sleeve)', hedgeStatus: 'SECURE (USD assets act as natural hedge against PHP weakness)', statusType: 'SECURE' },
-  { id: 'dv-2', indicator: 'PH Inflation (PSA CPI)', marketRef: '3.4% Baseline', portfolioExposure: '85.00% (Safe Shield)', hedgeStatus: 'SECURE (High-Yield Maya Bank interest outpacing 3.4% inflation)', statusType: 'SECURE' },
-  { id: 'dv-3', indicator: 'High-Yield Reserve Defense (Maya Bank HYS / TD)', marketRef: '6.50% Policy Rate | 6.0% - 10.0% HYS Base', portfolioExposure: '₱85,000.00', hedgeStatus: 'SECURE (Maya Bank high-yield savings interest shields capital from local currency degradation)', statusType: 'SECURE' },
-  { id: 'dv-4', indicator: 'USD & Commodity Proxy Hedge Ratio', marketRef: '₱15,000.00 (BTC, Gold & Foreign Assets)', portfolioExposure: '15.00% (Total Net Worth)', hedgeStatus: 'SECURE (Sufficient USD/Gold proxy hedge against PHP devaluation)', statusType: 'SECURE' }
-];
+export const INITIAL_DEVALUATION_ITEMS: DevaluationItem[] = [];
 
-export const INITIAL_AUDIT_CHANGES: AuditChangeItem[] = [
-  { id: 'ac-1', title: 'BTC & PAXG Volatility', description: 'Both positions held steady in peso terms as spot USD/PHP rate stabilized around ₱61.24.' },
-  { id: 'ac-2', title: 'Equities Trend Divergence', description: 'SCC Energy continued its steady downtrend (now down roughly 15.21% below registered cost bases), while SPC Power (+4.76%) and RCR REIT (+5.45%) extended positive momentum.' },
-  { id: 'ac-3', title: 'Inflation Moderation', description: 'Headline Philippine Inflation eased slightly to 6.4% in June 2026, narrowing the real under-yielding yield gap versus safe cash reserves, though structural under-yielding persists.' },
-  { id: 'ac-4', title: 'Loan Collection Receipt', description: 'The short-term personal receivable of ₱10,000 extended to your friend matured on Jul 11—carried over in cash balances as fully collected at ₱10,500 (+₱500 accrued premium).' },
-  { id: 'ac-5', title: 'Net Capital Stagnation', description: 'Total Core Portfolio value remains essentially flat versus our last audit (-0.91%), as moderate gold/crypto soft spots were safely hedged by fixed-income deposits and REIT/utility dividends.' }
-];
+export const INITIAL_AUDIT_CHANGES: AuditChangeItem[] = [];
 
-export const INITIAL_DEPLOYMENT_ITEMS: DeploymentPlanItem[] = [
-  { id: 'dp-1', date: 'Aug 15', asset: 'HYS Savings', amount: '₱10,000.00', status: 'PROCEED', description: 'direct 100% of cash surplus to shrink the gap' },
-  { id: 'dp-2', date: 'Aug 30', asset: 'HYS Savings', amount: '₱10,000.00', status: 'PROCEED', description: 'continue building cash reserves toward 85% Shield' },
-  { id: 'dp-3', date: 'Risk Assets', asset: 'Various', amount: '₱0.00', status: 'ABORT', description: 'risk sleeve remains overweight' }
-];
+export const INITIAL_DEPLOYMENT_ITEMS: DeploymentPlanItem[] = [];
 
 export interface MarketCycleAuditTabProps {
   assets: AssetPosition[];
@@ -318,7 +303,7 @@ export default function MarketCycleAuditTab({
   const devaluationItems = propDevaluationItems !== undefined ? propDevaluationItems : localDevaluationItems;
 
   const [localDevaluationTactics, setLocalDevaluationTactics] = useState(() => {
-    return localStorage.getItem('portfolio_devaluation_tactics') || '🛡️ USD Defense Tactics: Crypto positions (BTC) and Commodities (PAX Gold) act as proxy hedges, effectively minimizing raw PHP purchasing power devaluations.';
+    return localStorage.getItem('portfolio_devaluation_tactics') || '';
   });
   const devaluationTactics = propDevaluationTactics !== undefined ? propDevaluationTactics : localDevaluationTactics;
   const [isEditingDevaluation, setIsEditingDevaluation] = useState(false);
@@ -391,7 +376,7 @@ export default function MarketCycleAuditTab({
   const deploymentItems = propDeploymentItems !== undefined ? propDeploymentItems : localDeploymentItems;
 
   const [localBudgetCap, setLocalBudgetCap] = useState(() => {
-    return localStorage.getItem('portfolio_budget_cap') || 'Budget Cap: ₱20,000 Total (100% Allocation to Safe Shield, unchanged mandate)';
+    return localStorage.getItem('portfolio_budget_cap') || '';
   });
   const budgetCap = propBudgetCap !== undefined ? propBudgetCap : localBudgetCap;
   const [isEditingDeployment, setIsEditingDeployment] = useState(false);

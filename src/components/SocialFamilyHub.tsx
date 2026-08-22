@@ -56,8 +56,8 @@ export default function SocialFamilyHub({
   }, [highlightId]);
 
   const [goalTitle, setGoalTitle] = useState('');
-  const [goalTarget, setGoalTarget] = useState('50000');
-  const [goalDeadline, setGoalDeadline] = useState('2026-12-31');
+  const [goalTarget, setGoalTarget] = useState('');
+  const [goalDeadline, setGoalDeadline] = useState('');
 
   // Shared Invite Code State - unique per user
   const [inviteCode, setInviteCode] = useState(() => {
@@ -80,7 +80,7 @@ export default function SocialFamilyHub({
 
   // Goal Contribution form state
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
-  const [contributionAmt, setContributionAmt] = useState('5000');
+  const [contributionAmt, setContributionAmt] = useState('');
 
   // Goal Edit state
   const [editingGoal, setEditingGoal] = useState<FamilyGoal | null>(null);

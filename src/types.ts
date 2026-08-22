@@ -23,6 +23,7 @@ export interface TradeEntry {
 
 export interface AssetPosition {
   key: string;
+  symbol?: string;
   name: string;
   platform: string;
   class: 'safe' | 'risk' | 'physical' | 'liability' | 'hys';
@@ -30,6 +31,7 @@ export interface AssetPosition {
   units: number;
   costBasisPHP: number;
   currentPricePHP: number;
+  currentPriceUSD?: number;
   change24h?: number; // percentage fluctuation
   startDate?: string; // YYYY-MM-DD starting date
   maturityDate?: string; // YYYY-MM-DD maturity date
