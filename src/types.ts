@@ -76,6 +76,9 @@ export interface MarketAlert {
   type: 'up' | 'down' | 'info' | 'volatility';
   thresholdPercentage?: number;
   lastTriggeredDate?: string;
+  purpose?: string;
+  category?: 'price' | 'guardrail' | 'budget' | 'system';
+  isRead?: boolean;
 }
 
 export interface UserSession {

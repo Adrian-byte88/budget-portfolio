@@ -705,8 +705,8 @@ export default function MyFinancialPortfolio({
       </div>
 
       {/* Target Allocation Adjuster / Calibrator */}
-      <div id="safety-calibrator-section" data-highlight-id="safety-calibrator-section" className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-xl p-6 sm:p-8 flex flex-col justify-between shadow-xs">
+      <div id="safety-calibrator-section" data-highlight-id="safety-calibrator-section" className="w-full">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-xl p-6 sm:p-8 flex flex-col justify-between shadow-xs">
           <div>
             <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
               <Sliders className="w-4 h-4 text-blue-600 dark:text-teal-400" />
@@ -752,37 +752,6 @@ export default function MyFinancialPortfolio({
             <div className="flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase">
               <span>Conservative Minimum (50%)</span>
               <span>Speculative Maximum (95%)</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Visual quick summary of assets weight */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-xl p-6 flex flex-col justify-between shadow-xs">
-          <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Allocation Weights & Net Worth</h3>
-          <div className="space-y-3.5 my-4">
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-500 dark:text-slate-400">Total Liquid Safe Shield:</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">₱{totalSafeShield.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-500 dark:text-slate-400">Total Risk Sleeve Growth:</span>
-              <span className="font-bold text-indigo-600 dark:text-indigo-400">₱{totalRiskSleeve.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-500 dark:text-slate-400">Total Physical Assets:</span>
-              <span className="font-bold text-purple-600 dark:text-purple-400">₱{totalPhysical.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-500 dark:text-slate-400">Total Liabilities / Debt:</span>
-              <span className="font-bold text-rose-600 dark:text-rose-400">₱{totalLiabilities.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            </div>
-            <div className="border-t border-slate-100 dark:border-white/5 pt-2 flex justify-between items-center text-xs">
-              <span className="text-slate-500 dark:text-slate-400 font-bold">Comprehensive Portfolio Size:</span>
-              <span className="font-bold text-slate-900 dark:text-white">₱{totalAssets.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-500 dark:text-slate-400 font-bold">Calculated Net Worth:</span>
-              <span className="font-bold text-blue-600 dark:text-blue-400">₱{netWorth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
           </div>
         </div>
@@ -950,7 +919,6 @@ export default function MyFinancialPortfolio({
                   <th className="py-4 pl-5">Tier</th>
                   <th className="py-4">Assets Included</th>
                   <th className="py-4 text-right">Current Value</th>
-                  <th className="py-4 text-right">Net Yield / Gain</th>
                   <th className="py-4 text-right">Weight %</th>
                   <th className="py-4 text-right">Target %</th>
                   <th className="py-4 text-center pr-5">Status</th>
@@ -962,11 +930,6 @@ export default function MyFinancialPortfolio({
                   <td className="py-4 text-xs text-slate-600 dark:text-slate-300">Savings + TDs + Loan ({safeAssets.length} active)</td>
                   <td className="py-4 text-xs font-mono font-bold text-right text-slate-900 dark:text-white">
                     ₱{totalSafeShield.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </td>
-                  <td className="py-4 text-xs font-mono font-bold text-right">
-                    <span className={`text-[11px] ${totalSafeGainsLoss >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                      {totalSafeGainsLoss >= 0 ? '+' : ''}₱{totalSafeGainsLoss.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({totalSafeGainsLossPct >= 0 ? '+' : ''}{totalSafeGainsLossPct.toFixed(2)}%)
-                    </span>
                   </td>
                   <td className="py-4 text-xs font-mono font-bold text-right">{safeWeight.toFixed(2)}%</td>
                   <td className="py-4 text-xs font-mono text-right text-slate-400">{targetAllocation.toFixed(1)}%</td>
@@ -985,11 +948,6 @@ export default function MyFinancialPortfolio({
                   <td className="py-4 text-xs text-slate-600 dark:text-slate-300">Crypto, Stocks, REITs ({riskAssets.length} active)</td>
                   <td className="py-4 text-xs font-mono font-bold text-right text-slate-900 dark:text-white">
                     ₱{totalRiskSleeve.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </td>
-                  <td className="py-4 text-xs font-mono font-bold text-right">
-                    <span className={`text-[11px] ${totalRiskGainsLoss >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                      {totalRiskGainsLoss >= 0 ? '+' : ''}₱{totalRiskGainsLoss.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({totalRiskGainsLossPct >= 0 ? '+' : ''}{totalRiskGainsLossPct.toFixed(2)}%)
-                    </span>
                   </td>
                   <td className="py-4 text-xs font-mono font-bold text-right">{riskWeight.toFixed(2)}%</td>
                   <td className="py-4 text-xs font-mono text-right text-slate-400">{(100 - targetAllocation).toFixed(1)}%</td>
@@ -1011,7 +969,6 @@ export default function MyFinancialPortfolio({
                   </td>
                   <td className="py-4 text-xs font-mono text-right text-slate-400">-</td>
                   <td className="py-4 text-xs font-mono text-right text-slate-400">-</td>
-                  <td className="py-4 text-xs font-mono text-right text-slate-400">-</td>
                   <td className="py-4 text-center pr-5">
                     <span className="px-2.5 py-1 text-[9px] font-extrabold rounded-md bg-purple-100 text-purple-800 dark:bg-purple-500/10 dark:text-purple-400">
                       PHYSICAL
@@ -1024,7 +981,6 @@ export default function MyFinancialPortfolio({
                   <td className="py-4 text-xs font-mono font-bold text-right text-rose-600 dark:text-rose-400">
                     -₱{totalLiabilities.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
-                  <td className="py-4 text-xs font-mono text-right text-slate-400">-</td>
                   <td className="py-4 text-xs font-mono text-right text-slate-400">-</td>
                   <td className="py-4 text-xs font-mono text-right text-slate-400">-</td>
                   <td className="py-4 text-center pr-5">
@@ -1043,7 +999,7 @@ export default function MyFinancialPortfolio({
                   <td className="py-4 text-xs font-mono font-black text-right text-slate-900 dark:text-white">
                     ₱{totalOverallValuation.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
-                  <td className="py-4 text-xs font-mono font-black text-right">
+                  <td colSpan={3} className="py-4 text-right pr-5">
                     <span className={`px-2 py-0.5 text-[10px] font-black rounded ${
                       totalOverallGainsLoss >= 0
                         ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30'
@@ -1052,7 +1008,6 @@ export default function MyFinancialPortfolio({
                       {totalOverallGainsLoss >= 0 ? '+' : ''}₱{totalOverallGainsLoss.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({totalOverallGainsLossPct >= 0 ? '+' : ''}{totalOverallGainsLossPct.toFixed(2)}%)
                     </span>
                   </td>
-                  <td colSpan={3} className="py-4"></td>
                 </tr>
                 <tr className="bg-blue-500/5">
                   <td className="py-4 pl-5 text-xs font-black text-blue-600 dark:text-teal-400 uppercase tracking-widest">Calculated Real-Time Net Worth</td>
@@ -1060,7 +1015,7 @@ export default function MyFinancialPortfolio({
                   <td className="py-4 text-sm font-mono font-black text-right text-blue-600 dark:text-teal-400">
                     ₱{netWorth.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
-                  <td colSpan={4} className="py-4"></td>
+                  <td colSpan={3} className="py-4"></td>
                 </tr>
               </tfoot>
             </table>

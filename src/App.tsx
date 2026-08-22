@@ -47,7 +47,42 @@ import ProPaywallOverlay from './components/ProPaywallOverlay';
 import AdminPortal from './components/admin/AdminPortal';
 import { getAssetValuation } from './lib/formatters';
 import { AIPopupModal } from './components/AIPopupModal';
-import { ShieldCheck, Wifi, RefreshCw, MessageSquare, X, Mic, Send, Sparkles, Bot, User as UserIcon, Check, Lock, Crown, Undo2, Redo2, RotateCcw, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { 
+  ShieldCheck, 
+  Wifi, 
+  RefreshCw, 
+  MessageSquare, 
+  X, 
+  Mic, 
+  Send, 
+  Sparkles, 
+  Bot, 
+  User as UserIcon, 
+  Check, 
+  Lock, 
+  Crown, 
+  Undo2, 
+  Redo2, 
+  RotateCcw, 
+  AlertTriangle, 
+  CheckCircle2,
+  Home,
+  LayoutDashboard,
+  PieChart,
+  Receipt,
+  Users,
+  Activity,
+  History,
+  Settings,
+  LogOut,
+  ChevronRight,
+  Menu,
+  Coins,
+  Wallet,
+  Layers,
+  ChevronDown,
+  ChevronUp
+} from 'lucide-react';
 import { doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
 
 export interface UndoAction {
@@ -344,6 +379,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'home' | 'dashboard' | 'pricing' | 'portfolio' | 'assets' | 'ledger' | 'social' | 'audit' | 'transactions'>('home');
   const [darkMode, setDarkMode] = useState(false);
   const [isGuestMode, setIsGuestMode] = useState(false);
+  const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [showSignInModal, setShowSignInModal] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [settingsDefaultTab, setSettingsDefaultTab] = useState<'profile' | 'preferences' | 'export'>('profile');
@@ -2567,6 +2604,14 @@ export default function App() {
         lastUndoDescription={undoStack[0]?.title || undoStack[0]?.description}
         onUndo={() => performUndo()}
         onRedo={() => performRedo()}
+        onToggleSidebar={() => {
+          if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+            setIsMobileSidebarOpen((prev) => !prev);
+          } else {
+            setIsLeftSidebarOpen((prev) => !prev);
+          }
+        }}
+        isSidebarOpen={isLeftSidebarOpen}
       />
 
       {/* Sign In Modal Overlay for Guest Mode */}
@@ -2667,91 +2712,274 @@ export default function App() {
         onClose={() => setPopupModal((prev) => ({ ...prev, isOpen: false }))}
       />
 
-      {/* Tab Navigations */}
-      <main className="w-full max-w-[1750px] mx-auto px-3 sm:px-6 lg:px-10 py-4 sm:py-8">
-        
-        {/* Core Sub navigation rails */}
-        <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-2 mb-4 sm:mb-8 overflow-x-auto gap-2 sm:gap-4 hide-scrollbar">
-          <nav className="flex space-x-1.5 sm:space-x-2 shrink-0" aria-label="Tabs">
-            {accessibleTabs.map((tab) => {
-              const isActive = activeTab === tab;
-              const isLocked = !isAdmin && subscriptionTier === 'free' && !FREE_ALLOWED_TABS.includes(tab as any);
-              const titles: Record<string, string> = {
-                home: 'Home Overview',
-                dashboard: 'Summary Analytics',
-                pricing: 'Pricing Plan',
-                portfolio: 'My Financial Portfolio',
-                assets: 'Risk & Safe Assets',
-                ledger: 'Cash Flow & Expense Ledger',
-                social: 'Social Family Sync',
-                audit: 'Cycle Audit',
-                transactions: 'History'
-              };
+      {/* App Body Container: Collapsible YouTube-style Left Navigation Sidebar + Dynamic Main Content */}
+      <div className="flex flex-1 relative w-full min-h-[calc(100vh-57px)]">
+        {/* Mobile Backdrop Overlay */}
+        {isMobileSidebarOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-xs lg:hidden transition-opacity"
+            onClick={() => setIsMobileSidebarOpen(false)}
+            aria-hidden="true"
+          />
+        )}
 
-              return (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[11px] sm:text-xs font-semibold tracking-tight transition-all whitespace-nowrap border flex items-center space-x-1.5 ${
-                    isActive
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                      : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  <span>{titles[tab]}</span>
-                  {isLocked && (
-                    <span className="bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-[9px] font-black px-1.5 py-0.5 rounded-full flex items-center space-x-0.5">
-                      <Lock className="w-2.5 h-2.5" />
-                      <span>PRO</span>
+        {/* YouTube-Style Collapsible Left Sidebar */}
+        <aside
+          className={`
+            fixed lg:sticky top-14 sm:top-18 z-40 lg:z-30 h-[calc(100vh-56px)] sm:h-[calc(100vh-72px)]
+            bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-white/5
+            flex flex-col justify-between shrink-0 transition-all duration-300 ease-in-out select-none
+            ${isMobileSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}
+            ${isLeftSidebarOpen ? 'w-64 xl:w-72 p-3' : 'w-72 lg:w-18 p-2'}
+            overflow-y-auto overflow-x-hidden hide-scrollbar
+          `}
+        >
+          {/* Sidebar Top Nav Group */}
+          <div className="space-y-4">
+            {/* Main Primary Section */}
+            <div className="space-y-1">
+              {[
+                { id: 'home', label: 'Home', fullLabel: 'Home Overview', icon: Home },
+                { id: 'dashboard', label: 'Analytics', fullLabel: 'Summary Analytics', icon: LayoutDashboard },
+                { id: 'portfolio', label: 'Portfolio', fullLabel: 'My Financial Portfolio', icon: PieChart, requiresPro: true },
+                { id: 'assets', label: 'Assets', fullLabel: 'Risk & Safe Assets', icon: ShieldCheck, requiresPro: true },
+              ].map((item) => {
+                const isActive = activeTab === item.id;
+                const isLocked = !isAdmin && subscriptionTier === 'free' && item.requiresPro;
+                const IconComponent = item.icon;
+
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setActiveTab(item.id as any);
+                      setIsMobileSidebarOpen(false);
+                    }}
+                    className={`
+                      w-full flex items-center rounded-xl transition-all cursor-pointer group relative
+                      ${isLeftSidebarOpen 
+                        ? 'px-3.5 py-2.5 space-x-3 text-left' 
+                        : 'lg:flex-col lg:justify-center lg:py-3 lg:px-1 text-center'}
+                      ${isActive 
+                        ? 'bg-slate-100 dark:bg-white/10 text-blue-600 dark:text-blue-400 font-bold shadow-2xs' 
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white font-medium'}
+                    `}
+                    title={item.fullLabel}
+                  >
+                    <IconComponent className={`shrink-0 transition-transform group-hover:scale-110 ${isLeftSidebarOpen ? 'w-5 h-5' : 'w-5 h-5 lg:w-5.5 lg:h-5.5 lg:mb-1'} ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400'}`} />
+                    
+                    <span className={`truncate ${!isLeftSidebarOpen ? 'lg:text-[10px] lg:leading-tight' : 'text-xs'}`}>
+                      {isLeftSidebarOpen ? item.fullLabel : item.label}
                     </span>
-                  )}
-                </button>
-              );
-            })}
-          </nav>
-          
-          <div className="hidden sm:flex items-center space-x-2 bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-white/5 shrink-0 shadow-xs">
-            {/* Quick Undo / Redo controls in Sub-Nav */}
-            <div className="flex items-center space-x-1 border-r border-slate-200 dark:border-slate-800 pr-2 mr-1">
-              <button
-                onClick={() => performUndo()}
-                disabled={undoStack.length === 0}
-                className={`p-1.5 rounded-lg flex items-center space-x-1 text-xs font-bold transition-all cursor-pointer ${
-                  undoStack.length > 0
-                    ? 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95'
-                    : 'text-slate-300 dark:text-slate-700 cursor-not-allowed opacity-50'
-                }`}
-                title={undoStack.length > 0 ? `Undo: ${undoStack[0]?.title} (Ctrl+Z)` : 'Nothing to undo (Ctrl+Z)'}
-              >
-                <Undo2 className="w-3.5 h-3.5" />
-                <span className="text-[10px] hidden md:inline font-semibold">Undo</span>
-                {undoStack.length > 0 && (
-                  <span className="text-[9px] bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 px-1 py-0.2 rounded-full font-extrabold">
-                    {undoStack.length}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => performRedo()}
-                disabled={redoStack.length === 0}
-                className={`p-1.5 rounded-lg flex items-center space-x-1 text-xs font-bold transition-all cursor-pointer ${
-                  redoStack.length > 0
-                    ? 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95'
-                    : 'text-slate-300 dark:text-slate-700 cursor-not-allowed opacity-50'
-                }`}
-                title={redoStack.length > 0 ? `Redo: ${redoStack[0]?.title} (Ctrl+Y)` : 'Nothing to redo (Ctrl+Y)'}
-              >
-                <Redo2 className="w-3.5 h-3.5" />
-                <span className="text-[10px] hidden md:inline font-semibold">Redo</span>
-              </button>
+
+                    {isLeftSidebarOpen && isLocked && (
+                      <span className="ml-auto bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[9px] font-black px-1.5 py-0.2 rounded-full flex items-center space-x-0.5">
+                        <Lock className="w-2.5 h-2.5" />
+                        <span>PRO</span>
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
-            <div className="px-3 py-1 bg-slate-50 dark:bg-slate-800/80 rounded-lg flex items-center space-x-1.5">
-              <span className="text-[9px] text-slate-500 font-bold uppercase">USD/PHP Exchange</span>
-              <span className="text-xs text-slate-900 dark:text-slate-200 font-bold">₱{exchangeRates.USD.toFixed(2)}</span>
+            {/* Divider */}
+            <div className="border-t border-slate-200 dark:border-white/10 mx-1" />
+
+            {/* Subscriptions / Financial Tools Section */}
+            <div>
+              {isLeftSidebarOpen && (
+                <div className="px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center justify-between">
+                  <span>Financial Tools</span>
+                  <ChevronRight className="w-3.5 h-3.5 opacity-50" />
+                </div>
+              )}
+              <div className="space-y-1 mt-1">
+                {[
+                  { id: 'ledger', label: 'Ledger', fullLabel: 'Cash Flow & Expense', icon: Receipt },
+                  { id: 'social', label: 'Social Sync', fullLabel: 'Social Family Sync', icon: Users },
+                  { id: 'audit', label: 'Cycle Audit', fullLabel: 'Market Cycle Audit', icon: Activity, requiresPro: true },
+                ].map((item) => {
+                  const isActive = activeTab === item.id;
+                  const isLocked = !isAdmin && subscriptionTier === 'free' && item.requiresPro;
+                  const IconComponent = item.icon;
+
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setActiveTab(item.id as any);
+                        setIsMobileSidebarOpen(false);
+                      }}
+                      className={`
+                        w-full flex items-center rounded-xl transition-all cursor-pointer group relative
+                        ${isLeftSidebarOpen 
+                          ? 'px-3.5 py-2.5 space-x-3 text-left' 
+                          : 'lg:flex-col lg:justify-center lg:py-3 lg:px-1 text-center'}
+                        ${isActive 
+                          ? 'bg-slate-100 dark:bg-white/10 text-blue-600 dark:text-blue-400 font-bold shadow-2xs' 
+                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white font-medium'}
+                      `}
+                      title={item.fullLabel}
+                    >
+                      <IconComponent className={`shrink-0 transition-transform group-hover:scale-110 ${isLeftSidebarOpen ? 'w-5 h-5' : 'w-5 h-5 lg:w-5.5 lg:h-5.5 lg:mb-1'} ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400'}`} />
+                      
+                      <span className={`truncate ${!isLeftSidebarOpen ? 'lg:text-[10px] lg:leading-tight' : 'text-xs'}`}>
+                        {isLeftSidebarOpen ? item.fullLabel : item.label}
+                      </span>
+
+                      {isLeftSidebarOpen && isLocked && (
+                        <span className="ml-auto bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[9px] font-black px-1.5 py-0.2 rounded-full flex items-center space-x-0.5">
+                          <Lock className="w-2.5 h-2.5" />
+                          <span>PRO</span>
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-slate-200 dark:border-white/10 mx-1" />
+
+            {/* "You" & System Section */}
+            <div>
+              {isLeftSidebarOpen && (
+                <div className="px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center justify-between">
+                  <span>You & System</span>
+                  <ChevronRight className="w-3.5 h-3.5 opacity-50" />
+                </div>
+              )}
+              <div className="space-y-1 mt-1">
+                <button
+                  onClick={() => {
+                    setActiveTab('transactions');
+                    setIsMobileSidebarOpen(false);
+                  }}
+                  className={`
+                    w-full flex items-center rounded-xl transition-all cursor-pointer group relative
+                    ${isLeftSidebarOpen 
+                      ? 'px-3.5 py-2.5 space-x-3 text-left' 
+                      : 'lg:flex-col lg:justify-center lg:py-3 lg:px-1 text-center'}
+                    ${activeTab === 'transactions' 
+                      ? 'bg-slate-100 dark:bg-white/10 text-blue-600 dark:text-blue-400 font-bold shadow-2xs' 
+                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white font-medium'}
+                  `}
+                  title="Transaction History Ledger"
+                >
+                  <History className={`shrink-0 transition-transform group-hover:scale-110 ${isLeftSidebarOpen ? 'w-5 h-5' : 'w-5 h-5 lg:w-5.5 lg:h-5.5 lg:mb-1'} ${activeTab === 'transactions' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400'}`} />
+                  <span className={`truncate ${!isLeftSidebarOpen ? 'lg:text-[10px] lg:leading-tight' : 'text-xs'}`}>
+                    {isLeftSidebarOpen ? 'Transaction History' : 'History'}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setActiveTab('pricing');
+                    setIsMobileSidebarOpen(false);
+                  }}
+                  className={`
+                    w-full flex items-center rounded-xl transition-all cursor-pointer group relative
+                    ${isLeftSidebarOpen 
+                      ? 'px-3.5 py-2.5 space-x-3 text-left' 
+                      : 'lg:flex-col lg:justify-center lg:py-3 lg:px-1 text-center'}
+                    ${activeTab === 'pricing' 
+                      ? 'bg-slate-100 dark:bg-white/10 text-blue-600 dark:text-blue-400 font-bold shadow-2xs' 
+                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white font-medium'}
+                  `}
+                  title="Pricing & Upgrade Plans"
+                >
+                  <Crown className={`shrink-0 transition-transform group-hover:scale-110 ${isLeftSidebarOpen ? 'w-5 h-5' : 'w-5 h-5 lg:w-5.5 lg:h-5.5 lg:mb-1'} text-amber-500`} />
+                  <span className={`truncate ${!isLeftSidebarOpen ? 'lg:text-[10px] lg:leading-tight' : 'text-xs'}`}>
+                    {isLeftSidebarOpen ? 'Pricing Plans' : 'Plans'}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setSettingsDefaultTab('profile');
+                    setIsSettingsOpen(true);
+                    setIsMobileSidebarOpen(false);
+                  }}
+                  className={`
+                    w-full flex items-center rounded-xl transition-all cursor-pointer group relative
+                    ${isLeftSidebarOpen 
+                      ? 'px-3.5 py-2.5 space-x-3 text-left' 
+                      : 'lg:flex-col lg:justify-center lg:py-3 lg:px-1 text-center'}
+                    text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white font-medium
+                  `}
+                  title="Settings & Data Preferences"
+                >
+                  <Settings className={`shrink-0 transition-transform group-hover:rotate-45 ${isLeftSidebarOpen ? 'w-5 h-5' : 'w-5 h-5 lg:w-5.5 lg:h-5.5 lg:mb-1'} text-slate-500 dark:text-slate-400`} />
+                  <span className={`truncate ${!isLeftSidebarOpen ? 'lg:text-[10px] lg:leading-tight' : 'text-xs'}`}>
+                    {isLeftSidebarOpen ? 'Settings' : 'Settings'}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setIsMobileSidebarOpen(false);
+                    setIsGuestMode(false);
+                    signOut(auth);
+                    triggerToast('Session Closed', 'Returned to Public Landing Page', 'warning');
+                  }}
+                  className={`
+                    w-full flex items-center rounded-xl transition-all cursor-pointer group relative
+                    ${isLeftSidebarOpen 
+                      ? 'px-3.5 py-2.5 space-x-3 text-left' 
+                      : 'lg:flex-col lg:justify-center lg:py-3 lg:px-1 text-center'}
+                    text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-medium
+                  `}
+                  title="Logout Securely"
+                >
+                  <LogOut className={`shrink-0 transition-transform group-hover:scale-110 ${isLeftSidebarOpen ? 'w-5 h-5' : 'w-5 h-5 lg:w-5.5 lg:h-5.5 lg:mb-1'} text-rose-500`} />
+                  <span className={`truncate ${!isLeftSidebarOpen ? 'lg:text-[10px] lg:leading-tight' : 'text-xs font-semibold'}`}>
+                    {isLeftSidebarOpen ? 'Logout' : 'Logout'}
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+
+          {/* Sidebar Bottom Footer Widget */}
+          {isLeftSidebarOpen && (
+            <div className="pt-4 border-t border-slate-200 dark:border-white/10 space-y-2 mt-auto">
+              <div className="px-3 py-2 bg-slate-50 dark:bg-slate-900/90 rounded-xl border border-slate-200/80 dark:border-white/5 flex items-center justify-between">
+                <div>
+                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">USD / PHP</p>
+                  <p className="text-xs font-black text-slate-900 dark:text-white">₱{exchangeRates.USD.toFixed(2)}</p>
+                </div>
+                <div className="flex items-center space-x-1">
+                  {undoStack.length > 0 && (
+                    <button
+                      onClick={() => performUndo()}
+                      className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300 cursor-pointer transition-colors"
+                      title="Undo"
+                    >
+                      <Undo2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  {redoStack.length > 0 && (
+                    <button
+                      onClick={() => performRedo()}
+                      className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300 cursor-pointer transition-colors"
+                      title="Redo"
+                    >
+                      <Redo2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+              <p className="px-2 text-[9px] text-slate-400 text-center">
+                Budget Portfolio Core v96.2
+              </p>
+            </div>
+          )}
+        </aside>
+
+        {/* Dynamic Tab Main Content Area */}
+        <main className="flex-1 w-full min-w-0 px-3 sm:px-6 lg:px-8 py-4 sm:py-6 overflow-x-hidden">
 
         {/* Dynamic Tab Pane Views */}
         {activeTab === 'home' && (
@@ -2779,6 +3007,7 @@ export default function App() {
             assets={assets}
             expenses={expenses}
             budgets={budgets}
+            transactions={trades}
             onAdjustBudgetLimit={handleAdjustBudgetLimit}
             onResyncBudgets={handleResyncBudgets}
             targetAllocation={targetAllocation}
@@ -2952,7 +3181,14 @@ export default function App() {
           />
         )}
 
+        {/* Clean elegant bottom footer with Philippine live clock */}
+        <footer className="border-t border-slate-200/50 dark:border-white/5 py-8 mt-16 text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest flex flex-col items-center justify-center gap-3">
+          <PhilippineClock />
+          <span>© 2026 Budget Portfolio Inc. Fully Audited Cryptographic Protection.</span>
+        </footer>
+
       </main>
+      </div>
 
       {/* Settings Modal */}
       <SettingsModal
@@ -3004,12 +3240,6 @@ export default function App() {
         }}
         onTriggerToast={triggerToast}
       />
-
-      {/* Clean elegant bottom footer with Philippine live clock */}
-      <footer className="border-t border-slate-200/50 dark:border-white/5 py-8 mt-16 text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest flex flex-col items-center justify-center gap-3">
-        <PhilippineClock />
-        <span>© 2026 Budget Portfolio Inc. Fully Audited Cryptographic Protection.</span>
-      </footer>
 
       {/* --- GEMINI AI CHAT BOX FLOATING SYSTEM --- */}
       <div className="fixed bottom-6 right-6 z-50 font-sans">
